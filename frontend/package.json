@@ -1,0 +1,12 @@
+﻿{
+  "name": "dentmed-frontend",
+  "version": "1.0.0",
+  "description": "Interfaz web para DentMed System",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"Frontend no configurado aún\"",
+    "build": "echo \"Frontend no configurado aún\""
+  },
+  "author": "",
+  "license": "ISC"
+}
