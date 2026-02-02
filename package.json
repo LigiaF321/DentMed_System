@@ -1,0 +1,29 @@
+{
+  "name": "dentmed_system",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión para Clínica Dental DENTMED - Proyecto Universitario",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LigiaF321/DentMed_System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LigiaF321/DentMed_System/issues"
+  },
+  "homepage": "https://github.com/LigiaF321/DentMed_System#readme",
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1"
+  }
+}

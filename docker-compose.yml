@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dentmed-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dentmed_db
+      MYSQL_USER: dentmed_user
+      MYSQL_PASSWORD: dentmed_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - dentmed-network
+
+volumes:
+  mysql_data:
+
+networks:
+  dentmed-network:
+    driver: bridge
