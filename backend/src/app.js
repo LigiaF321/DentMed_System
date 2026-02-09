@@ -2,9 +2,13 @@
 const express = require("express");
 const app = express();
 
+const horariosRoutes = require("./routes/horarios.routes");
+
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api/horarios", horariosRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
