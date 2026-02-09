@@ -51,7 +51,7 @@ const WelcomeScreen = ({ onEnter }) => {
           <span className="med-text">Med</span>
         </h1>
         <p className="tagline">Sistema de Gestión Dental</p>
-        <p className="slogan">WORKSPACE BY MILLA'S</p>
+        <p className="slogan">WORK SPACE BY MILLA'S</p>
 
         <button className="enter-button" onClick={handleEnter}>
           <i className="fas fa-tooth"></i> 

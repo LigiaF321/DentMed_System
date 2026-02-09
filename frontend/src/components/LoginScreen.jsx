@@ -31,7 +31,7 @@ const LoginScreen = ({ onBack }) => {
         </div>
         <div className="header-right">
           <h1>Sistema de Gestión Dental DentMed</h1>
-          <p className="slogan">WORKS PACE BY MILLA'S</p>
+          <p className="slogan">WORK SPACE BY MILLA'S</p>
         </div>
       </header>
 
