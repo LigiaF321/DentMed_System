@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const { Usuario, Dentista } = require('../models');
 
-// 1. Configuración del correo
+//  Configuración del correo
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -19,16 +19,15 @@ const dentistaController = {
         try {
             const { nombre, especialidad, telefono, email, password } = req.body;
 
-            // Paso A: Crear el Usuario
+            // Crear el Usuario
             const nuevoUsuario = await Usuario.create({
                 email: email,
-                password_hash: password, // Coincide con tu modelo
-                rol: "dentista",          // Evita el error de campo obligatorio
+                password_hash: password, 
+                rol: "dentista",         
                 activo: true
             });
 
-            // Paso B: Crear el Dentista
-            // NOTA: Si da error aquí, intenta cambiar 'id_usuario' por 'idUsuario'
+            // Crear el Dentista
             const nuevoDentista = await Dentista.create({
                 nombre: nombre,
                 especialidad: especialidad,
@@ -36,7 +35,7 @@ const dentistaController = {
                 id_usuario: nuevoUsuario.id 
             });
 
-            // Paso C: Enviar correo
+            //  Enviar correo
             const mailOptions = {
                 from: '"Sistema DentMed" <alejandramonc23@gmail.com>',
                 to: email, 
@@ -60,7 +59,7 @@ const dentistaController = {
         }
     },
 
-    // TAREA 1: Listar (GET)
+    // Listar (GET)
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({
@@ -72,7 +71,7 @@ const dentistaController = {
         }
     },
 
-    // TAREA 2: Editar (PUT)
+    // Editar (PUT)
     editarDatos: async (req, res) => {
         try {
             const { id } = req.params;
@@ -84,7 +83,7 @@ const dentistaController = {
         }
     },
 
-    // TAREA 3, 4 y 8: Estado + Email (PATCH)
+    // Estado + Email (PATCH)
     cambiarEstado: async (req, res) => {
         try {
             const { idUsuario } = req.params;
@@ -108,7 +107,7 @@ const dentistaController = {
         }
     },
 
-    // TAREA 5 y 6: Eliminar (DELETE)
+    // Eliminar (DELETE)
     eliminar: async (req, res) => {
         try {
             const { id } = req.params;

@@ -4,19 +4,18 @@ const router = express.Router();
 // Importamos el controlador
 const dentistaController = require('../controllers/dentistaControl');
 
-// --- AQUÍ ESTABA EL ERROR: Faltaba esta línea para el registro ---
 router.post('/', dentistaController.registrar); 
 
-// TAREA 1: Listar
+// Listar
 router.get('/', dentistaController.listarTodos);
 
-// TAREA 2: Editar
+//Editar
 router.put('/:id', dentistaController.editarDatos);
 
-// TAREA 3 y 4: Inhabilitar/Habilitar
+// Inhabilitar/Habilitar
 router.patch('/estado/:idUsuario', dentistaController.cambiarEstado);
 
-// TAREA 5: Eliminar cuenta
+// Eliminar cuenta
 router.delete('/:id', dentistaController.eliminar);
 
 module.exports = router;
