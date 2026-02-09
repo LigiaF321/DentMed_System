@@ -17,3 +17,20 @@ INSERT INTO pacientes (nombre, email, telefono, fecha_nacimiento)
 VALUES 
     ('Juan Pérez', 'juan@email.com', '12345678', '1985-05-15'),
     ('María García', 'maria@email.com', '87654321', '1990-08-22');
+
+    -- Tabla de horarios de atención
+CREATE TABLE IF NOT EXISTS horarios_atencion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dia VARCHAR(20) NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    es_feriado BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+--Tabla Horario
+CREATE TABLE IF NOT EXISTS horarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  dia VARCHAR(20) NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL
+);
