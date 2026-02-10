@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import WelcomeScreen from './components/WelcomeScreen';
-import LoginScreen from './components/LoginScreen';
-import './App.css';
+import React, { useState } from "react";
+import WelcomeScreen from "./components/WelcomeScreen";
+import LoginScreen from "./components/LoginScreen";
+import DashboardScreen from "./components/dashboard/DashboardScreen";
+import "./App.css";
 
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
-
-  const handleEnterSystem = () => {
-    setShowWelcome(false);
-  };
-
-  const handleBackToWelcome = () => {
-    setShowWelcome(true);
-  };
+  const [screen, setScreen] = useState("welcome"); // welcome | login | dashboard
 
   return (
     <div className="App">
-      {showWelcome ? (
-        <WelcomeScreen onEnter={handleEnterSystem} />
-      ) : (
-        <LoginScreen onBack={handleBackToWelcome} />
+      {screen === "welcome" && (
+        <WelcomeScreen onEnter={() => setScreen("login")} />
       )}
+
+      {screen === "login" && (
+        <LoginScreen
+          onBack={() => setScreen("welcome")}
+          onLoginSuccess={() => setScreen("dashboard")}
+        />
+      )}
+
+      {screen === "dashboard" && <DashboardScreen />}
     </div>
   );
 }
