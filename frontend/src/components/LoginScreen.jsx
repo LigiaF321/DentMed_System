@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import './LoginScreen.css';
 
-const LoginScreen = ({ onBack }) => {
+const LoginScreen = ({ onBack, onLoginSuccess }) => {
   const [userType, setUserType] = useState('doctor');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Aquí iría tu lógica de autenticación
-    console.log('Iniciando sesión...');
-    alert(`Redirigiendo al dashboard de ${userType}`);
-  };
+const handleSubmit = (e) => {
+  e.preventDefault();
+  console.log("Iniciando sesión...");
+
+  // TEMP: sin backend todavía, entramos directo al dashboard
+  if (onLoginSuccess) onLoginSuccess();
+};
 
   const handleLogoClick = () => {
     if (onBack) {
