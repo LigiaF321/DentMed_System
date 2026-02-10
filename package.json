@@ -2,12 +2,33 @@
   "name": "dentmed_system",
   "version": "1.0.0",
   "description": "Sistema de Gestión para Clínica Dental DENTMED - Proyecto Universitario",
-  "main": "index.js",
+  "main": "backend/src/server.js",
   "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node backend/src/server.js",
+    "db:verify": "node backend/src/scripts/verify-connection.js",
+    "db:sync": "node backend/src/scripts/sync-database.js",
+    "db:seed": "node backend/src/scripts/seed.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0",
+    "nodemailer": "^8.0.1",
+    "sequelize": "^6.37.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
-﻿// server.js - Punto de entrada del servidor
+// server.js - Punto de entrada del servidor
+const path = require("path");
+require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
 const app = require("./app");
-require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
 
