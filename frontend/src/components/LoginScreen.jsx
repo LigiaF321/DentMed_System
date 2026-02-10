@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import './LoginScreen.css';
 
-const LoginScreen = ({ onBack, onLoginSuccess }) => {
+const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [userType, setUserType] = useState('doctor');
   const [rememberMe, setRememberMe] = useState(false);
 
-const handleSubmit = (e) => {
-  e.preventDefault();
-  console.log("Iniciando sesión...");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Iniciando sesión...');
 
-  // TEMP: sin backend todavía, entramos directo al dashboard
-  if (onLoginSuccess) onLoginSuccess();
-};
+    // TEMP: sin backend todavía, entramos directo al dashboard
+    if (onLoginSuccess) onLoginSuccess();
+  };
 
   const handleLogoClick = () => {
     if (onBack) {
@@ -38,12 +38,13 @@ const handleSubmit = (e) => {
 
       {/* CONTENIDO PRINCIPAL */}
       <div className="login-main">
-        
         {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
             <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-            <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
+            <p className="visual-subtitle">
+              Acceso exclusivo para personal autorizado
+            </p>
             <div className="visual-placeholder">
               <div className="dental-icon">
                 <i className="fas fa-tooth"></i>
@@ -102,8 +103,8 @@ const handleSubmit = (e) => {
               <label htmlFor="userType">
                 <i className="fas fa-user-tag"></i> Tipo de Usuario
               </label>
-              <select 
-                id="userType" 
+              <select
+                id="userType"
                 value={userType}
                 onChange={(e) => setUserType(e.target.value)}
                 className="user-type-select"
@@ -124,9 +125,13 @@ const handleSubmit = (e) => {
                 />
                 <label htmlFor="remember">Recordar mi sesión</label>
               </div>
-              <a href="#forgot" className="forgot-password">
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={() => onForgotPassword && onForgotPassword()}
+              >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </button>
             </div>
 
             {/* Botón de Ingreso */}
