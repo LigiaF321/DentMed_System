@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Usuarios | Crear Dentista</title>
+  <link rel="stylesheet" href="../styles/admin.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1>Crear Cuenta de Dentista (Administración)</h1>
+    <p class="subtitle">Complete la información del profesional de la clínica</p>
+
+    <form id="dentistForm">
+
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="name" placeholder="Ej: Juan Pérez" required />
+      </div>
+
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="email" placeholder="correo@clinica.com" required />
+      </div>
+
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="phone" placeholder="9999-9999" required />
+      </div>
+
+      <div class="form-group">
+        <label>Especialidad</label>
+        <input type="text" id="specialty" placeholder="Ortodoncia" required />
+      </div>
+
+      <button type="submit" class="btn-primary">
+        Crear Dentista
+      </button>
+
+    </form>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="./createDentist.js"></script>
+</body>
+</html>

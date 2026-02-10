@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './LoginScreen.css';
 
-const LoginScreen = ({ onBack, onLoginSuccess }) => {
-  const [userType, setUserType] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+const LoginScreen = ({ onBack }) => {
+  const [userType, setUserType] = useState('doctor');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,68 +26,9 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    if (!userType) {
-      setError('⚠️ Por favor, seleccione un tipo de usuario');
-      setIsLoading(false);
-      return;
-    }
-
-    if (!username.trim()) {
-      setError('⚠️ El nombre de usuario es requerido');
-      setIsLoading(false);
-      return;
-    }
-
-    if (!password) {
-      setError('⚠️ La contraseña es requerida');
-      setIsLoading(false);
-      return;
-    }
-
-    if (!isValidUsername(username)) {
-      setError('⚠️ El usuario debe contener solo letras, números, puntos y guiones bajos (3-20 caracteres)');
-      setIsLoading(false);
-      return;
-    }
-
-    if (!isValidPassword(password)) {
-      setError('⚠️ La contraseña debe tener al menos 6 caracteres, letras y números');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      if (userType === 'admin') {
-        if (username === MASTER_CREDENTIALS.admin.username && 
-            password === MASTER_CREDENTIALS.admin.password) {
-          onLoginSuccess({
-            id: 1,
-            username: username,
-            userType: 'admin',
-            fullName: 'Administrador Principal',
-            needsChange: true
-          });
-          return;
-        } else {
-          setError('❌ Credenciales incorrectas para administrador');
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      if (userType === 'doctor') {
-        setError('❌ Credenciales incorrectas. Contacte al administrador para obtener acceso');
-      }
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('❌ Error de conexión con el servidor');
-    } finally {
-      setIsLoading(false);
-    }
+    // Aquí iría tu lógica de autenticación
+    console.log('Iniciando sesión...');
+    alert(`Redirigiendo al dashboard de ${userType}`);
   };
 
   const handleLogoClick = () => {
@@ -120,11 +59,12 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
       </header>
 
       <div className="login-main">
+        
+        {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
             <h2>Bienvenido al Sistema de Gestión DentMed</h2>
             <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
-            
             <div className="visual-placeholder">
               <div className="dental-icon">
                 <i className="fas fa-tooth"></i>
@@ -229,29 +169,28 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
               <label htmlFor="password" className="form-label">
                 <i className="fas fa-lock"></i> Contraseña *
               </label>
-              <div className="password-input-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={!userType}
-                  className="form-input"
-                />
-                <button
-                  type="button"
-                  className="show-password-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
-                </button>
-              </div>
-              <div className="input-hint">
-                <i className="fas fa-info-circle"></i>
-                Mínimo 6 caracteres, letras y números
-              </div>
+              <input
+                type="password"
+                id="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {/* Selector de Tipo de Usuario - SOLO 2 OPCIONES */}
+            <div className="form-group">
+              <label htmlFor="userType">
+                <i className="fas fa-user-tag"></i> Tipo de Usuario
+              </label>
+              <select 
+                id="userType" 
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+                className="user-type-select"
+              >
+                <option value="admin">Administrador(a)</option>
+                <option value="doctor">Doctor(a)</option>
+              </select>
             </div>
 
             <div className="form-options">
@@ -268,6 +207,9 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
                   Recordar mi sesión
                 </label>
               </div>
+              <a href="#forgot" className="forgot-password">
+                ¿Olvidaste tu contraseña?
+              </a>
             </div>
 
             <button 

@@ -15,14 +15,21 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "axios": "^1.13.5",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "formik": "^2.4.9",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.0",
     "nodemailer": "^8.0.1",
+<<<<<<< Updated upstream
     "sequelize": "^6.37.3"
+=======
+    "sequelize": "^6.37.3",
+    "yup": "^1.7.1"
+>>>>>>> Stashed changes
   },
   "devDependencies": {
     "eslint": "^9.39.2",
