@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import MetricCard from "./MetricCard";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import UrgentAlertsList from "./UrgentAlertsList";
@@ -45,7 +45,7 @@ function ActivityIcon({ type }) {
   );
 }
 
-export default function DashboardScreen() {
+export default function DashboardScreen({ onConfig, onCreateUser, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState(MOCK.metrics);
   const [weekly, setWeekly] = useState(MOCK.weekly);
@@ -54,6 +54,9 @@ export default function DashboardScreen() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const [selectedDayIdx, setSelectedDayIdx] = useState(2); // destaca "Mié" por defecto
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   const subtitle = useMemo(() => {
     if (!lastUpdated) return "Cargando datos...";
@@ -106,6 +109,36 @@ export default function DashboardScreen() {
     };
   }, []);
 
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    function onDoc(e) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    if (menuOpen) document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [menuOpen]);
+
+  const handleConfig = () => {
+    setMenuOpen(false);
+    if (typeof onConfig === "function") return onConfig();
+    try { window.location.href = "/configuracion"; } catch (e) {}
+  };
+
+  const handleCreateUser = () => {
+    setMenuOpen(false);
+    if (typeof onCreateUser === "function") return onCreateUser();
+  };
+
+  const handleLogout = () => {
+    setMenuOpen(false);
+    try { localStorage.removeItem("token"); } catch (e) {}
+    if (typeof onLogout === "function") return onLogout();
+    try { window.location.href = "/login"; } catch (e) {}
+  };
+
   const selectedDay = weekly[selectedDayIdx];
 
   return (
@@ -127,9 +160,31 @@ export default function DashboardScreen() {
           DESCARGAR REPORTES
         </button>
 
-        <div className="dm-userchip">
-          <div className="dm-userrole">Administrador</div>
-          <div className="dm-avatar">A</div>
+        <div className="dm-userwrap" ref={userMenuRef}>
+          <button
+            type="button"
+            className={`dm-userchip dm-userchip-btn ${menuOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen((s) => !s)}
+            aria-expanded={menuOpen}
+          >
+            <div className="dm-userrole">Administrador</div>
+            <div className="dm-avatar">A</div>
+            <i className="fa-solid fa-caret-down dm-caret" style={{ marginLeft: 6 }} />
+          </button>
+
+          {menuOpen && (
+            <div className="dm-usermenu">
+              <button type="button" className="dm-usermenu-item" onClick={handleConfig}>
+                Configuración
+              </button>
+              <button type="button" className="dm-usermenu-item" onClick={handleCreateUser}>
+                Crear Usuario
+              </button>
+              <button type="button" className="dm-usermenu-item dm-usermenu-item-danger" onClick={handleLogout}>
+                Cerrar sesión
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -10,6 +10,10 @@ const handleSubmit = (e) => {
   console.log("Iniciando sesión...");
 
   // TEMP: sin backend todavía, entramos directo al dashboard
+  // Guardar token en localStorage para persistir sesión
+  try {
+    localStorage.setItem("token", "demo-token-" + Date.now());
+  } catch (e) {}
   if (onLoginSuccess) onLoginSuccess();
 };
 

@@ -1,0 +1,286 @@
+.cuf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cuf-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(9, 2, 32, 0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cuf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid rgba(11, 16, 32, 0.08);
+}
+
+.cuf-header h2 {
+  margin: 0;
+  font-weight: 900;
+  color: #1a2366;
+  font-size: 22px;
+}
+
+.cuf-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  color: rgba(11, 16, 32, 0.6);
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.cuf-close:hover {
+  background: rgba(11, 16, 32, 0.06);
+  color: #1a2366;
+}
+
+.cuf-form {
+  padding: 24px;
+}
+
+.cuf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cuf-group,
+.cuf-group-full {
+  display: flex;
+  flex-direction: column;
+}
+
+.cuf-group-full {
+  grid-column: 1 / -1;
+}
+
+.cuf-group label,
+.cuf-group-full label {
+  font-weight: 800;
+  font-size: 13px;
+  color: #1a2366;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cuf-group input,
+.cuf-group-full input,
+.cuf-group-full select {
+  padding: 10px 12px;
+  border: 1px solid rgba(11, 16, 32, 0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.cuf-group input:focus,
+.cuf-group-full input:focus,
+.cuf-group-full select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.cuf-generated {
+  background: rgba(79, 70, 229, 0.06);
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.cuf-gen-title {
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #1a2366;
+  margin-bottom: 12px;
+  letter-spacing: 0.6px;
+}
+
+.cuf-gen-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cuf-gen-item label {
+  font-weight: 800;
+  font-size: 11px;
+  color: rgba(11, 16, 32, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.cuf-gen-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.cuf-gen-value span {
+  flex: 1;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: #1a2366;
+  word-break: break-all;
+}
+
+.cuf-copy-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #4f46e5;
+  font-size: 12px;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cuf-copy-btn:hover:not(:disabled) {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+
+.cuf-copy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cuf-gen-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(11, 16, 32, 0.65);
+  line-height: 1.4;
+}
+
+.cuf-gen-note i {
+  color: #4f46e5;
+  font-size: 11px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.cuf-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(11, 16, 32, 0.08);
+  padding-top: 20px;
+}
+
+.cuf-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cuf-btn-cancel {
+  background: rgba(11, 16, 32, 0.06);
+  color: #1a2366;
+}
+
+.cuf-btn-cancel:hover {
+  background: rgba(11, 16, 32, 0.1);
+}
+
+.cuf-btn-create {
+  background: linear-gradient(90deg, #4f46e5, #d42674);
+  color: white;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+}
+
+.cuf-btn-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
+}
+
+.cuf-btn-create:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .cuf-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .cuf-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cuf-header h2 {
+    font-size: 18px;
+  }
+
+  .cuf-form {
+    padding: 16px;
+  }
+
+  .cuf-gen-row {
+    grid-template-columns: 1fr;
+  }
+}

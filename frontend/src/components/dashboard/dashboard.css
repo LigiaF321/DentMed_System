@@ -33,7 +33,8 @@
   );
   color: white;
   position: relative;
-  overflow: hidden;
+  /* permitir que los menús desplegables se muestren fuera del header */
+  overflow: visible;
 }
 
 .dm-topbar::after{
@@ -225,6 +226,28 @@
   font-weight:900;
   background: rgba(255,255,255,.18);
 }
+
+/* User menu button + dropdown */
+.dm-userwrap{ position: relative; display: inline-block; }
+.dm-userchip-btn{ cursor: pointer; border: 0; background: transparent; padding:8px 10px; display:flex; align-items:center; gap:10px; }
+.dm-userchip-btn.active{ box-shadow: 0 8px 20px rgba(9,2,32,.18); }
+.dm-caret{ color: rgba(255,255,255,.9); }
+.dm-usermenu{
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #fff;
+  color: var(--dm-ink);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(9,2,32,.12);
+  border: 1px solid rgba(11,16,32,.06);
+  min-width: 160px;
+  z-index: 9999;
+  overflow: hidden;
+}
+.dm-usermenu-item{ display:block; width:100%; text-align:left; padding:10px 12px; border:0; background:transparent; font-weight:800; }
+.dm-usermenu-item:hover{ background: rgba(11,16,32,.04); }
+.dm-usermenu-item-danger{ color: var(--dm-pink); }
 
 .dm-weeklist{
   display:grid;
