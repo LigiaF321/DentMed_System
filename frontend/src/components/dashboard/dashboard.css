@@ -226,6 +226,29 @@
   background: rgba(255,255,255,.18);
 }
 
+.dm-logout-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dm-logout-btn:hover {
+  background: rgba(212, 38, 116, 0.3);
+  border-color: rgba(212, 38, 116, 0.5);
+}
+
+.dm-logout-btn:active {
+  transform: scale(0.95);
+}
+
 .dm-weeklist{
   display:grid;
   gap:10px;

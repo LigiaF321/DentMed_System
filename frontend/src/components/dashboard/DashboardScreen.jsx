@@ -45,7 +45,7 @@ function ActivityIcon({ type }) {
   );
 }
 
-export default function DashboardScreen() {
+export default function DashboardScreen({ userData, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState(MOCK.metrics);
   const [weekly, setWeekly] = useState(MOCK.weekly);
@@ -54,6 +54,9 @@ export default function DashboardScreen() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const [selectedDayIdx, setSelectedDayIdx] = useState(2); // destaca "Mié" por defecto
+
+  // Obtener la inicial del usuario para el avatar
+  const userInitial = userData?.username ? userData.username.charAt(0).toUpperCase() : "A";
 
   const subtitle = useMemo(() => {
     if (!lastUpdated) return "Cargando datos...";
@@ -110,31 +113,38 @@ export default function DashboardScreen() {
 
   return (
     <div className="dm-page">
-      {}
-<header className="dm-topbar">
-  <div className="container dm-topwrap py-3">
-    {}
-    <div className="dm-toprow">
-      {}
-      <div className="dm-left">
-        <img src={logoDentMed} alt="DentMed" className="dm-logo dm-logo-shift" />
-      </div>
+      <header className="dm-topbar">
+        <div className="container dm-topwrap py-3">
+          <div className="dm-toprow">
+            <div className="dm-left">
+              <img src={logoDentMed} alt="DentMed" className="dm-logo dm-logo-shift" />
+            </div>
 
-      {}
-      <div className="dm-right">
-        <button className="dm-cta" type="button">
-          <i className="fa-solid fa-download me-2" />
-          DESCARGAR REPORTES
-        </button>
+            <div className="dm-right">
+              <button className="dm-cta" type="button">
+                <i className="fa-solid fa-download me-2" />
+                DESCARGAR REPORTES
+              </button>
 
-        <div className="dm-userchip">
-          <div className="dm-userrole">Administrador</div>
-          <div className="dm-avatar">A</div>
+              <div className="dm-userchip">
+                <div className="dm-userrole">
+                  {userData?.role === 'admin' ? 'Administrador' : 'Doctor(a)'}
+                </div>
+                <div className="dm-avatar">{userInitial}</div>
+              </div>
+
+              <button 
+                className="dm-logout-btn" 
+                type="button" 
+                onClick={onLogout}
+                title="Cerrar sesión"
+              >
+                <i className="fa-solid fa-sign-out-alt" />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
 
       <main className="container py-4">
         {/* GRID estilo Figma: izquierda calendario / derecha actividad */}
@@ -168,7 +178,6 @@ export default function DashboardScreen() {
               </div>
             </div>
 
-            {}
             <div className="row g-3 mt-1">
               <div className="col-12">
                 <MetricCard
@@ -200,7 +209,7 @@ export default function DashboardScreen() {
             </div>
           </div>
 
-          {}
+          {/* DERECHA */}
           <div className="col-12 col-lg-8">
             <div className="dm-card p-3 p-md-4">
               <div className="d-flex align-items-center justify-content-between">
@@ -242,7 +251,6 @@ export default function DashboardScreen() {
                   <div className="dm-card-subtitle">Tendencia semanal</div>
 
                   <div className="mt-3" style={{ height: 280 }}>
-                    {}
                     <WeeklyAppointmentsChart data={weekly.map(({ day, count }) => ({ day, count }))} />
                   </div>
                 </div>
