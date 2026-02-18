@@ -30,6 +30,7 @@ const MOCK = {
   ],
 };
 
+
 function ActivityIcon({ type }) {
   const cls =
     type === "ok"
@@ -37,7 +38,6 @@ function ActivityIcon({ type }) {
       : type === "warn"
       ? "fa-solid fa-triangle-exclamation"
       : "fa-solid fa-user-check";
-
   return (
     <div className={`dm-activity-ico dm-activity-ico-${type}`}>
       <i className={cls} />
@@ -52,64 +52,13 @@ export default function DashboardScreen({ userData, onLogout }) {
   const [activity, setActivity] = useState(MOCK.activity);
   const [alerts, setAlerts] = useState(MOCK.alerts);
   const [lastUpdated, setLastUpdated] = useState(null);
-
-  const [selectedDayIdx, setSelectedDayIdx] = useState(2); // destaca "Mié" por defecto
-
-  // Obtener la inicial del usuario para el avatar
+  const [selectedDayIdx, setSelectedDayIdx] = useState(2);
   const userInitial = userData?.username ? userData.username.charAt(0).toUpperCase() : "A";
-
-  const subtitle = useMemo(() => {
-    if (!lastUpdated) return "Cargando datos...";
-    return `Actualizado: ${lastUpdated.toLocaleString()}`;
-  }, [lastUpdated]);
-
-  async function loadDashboardData(signal) {
-    try {
-      // Endpoints para mas adelante
-      // const [m, w, a, al] = await Promise.all([
-      //   fetch("/api/dashboard/metrics", { signal }).then(r => r.json()),
-      //   fetch("/api/dashboard/weekly-appointments", { signal }).then(r => r.json()),
-      //   fetch("/api/dashboard/activity", { signal }).then(r => r.json()),
-      //   fetch("/api/dashboard/alerts", { signal }).then(r => r.json()),
-      // ]);
-
-      const m = MOCK.metrics;
-      const w = MOCK.weekly;
-      const a = MOCK.activity;
-      const al = MOCK.alerts;
-
-      setMetrics(m);
-      setWeekly(w);
-      setActivity(a);
-      setAlerts(al);
-      setLastUpdated(new Date());
-    } catch (err) {
-      if (err?.name !== "AbortError") setLastUpdated(new Date());
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleManualRefresh = () => {
-    const controller = new AbortController();
-    loadDashboardData(controller.signal);
-  };
+  const selectedDay = weekly[selectedDayIdx];
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadDashboardData(controller.signal);
-
-    const id = setInterval(() => {
-      loadDashboardData(controller.signal);
-    }, 300000);
-
-    return () => {
-      clearInterval(id);
-      controller.abort();
-    };
+    setLoading(false);
   }, []);
-
-  const selectedDay = weekly[selectedDayIdx];
 
   return (
     <div className="dm-page">
@@ -119,20 +68,17 @@ export default function DashboardScreen({ userData, onLogout }) {
             <div className="dm-left">
               <img src={logoDentMed} alt="DentMed" className="dm-logo dm-logo-shift" />
             </div>
-
             <div className="dm-right">
               <button className="dm-cta" type="button">
                 <i className="fa-solid fa-download me-2" />
                 DESCARGAR REPORTES
               </button>
-
               <div className="dm-userchip">
                 <div className="dm-userrole">
                   {userData?.role === 'admin' ? 'Administrador' : 'Doctor(a)'}
                 </div>
                 <div className="dm-avatar">{userInitial}</div>
               </div>
-
               <button 
                 className="dm-logout-btn" 
                 type="button" 
@@ -145,9 +91,7 @@ export default function DashboardScreen({ userData, onLogout }) {
           </div>
         </div>
       </header>
-
       <main className="container py-4">
-        {/* GRID estilo Figma: izquierda calendario / derecha actividad */}
         <div className="row g-3">
           {/* IZQUIERDA */}
           <div className="col-12 col-lg-4">
@@ -159,7 +103,6 @@ export default function DashboardScreen({ userData, onLogout }) {
               <div className="dm-card-subtitle">
                 {selectedDay ? `Seleccionado: ${selectedDay.day} ${selectedDay.date}` : "Selecciona un día"}
               </div>
-
               <div className="dm-weeklist mt-3">
                 {weekly.map((d, idx) => (
                   <button
@@ -177,7 +120,6 @@ export default function DashboardScreen({ userData, onLogout }) {
                 ))}
               </div>
             </div>
-
             <div className="row g-3 mt-1">
               <div className="col-12">
                 <MetricCard
@@ -187,7 +129,6 @@ export default function DashboardScreen({ userData, onLogout }) {
                   hint={loading ? "Cargando..." : "Programadas hoy"}
                 />
               </div>
-
               <div className="col-12">
                 <MetricCard
                   title="Consultorios ocupados"
@@ -196,7 +137,6 @@ export default function DashboardScreen({ userData, onLogout }) {
                   hint={loading ? "Cargando..." : "En atención ahora"}
                 />
               </div>
-
               <div className="col-12">
                 <MetricCard
                   title="Inventario crítico"
@@ -208,7 +148,6 @@ export default function DashboardScreen({ userData, onLogout }) {
               </div>
             </div>
           </div>
-
           {/* DERECHA */}
           <div className="col-12 col-lg-8">
             <div className="dm-card p-3 p-md-4">
@@ -220,13 +159,11 @@ export default function DashboardScreen({ userData, onLogout }) {
                   </div>
                   <div className="dm-card-subtitle">Movimientos del sistema (demo)</div>
                 </div>
-
-                <button className="dm-btn dm-btn-sm" type="button" onClick={handleManualRefresh}>
+                <button className="dm-btn dm-btn-sm" type="button" onClick={() => setLoading(true)}>
                   <i className="fa-solid fa-rotate me-2" />
                   Actualizar
                 </button>
               </div>
-
               <div className="dm-activity mt-3">
                 {activity.map((a) => (
                   <div key={a.id} className="dm-activity-row">
@@ -240,7 +177,6 @@ export default function DashboardScreen({ userData, onLogout }) {
                 ))}
               </div>
             </div>
-
             <div className="row g-3 mt-1">
               <div className="col-12 col-xl-8">
                 <div className="dm-card p-3 p-md-4 h-100">
@@ -249,13 +185,11 @@ export default function DashboardScreen({ userData, onLogout }) {
                     Citas por semana
                   </div>
                   <div className="dm-card-subtitle">Tendencia semanal</div>
-
                   <div className="mt-3" style={{ height: 280 }}>
                     <WeeklyAppointmentsChart data={weekly.map(({ day, count }) => ({ day, count }))} />
                   </div>
                 </div>
               </div>
-
               <div className="col-12 col-xl-4">
                 <div className="dm-card p-3 p-md-4 h-100">
                   <div className="dm-card-title">
@@ -263,11 +197,9 @@ export default function DashboardScreen({ userData, onLogout }) {
                     Alertas urgentes
                   </div>
                   <div className="dm-card-subtitle">Prioriza lo importante</div>
-
                   <div className="mt-3">
                     <UrgentAlertsList alerts={alerts} />
                   </div>
-
                   <div className="dm-footnote mt-3">Auto-actualiza cada 5 minutos</div>
                 </div>
               </div>
