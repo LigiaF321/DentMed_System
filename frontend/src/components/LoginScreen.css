@@ -953,3 +953,74 @@
   color: #fbbf24 !important; /* Amarillo de advertencia */
 }
 
+.admin-instructions-visual {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.5s cubic-bezier(.4,0,.2,1), max-height 0.5s cubic-bezier(.4,0,.2,1);
+  background: rgba(255,255,255,0.18);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(30,41,59,0.10);
+  padding: 28px 20px 20px 20px;
+  margin: 0 auto 0 auto;
+  color: #fff;
+  text-align: center;
+}
+.admin-instructions-visual.show {
+  opacity: 1;
+  max-height: 400px;
+}
+.admin-instructions-visual h2 {
+  color: #fff;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+.admin-instructions-visual .credentials-box {
+  background: rgba(0,0,0,0.10);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+  color: #fff;
+}
+.admin-instructions-visual .credential-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.admin-instructions-visual .credential-item:last-child {
+  border-bottom: none;
+}
+.admin-instructions-visual .credential-label {
+  color: #fff;
+  font-weight: 500;
+}
+.admin-instructions-visual .credential-value {
+  font-family: monospace;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.admin-instructions-visual .warning-text {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.13);
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 12px;
+  font-size: 0.93rem;
+  justify-content: center;
+}
+.admin-instructions-visual .fa-key {
+  color: #fff;
+}
+.admin-instructions-visual .fa-exclamation-triangle {
+  color: #fbbf24;
+}
+
