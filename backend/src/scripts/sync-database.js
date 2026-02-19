@@ -11,7 +11,8 @@ async function syncDatabase() {
     await sequelize.authenticate();
     console.log("✅ Conexión OK. Sincronizando tablas...");
 
-    await sequelize.sync({ alter: false, force: false });
+    // alter: true agrega nuevas columnas a tablas existentes (apellidos, licencia, ip)
+    await sequelize.sync({ alter: true, force: false });
     console.log("✅ Tablas creadas/actualizadas correctamente.");
 
     process.exit(0);

@@ -1,4 +1,4 @@
-﻿// app.js - Configuración principal de Express
+// app.js - Configuración principal de Express
 const express = require("express");
 const app = express();
 

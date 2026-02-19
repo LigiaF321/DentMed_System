@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ForceChangeCredentials.css';
 
-const ForceChangeCredentials = ({ user, onCredentialsChanged }) => {
+const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -97,20 +97,17 @@ const ForceChangeCredentials = ({ user, onCredentialsChanged }) => {
 
     try {
       // Simular llamada al backend
-      console.log('Cambiando credenciales para:', user.userType);
+      console.log('Cambiando credenciales para:', userData.role);
       console.log('Nuevo usuario:', newUsername);
       console.log('Nueva contraseña:', newPassword);
       
       // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Éxito
-      onCredentialsChanged({
-        ...user,
-        username: newUsername,
-        hasChangedCredentials: true,
-        newPassword: newPassword // En producción esto NO se debería guardar aquí
-      });
+      // Éxito - llamar onSuccess para ir al dashboard
+      if (onSuccess) {
+        onSuccess();
+      }
       
     } catch (error) {
       setError('Error al cambiar credenciales: ' + error.message);
@@ -141,7 +138,7 @@ const ForceChangeCredentials = ({ user, onCredentialsChanged }) => {
         </div>
         <h1>
           <i className="fas fa-shield-alt"></i> 
-          {user.userType === 'admin' ? 'Cambio Obligatorio de Credenciales de Administrador' : 'Cambio Obligatorio de Credenciales'}
+          {userData.role === 'admin' ? 'Cambio Obligatorio de Credenciales de Administrador' : 'Cambio Obligatorio de Credenciales'}
         </h1>
       </div>
 
@@ -149,10 +146,10 @@ const ForceChangeCredentials = ({ user, onCredentialsChanged }) => {
         <div className="change-alert">
           <i className="fas fa-exclamation-triangle"></i>
           <div>
-            <h3>¡ATENCIÓN {user.userType === 'admin' ? 'ADMINISTRADOR(A)' : 'DOCTOR(A)'}!</h3>
+            <h3>¡ATENCIÓN {userData.role === 'admin' ? 'ADMINISTRADOR(A)' : 'DOCTOR(A)'}!</h3>
             <p>Por seguridad del sistema, debe cambiar sus credenciales de acceso.</p>
             <p className="alert-detail">
-              <strong>Usuario actual:</strong> {user.username}
+              <strong>Usuario actual:</strong> {userData.username}
             </p>
           </div>
         </div>
@@ -167,7 +164,7 @@ const ForceChangeCredentials = ({ user, onCredentialsChanged }) => {
               id="newUsername"
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
-              placeholder={user.userType === 'admin' ? "Ej: AdminMaria, Director_2024" : "Ej: DraLopez, DrGarcia2024"}
+              placeholder={userData.role === 'admin' ? "Ej: AdminMaria, Director_2024" : "Ej: DraLopez, DrGarcia2024"}
               required
               autoFocus
             />
