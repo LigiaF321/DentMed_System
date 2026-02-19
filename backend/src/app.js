@@ -4,10 +4,14 @@ const app = express();
 
 // 1. IMPORTANTE: Importar las rutas que creaste
 const dentistaRoutes = require('./routes/dentistaRoutes');
+const authRoutes = require("./routes/auth.routes");
 
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//Rutas auth
+app.use("/api/auth", authRoutes);
 
 // 2. IMPORTANTE: Conectar la ruta con el prefijo /api/dentistas
 app.use('/api/dentistas', dentistaRoutes);
