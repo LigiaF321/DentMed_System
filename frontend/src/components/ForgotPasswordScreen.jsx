@@ -107,7 +107,7 @@ export default function ForgotPasswordScreen({ onBack, onVerified }) {
 
       if (!data?.token) throw new Error("No se recibió token del servidor.");
 
-      // “PESTAÑA/PANTALLA”
+      // “PANTALLA”
       onVerified?.({ token: data.token, email: eTrim });
     } catch (err) {
       setError(err.message || "Código inválido o expirado.");

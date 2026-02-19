@@ -41,7 +41,7 @@ function App() {
     goTo("welcome");
   };
 
-  // ForgotPassword verifica el código
+  // Forgot verifica el código
   const handleVerifiedCode = ({ token, email }) => {
     setResetToken(token);
     setResetEmail(email);
