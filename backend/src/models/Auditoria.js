@@ -28,6 +28,11 @@ const Auditoria = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    ip: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+      comment: "IP desde donde se realizó la acción (IPv4 o IPv6)",
+    },
   },
   {
     tableName: "auditoria",

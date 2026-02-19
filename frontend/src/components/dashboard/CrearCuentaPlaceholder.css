@@ -1,0 +1,30 @@
+.dm-cc-placeholder {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.dm-cc-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(212, 38, 116, 0.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--dm-indigo, #4f46e5);
+}
+
+.dm-cc-title {
+  font-weight: 800;
+  font-size: 22px;
+  color: #1a2366;
+  margin: 0 0 12px;
+}
+
+.dm-cc-text {
+  color: var(--dm-muted, rgba(11, 16, 32, 0.65));
+  font-size: 15px;
+  margin: 0;
+}

@@ -20,6 +20,17 @@ const Dentista = sequelize.define(
     nombre: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      comment: "Nombres (p. ej. Juan Carlos). Mantener por compatibilidad.",
+    },
+    apellidos: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "Apellidos (p. ej. Pérez García)",
+    },
+    licencia: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: "Número de licencia profesional",
     },
     especialidad: {
       type: DataTypes.STRING(255),
