@@ -1,6 +1,7 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { sequelize, Usuario, Dentista, Auditoria } = require("../models");
 const { generateTemporaryPassword } = require("../utils/password.utils");
+const { getClientIp } = require("../utils/audit.utils");
 const {
   sendDentistCredentialsEmail,
 } = require("../services/email.service");
@@ -8,7 +9,7 @@ const {
 async function createDentistAccount(req, res, next) {
   try {
     
-    const { nombre, email, telefono, especialidad } = req.body;
+    const { nombre, apellidos, email, telefono, especialidad, licencia } = req.body;
 
     
     if (!nombre || !email) {
@@ -45,19 +46,22 @@ async function createDentistAccount(req, res, next) {
         {
           id_usuario: user.id,
           nombre,
+          apellidos: apellidos || null,
           especialidad: especialidad || null,
           telefono: telefono || null,
-          email, 
+          email,
+          licencia: licencia || null,
         },
         { transaction: t }
       );
 
       const adminIdHeader = req.headers["x-user-id"];
       const adminId = adminIdHeader ? Number(adminIdHeader) : null;
+      const ip = getClientIp(req);
 
       await Auditoria.create(
         {
-          id_usuario: adminId, 
+          id_usuario: adminId,
           accion: "CREAR_DENTISTA",
           modulo: "GESTION_USUARIOS",
           detalles: JSON.stringify({
@@ -65,6 +69,7 @@ async function createDentistAccount(req, res, next) {
             userId: user.id,
             email,
           }),
+          ip,
         },
         { transaction: t }
       );
@@ -83,9 +88,11 @@ async function createDentistAccount(req, res, next) {
       dentist: {
         id: result.dentist.id,
         nombre: result.dentist.nombre,
+        apellidos: result.dentist.apellidos,
         email: result.user.email,
         especialidad: result.dentist.especialidad,
         telefono: result.dentist.telefono,
+        licencia: result.dentist.licencia,
       },
       email: emailResult,
       

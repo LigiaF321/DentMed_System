@@ -4,7 +4,7 @@
  * Ejecutar después de: npm run db:sync
  */
 require("dotenv").config({ path: require("path").resolve(process.cwd(), ".env") });
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { sequelize, Usuario, Dentista, Configuracion, HorarioClinica, Paciente, Consultorio, Material } = require("../models");
 
 async function seed() {
@@ -38,7 +38,8 @@ async function seed() {
       where: { id_usuario: adminUser.id },
       defaults: {
         id_usuario: adminUser.id,
-        nombre: "Administradora DENTMED",
+        nombre: "Administradora",
+        apellidos: "DENTMED",
         especialidad: "General",
         telefono: "99999999",
         email: adminUser.email,
@@ -50,9 +51,11 @@ async function seed() {
       defaults: {
         id_usuario: dentistaUser.id,
         nombre: "Dr. Ejemplo",
+        apellidos: "Ortodoncista",
         especialidad: "Ortodoncia",
         telefono: "88888888",
         email: dentistaUser.email,
+        licencia: "12345",
       },
     });
 
