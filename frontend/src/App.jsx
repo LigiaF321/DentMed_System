@@ -1,13 +1,10 @@
-// Test commit frontend admin
 import React, { useState } from "react";
 
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
+import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
 import ForceChangeCredentials from "./components/ForceChangeCredentials";
-
-import AdminLayout from "./components/admin/AdminLayout";
-import DentistDashboard from "./components/dentist/DentistDashboard";
 
 import "./App.css";
 
@@ -18,6 +15,7 @@ function App() {
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData);
 
+    // Siempre pasa por cambio de contraseña en primer login
     if (userData?.requiresPasswordChange) {
       setScreen("forceChange");
     } else {
@@ -33,14 +31,6 @@ function App() {
     setCurrentUser(null);
     setScreen("welcome");
   };
-
-  // ✅ Robustez: aceptar varios strings que podrían venir como rol de admin
-  const roleNormalized = (currentUser?.role || "").toString().trim().toLowerCase();
-  const isAdmin =
-    roleNormalized === "admin" ||
-    roleNormalized === "administrador" ||
-    roleNormalized === "administradora" ||
-    roleNormalized === "administrator";
 
   return (
     <div className="App">
@@ -72,11 +62,10 @@ function App() {
       )}
 
       {screen === "dashboard" && currentUser && (
-        isAdmin ? (
-          <AdminLayout userData={currentUser} onLogout={handleLogout} />
-        ) : (
-          <DentistDashboard userData={currentUser} onLogout={handleLogout} />
-        )
+        <DashboardScreen
+          userData={currentUser}
+          onLogout={handleLogout}
+        />
       )}
     </div>
   );
