@@ -1,0 +1,17 @@
+*   [33mcbe3628[m[33m ([m[1;31morigin/feature/daniel-login-y-monitoreo[m[33m)[m Merge branch 'main' into feature/daniel-login-y-monitoreo
+[31m|[m[32m\[m  
+[31m|[m *   [33mb1a20d7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HU-DM02 – Crear cuenta de dentista (Frontend Admin)
+[31m|[m [33m|[m[34m\[m  
+[31m|[m [33m|[m * [33me80439e[m[33m ([m[1;31morigin/feature/HU-DM02-crear-cuenta[m[33m, [m[1;32mfeature/HU-DM02-crear-cuenta[m[33m)[m HU-DM02: botón para abrir formulario crear dentista
+[31m|[m [33m|[m * [33m3810eec[m HU-DM02: botón para acceder al formulario crear dentista
+[31m|[m [33m|[m * [33mef3a2c5[m HU-DM02 : identificador visible en dashboard admin
+[31m|[m [33m|[m[33m/[m  
+[31m|[m *   [33m72192ef[m Merge pull request #11 from LigiaF321/feature/Kevin-Gestion-de-Cuenta
+[31m|[m [35m|[m[36m\[m  
+[31m|[m [35m|[m *   [33me1641f4[m[33m ([m[1;31morigin/feature/Kevin-Gestion-de-Cuenta[m[33m)[m Merge branch 'main' into feature/Kevin-Gestion-de-Cuenta
+[31m|[m [35m|[m [1;31m|[m[35m\[m  
+[31m|[m [35m|[m [1;31m|[m[35m/[m  
+[31m|[m [35m|[m[35m/[m[1;31m|[m   
+[31m|[m * [1;31m|[m [33m42c1678[m ADM: AdminLayout con sidebar + DentistDashboard
+[31m|[m * [1;31m|[m [33m97cf4df[m test: verificación cambios App.jsx
+[31m|[m * [1;31m|[m [33maa200c0[m Frontend: dashboard admin, sidebar y dashboard dentista

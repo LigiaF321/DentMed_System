@@ -1,133 +1,94 @@
-import React, { useState } from 'react';
-import './ForceChangeCredentials.css';
+import React, { useMemo, useState } from "react";
+import "./ForceChangeCredentials.css";
 
-const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
-  const [newUsername, setNewUsername] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
+function strengthScore(pw) {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[a-z]/.test(pw)) s++;
+  if (/\d/.test(pw)) s++;
+  // (opcional) símbolo suma extra
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(pw)) s++;
+  return s; // 0..5
+}
 
-  const validateUsername = (username) => {
-    if (username.length < 3 || username.length > 20) {
-      return 'El usuario debe tener entre 3 y 20 caracteres';
-    }
-    
-    const regex = /^[a-zA-Z0-9_.]+$/;
-    if (!regex.test(username)) {
-      return 'Solo se permiten letras, números, puntos y guiones bajos';
-    }
-    
-    if (username.toLowerCase() === 'admin') {
-      return 'No puede usar "Admin" como nombre de usuario';
-    }
-    
-    return '';
-  };
+function strengthLabel(score) {
+  if (score <= 2) return "Débil";
+  if (score === 3) return "Media";
+  return "Fuerte";
+}
 
-  const checkPasswordStrength = (password) => {
-    let strength = 0;
-    
-    // Longitud mínima
-    if (password.length >= 6) strength += 1;
-    if (password.length >= 8) strength += 1;
-    
-    // Tiene números
-    if (/\d/.test(password)) strength += 1;
-    
-    // Tiene letras mayúsculas y minúsculas
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
-    
-    // Tiene caracteres especiales
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
-    
-    setPasswordStrength(strength);
-    
-    if (password.length < 6) {
-      return 'La contraseña debe tener al menos 6 caracteres';
-    }
-    
-    const hasNumber = /\d/.test(password);
-    const hasLetter = /[a-zA-Z]/.test(password);
-    
-    if (!hasNumber || !hasLetter) {
-      return 'La contraseña debe contener letras y números';
-    }
-    
-    return '';
-  };
+export default function ForceChangeCredentials({ userData, onSuccess, onBack }) {
+  const username = userData?.username || "usuario";
 
-  const handleSubmit = async (e) => {
+  // En tu login actual NO hay password temporal en userData, así que:
+  // - por ahora pedimos que la escriba el usuario (como dice tu tarea).
+  // - luego, cuando conectemos backend, validaremos de verdad.
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNew, setConfirmNew] = useState("");
+
+  const [show, setShow] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const score = useMemo(() => strengthScore(newPassword), [newPassword]);
+  const label = useMemo(() => strengthLabel(score), [score]);
+
+  const rules = useMemo(() => {
+    return {
+      min8: newPassword.length >= 8,
+      upper: /[A-Z]/.test(newPassword),
+      lower: /[a-z]/.test(newPassword),
+      num: /\d/.test(newPassword),
+      notSame: currentPassword.length > 0 && newPassword !== currentPassword,
+      match: newPassword.length > 0 && newPassword === confirmNew,
+      hasCurrent: currentPassword.length > 0,
+    };
+  }, [newPassword, confirmNew, currentPassword]);
+
+  const allValid = useMemo(() => {
+    return (
+      rules.hasCurrent &&
+      rules.min8 &&
+      rules.upper &&
+      rules.lower &&
+      rules.num &&
+      rules.notSame &&
+      rules.match
+    );
+  }, [rules]);
+
+  const errorText = useMemo(() => {
+    if (!rules.hasCurrent) return "Ingrese la contraseña actual (temporal).";
+    if (!rules.min8) return "La nueva contraseña debe tener mínimo 8 caracteres.";
+    if (!rules.upper) return "Debe incluir al menos una mayúscula.";
+    if (!rules.lower) return "Debe incluir al menos una minúscula.";
+    if (!rules.num) return "Debe incluir al menos un número.";
+    if (!rules.notSame) return "La nueva contraseña no puede ser igual a la temporal.";
+    if (!rules.match) return "La confirmación no coincide.";
+    return "";
+  }, [rules]);
+
+  const strengthColor = useMemo(() => {
+    if (label === "Débil") return "#ef4444";
+    if (label === "Media") return "#f59e0b";
+    return "#10b981";
+  }, [label]);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    if (!allValid) return;
 
-    // Validaciones
-    const usernameError = validateUsername(newUsername);
-    if (usernameError) {
-      setError(usernameError);
-      return;
-    }
-
-    const passwordError = checkPasswordStrength(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
-    // No puede usar las credenciales maestras
-    if (newUsername === 'Admin' && newPassword === 'Admin123') {
-      setError('No puede usar las credenciales maestras iniciales');
-      return;
-    }
-
-    // Contraseña débil
-    if (passwordStrength < 3) {
-      setError('La contraseña es muy débil. Use mayúsculas, minúsculas y números');
-      return;
-    }
-
-    setIsLoading(true);
-
+    setSubmitting(true);
     try {
-      // Simular llamada al backend
-      console.log('Cambiando credenciales para:', userData.role);
-      console.log('Nuevo usuario:', newUsername);
-      console.log('Nueva contraseña:', newPassword);
-      
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Éxito - llamar onSuccess para ir al dashboard
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-    } catch (error) {
-      setError('Error al cambiar credenciales: ' + error.message);
-      setIsLoading(false);
+      // ✅ FRONTEND listo: luego conectamos backend aquí
+      // Por ahora simulamos éxito:
+      await new Promise((r) => setTimeout(r, 900));
+      onSuccess?.();
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const getPasswordStrengthText = () => {
-    if (passwordStrength === 0) return 'Muy débil';
-    if (passwordStrength <= 2) return 'Débil';
-    if (passwordStrength === 3) return 'Moderada';
-    if (passwordStrength === 4) return 'Fuerte';
-    return 'Muy fuerte';
-  };
-
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 2) return '#ef4444';
-    if (passwordStrength === 3) return '#f59e0b';
-    return '#10b981';
-  };
+  }
 
   return (
     <div className="force-change-container">
@@ -136,166 +97,162 @@ const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
           <span className="dent-text">Dent</span>
           <span className="med-text">Med</span>
         </div>
+
         <h1>
-          <i className="fas fa-shield-alt"></i> 
-          {userData.role === 'admin' ? 'Cambio Obligatorio de Credenciales de Administrador' : 'Cambio Obligatorio de Credenciales'}
+          <i className="fas fa-shield-alt"></i> Cambio obligatorio de contraseña
         </h1>
+        <p style={{ marginTop: 8, color: "#64748b" }}>
+          Por seguridad, debes cambiar tu contraseña en tu primer acceso.
+        </p>
       </div>
 
       <div className="change-card">
-        <div className="change-alert">
-          <i className="fas fa-exclamation-triangle"></i>
-          <div>
-            <h3>¡ATENCIÓN {userData.role === 'admin' ? 'ADMINISTRADOR(A)' : 'DOCTOR(A)'}!</h3>
-            <p>Por seguridad del sistema, debe cambiar sus credenciales de acceso.</p>
-            <p className="alert-detail">
-              <strong>Usuario actual:</strong> {userData.username}
-            </p>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="change-form">
+          {/* Usuario no editable */}
           <div className="form-group">
-            <label htmlFor="newUsername">
-              <i className="fas fa-user"></i> Nuevo Usuario *
+            <label>
+              <i className="fas fa-user"></i> Usuario
             </label>
-            <input
-              type="text"
-              id="newUsername"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-              placeholder={userData.role === 'admin' ? "Ej: AdminMaria, Director_2024" : "Ej: DraLopez, DrGarcia2024"}
-              required
-              autoFocus
-            />
-            <div className="input-hint">
-              <i className="fas fa-info-circle"></i>
-              3-20 caracteres. Letras (a-z, A-Z), números (0-9), puntos (.) y guiones bajos (_)
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+                background: "#f8fafc",
+                fontWeight: 700,
+              }}
+            >
+              {username}
             </div>
           </div>
 
+          {/* Contraseña actual */}
           <div className="form-group">
-            <label htmlFor="newPassword">
-              <i className="fas fa-lock"></i> Nueva Contraseña *
+            <label>
+              <i className="fas fa-key"></i> Contraseña actual (temporal) *
             </label>
             <div className="password-input-container">
               <input
-                type={showPassword ? "text" : "password"}
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  checkPasswordStrength(e.target.value);
-                }}
-                placeholder="Mínimo 6 caracteres con letras y números"
+                type={show ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Ingrese la contraseña temporal"
                 required
               />
               <button
                 type="button"
                 className="show-password-btn"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShow((v) => !v)}
               >
-                <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
+                <i className={`fas fa-eye${show ? "-slash" : ""}`}></i>
               </button>
             </div>
-            
+          </div>
+
+          {/* Nueva contraseña */}
+          <div className="form-group">
+            <label>
+              <i className="fas fa-lock"></i> Nueva contraseña *
+            </label>
+            <input
+              type={show ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número"
+              required
+            />
+
             {newPassword && (
-              <div className="password-strength">
-                <div className="strength-bar">
-                  <div 
-                    className="strength-fill"
+              <div style={{ marginTop: 10 }}>
+                <div
+                  style={{
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#e5e7eb",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
                     style={{
-                      width: `${passwordStrength * 20}%`,
-                      backgroundColor: getPasswordStrengthColor()
+                      height: "100%",
+                      width: `${Math.min(score, 5) * 20}%`,
+                      background: strengthColor,
+                      transition: "width .15s",
                     }}
-                  ></div>
+                  />
                 </div>
-                <span className="strength-text" style={{ color: getPasswordStrengthColor() }}>
-                  Fortaleza: {getPasswordStrengthText()}
-                </span>
+                <div style={{ marginTop: 6, color: strengthColor, fontWeight: 700 }}>
+                  Fortaleza: {label}
+                </div>
               </div>
             )}
-            
-            <div className="input-hint">
-              <i className="fas fa-info-circle"></i>
-              Recomendado: 8+ caracteres con mayúsculas, minúsculas, números y símbolos
-            </div>
           </div>
 
+          {/* Confirmar */}
           <div className="form-group">
-            <label htmlFor="confirmPassword">
-              <i className="fas fa-lock"></i> Confirmar Nueva Contraseña *
+            <label>
+              <i className="fas fa-lock"></i> Confirmar nueva contraseña *
             </label>
-            <div className="password-input-container">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita la nueva contraseña"
-                required
-              />
-            </div>
+            <input
+              type={show ? "text" : "password"}
+              value={confirmNew}
+              onChange={(e) => setConfirmNew(e.target.value)}
+              placeholder="Repita la nueva contraseña"
+              required
+            />
           </div>
 
-          {error && (
+          {/* Mensaje de error específico */}
+          {errorText && (
             <div className="error-message">
-              <i className="fas fa-exclamation-circle"></i> {error}
+              <i className="fas fa-exclamation-circle"></i> {errorText}
             </div>
           )}
 
+          {/* Checklist reglas */}
           <div className="security-rules">
-            <h4><i className="fas fa-shield-alt"></i> Reglas de Seguridad Obligatorias:</h4>
+            <h4>
+              <i className="fas fa-shield-alt"></i> Requisitos:
+            </h4>
             <ul>
-              <li className={newUsername.length >= 3 && newUsername.length <= 20 ? 'valid' : 'invalid'}>
-                {newUsername.length >= 3 && newUsername.length <= 20 ? '✓' : '✗'} 
-                Usuario entre 3 y 20 caracteres
+              <li className={rules.min8 ? "valid" : "invalid"}>
+                {rules.min8 ? "✓" : "✗"} Mínimo 8 caracteres
               </li>
-              <li className={!/[^a-zA-Z0-9_.]/.test(newUsername) ? 'valid' : 'invalid'}>
-                {!/[^a-zA-Z0-9_.]/.test(newUsername) ? '✓' : '✗'} 
-                Solo caracteres permitidos
+              <li className={rules.upper ? "valid" : "invalid"}>
+                {rules.upper ? "✓" : "✗"} Al menos una mayúscula
               </li>
-              <li className={newPassword.length >= 6 ? 'valid' : 'invalid'}>
-                {newPassword.length >= 6 ? '✓' : '✗'} 
-                Mínimo 6 caracteres
+              <li className={rules.lower ? "valid" : "invalid"}>
+                {rules.lower ? "✓" : "✗"} Al menos una minúscula
               </li>
-              <li className={/\d/.test(newPassword) && /[a-zA-Z]/.test(newPassword) ? 'valid' : 'invalid'}>
-                {/\d/.test(newPassword) && /[a-zA-Z]/.test(newPassword) ? '✓' : '✗'} 
-                Letras y números
+              <li className={rules.num ? "valid" : "invalid"}>
+                {rules.num ? "✓" : "✗"} Al menos un número
               </li>
-              <li className={newPassword === confirmPassword && newPassword !== '' ? 'valid' : 'invalid'}>
-                {newPassword === confirmPassword && newPassword !== '' ? '✓' : '✗'} 
-                Contraseñas coinciden
+              <li className={rules.notSame ? "valid" : "invalid"}>
+                {rules.notSame ? "✓" : "✗"} No igual a la temporal
+              </li>
+              <li className={rules.match ? "valid" : "invalid"}>
+                {rules.match ? "✓" : "✗"} Confirmación coincide
               </li>
             </ul>
           </div>
 
-          <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? (
+          <button type="submit" className="submit-btn" disabled={!allValid || submitting}>
+            {submitting ? (
               <>
-                <i className="fas fa-spinner fa-spin"></i> Cambiando credenciales...
+                <i className="fas fa-spinner fa-spin"></i> Cambiando...
               </>
             ) : (
-              <>
-                <i className="fas fa-check-circle"></i> Guardar Nuevas Credenciales
-              </>
+              "Cambiar contraseña e iniciar sesión"
             )}
           </button>
 
-          <div className="final-notes">
-            <p className="warning-note">
-              <i className="fas fa-exclamation-triangle"></i>
-              <strong>IMPORTANTE:</strong> Estas credenciales serán definitivas. Guárdelas en un lugar seguro.
-            </p>
-            <p className="info-note">
-              <i className="fas fa-info-circle"></i>
-              Después de este cambio, podrá acceder al sistema con sus nuevas credenciales.
-            </p>
+          <div style={{ marginTop: 14, display: "flex", justifyContent: "center" }}>
+            <button type="button" onClick={onBack} style={{ background: "transparent", border: 0, color: "#2563eb", cursor: "pointer", fontWeight: 700 }}>
+              Volver
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
-
-export default ForceChangeCredentials;
+}

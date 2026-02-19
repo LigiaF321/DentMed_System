@@ -1,0 +1,28 @@
+.dd-page{ min-height:100vh; background:#f4f6f8; }
+.dd-topbar{
+  height:64px; background:#fff; border-bottom:1px solid #e5e7eb;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px;
+}
+.dd-title{ font-weight:900; color:#0f172a; }
+.dd-right{ display:flex; align-items:center; gap:12px; }
+.dd-name{ font-weight:700; color:#334155; }
+.dd-logout{
+  border:0; border-radius:999px; padding:10px 14px;
+  background: rgba(239,68,68,.12); color:#b91c1c;
+  cursor:pointer; font-weight:800; display:flex; gap:8px; align-items:center;
+}
+.dd-main{ padding:20px; max-width:1100px; margin:0 auto; }
+.dd-welcome{ margin:0 0 14px; color:#0f172a; }
+.dd-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+@media (max-width: 900px){ .dd-grid{ grid-template-columns: 1fr; } }
+.dd-card{
+  background:#fff; border:1px solid #e5e7eb; border-radius:16px;
+  padding:16px; box-shadow: 0 10px 25px rgba(0,0,0,.06);
+}
+.dd-row{ display:flex; justify-content:space-between; padding:6px 0; color:#0f172a; }
+.dd-muted{ color:#64748b; }
+.dd-placeholder{
+  margin-top:12px; border:1px dashed #cbd5e1; border-radius:14px;
+  padding:14px; color:#64748b; display:flex; gap:10px; align-items:center;
+}
