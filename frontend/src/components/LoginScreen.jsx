@@ -8,6 +8,7 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => { // AGREGADO onLoginSuccess
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAdminModal, setShowAdminModal] = useState(false);
   
   // Simulación de base de datos de doctores (en realidad vendría del backend)
   const TEMPORARY_DOCTOR_CREDENTIALS = {
@@ -96,6 +97,8 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => { // AGREGADO onLoginSuccess
     setUsername('');
     setPassword('');
     setError(''); // Limpia error al cambiar tipo de usuario
+    if (type === 'admin') setShowAdminModal(true);
+    else setShowAdminModal(false);
   };
 
   // Limpiar error cuando el usuario empieza a escribir
@@ -145,16 +148,30 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => { // AGREGADO onLoginSuccess
         {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
-            <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-            <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
-            
-            <div className="dental-icon">
-              <i className="fas fa-tooth"></i>
-              <i className="fas fa-stethoscope"></i>
-              <i className="fas fa-user-md"></i>
+            <div className={`visual-fade${userType === 'doctor' ? ' hide' : ''}`}> 
+              <h2>Bienvenido al Sistema de Gestión DentMed</h2>
+              <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
+              <div className="dental-icon">
+                <i className="fas fa-tooth"></i>
+                <i className="fas fa-stethoscope"></i>
+                <i className="fas fa-user-md"></i>
+              </div>
             </div>
-            
-            {/* INFORMACIÓN DINÁMICA */}
+            <div className={`doctor-instructions-visual${userType === 'doctor' ? ' show' : ''}`}> 
+              {userType === 'doctor' && (
+                <>
+                  <h2><i className="fas fa-user-md"></i> Instrucciones para Doctores</h2>
+                  <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
+                  <p><i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123</p>
+                  <p><i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso</p>
+                  <p className="warning-text">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    Si no tiene credenciales, contacte al administrador
+                  </p>
+                </>
+              )}
+            </div>
+            {/* INFORMACIÓN DINÁMICA ADMIN/DEFAULT */}
             {userType === 'admin' && (
               <div className="user-type-info admin-info">
                 <h3><i className="fas fa-user-shield"></i> Modo Administrador</h3>
@@ -164,17 +181,6 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => { // AGREGADO onLoginSuccess
                 </p>
               </div>
             )}
-            
-            {userType === 'doctor' && (
-              <div className="user-type-info doctor-info">
-                <h3><i className="fas fa-user-md"></i> Modo Doctor</h3>
-                <p>Acceso a historiales y pacientes</p>
-                <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales temporales asignadas
-                </p>
-              </div>
-            )}
-            
             {!userType && (
               <div className="user-type-info default-info">
                 <h3><i className="fas fa-hand-pointer"></i> Seleccione tipo de usuario</h3>
@@ -326,46 +332,34 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => { // AGREGADO onLoginSuccess
             </button>
 
             {/* INSTRUCCIONES DINÁMICAS */}
-            <div className="special-instructions">
-              {userType === 'admin' && (
-                <div className="admin-instructions">
-                  <h4><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h4>
-                  <div className="credentials-box">
-                    <div className="credential-item">
-                      <span className="credential-label">Usuario:</span>
-                      <span className="credential-value">Admin</span>
-                    </div>
-                    <div className="credential-item">
-                      <span className="credential-label">Contraseña:</span>
-                      <span className="credential-value">Admin123</span>
-                    </div>
-                  </div>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
-                  </p>
-                </div>
-              )}
-              
-              {userType === 'doctor' && (
-                <div className="doctor-instructions">
-                  <h4><i className="fas fa-user-md"></i> Instrucciones para Doctores</h4>
-                  <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
-                  <p><i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123</p>
-                  <p><i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso</p>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    Si no tiene credenciales, contacte al administrador
-                  </p>
-                </div>
-              )}
-            </div>
-
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>
               <span>Sistema seguro - Acceso restringido al personal autorizado</span>
             </div>
           </form>
+          {/* MODAL PARA ADMIN */}
+          {showAdminModal && (
+            <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
+              <div className="modal-admin-instructions" onClick={e => e.stopPropagation()}>
+                <button className="close-modal-btn" onClick={() => setShowAdminModal(false)}>&times;</button>
+                <h4><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h4>
+                <div className="credentials-box">
+                  <div className="credential-item">
+                    <span className="credential-label">Usuario:</span>
+                    <span className="credential-value">Admin</span>
+                  </div>
+                  <div className="credential-item">
+                    <span className="credential-label">Contraseña:</span>
+                    <span className="credential-value">Admin123</span>
+                  </div>
+                </div>
+                <p className="warning-text">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
