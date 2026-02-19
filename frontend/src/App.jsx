@@ -3,73 +3,90 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
-import ForceChangeCredentials from "./components/ForceChangeCredentials"; // Asegúrate de tener este componente
+import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
 function App() {
   const [screen, setScreen] = useState("welcome");
-  const [currentUser, setCurrentUser] = useState(null); // Para guardar datos del usuario logueado
-  
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const goTo = (next) => setScreen(next);
+
   const handleLoginSuccess = (userData) => {
-    // Guardar datos del usuario
+    console.log("LOGIN OK =>", userData);
+
+    // Evitar “pantalla en blanco” si LoginScreen no manda datos
+    if (!userData) {
+      console.error(
+        "onLoginSuccess fue llamado sin userData. Revisa LoginScreen: debe llamar onLoginSuccess(userData)."
+      );
+      setCurrentUser(null);
+      goTo("login");
+      return;
+    }
+
     setCurrentUser(userData);
-    
-    // SIEMPRE redirigir a cambio de contraseña en el primer acceso
-    // (tanto admin como doctores deben cambiar credenciales)
-    setScreen("forceChange");
+
+    // Decide si forzar cambio de contraseña
+    const mustChange =
+      userData.mustChangePassword === true ||
+      userData.forcePasswordChange === true ||
+      userData.firstLogin === true;
+
+    if (mustChange) {
+      goTo("forceChange");
+    } else {
+      goTo("dashboard");
+    }
   };
-  
+
   const handlePasswordChangeComplete = () => {
-    // Después de cambiar contraseña, ir al dashboard
-    setScreen("dashboard");
+    goTo("dashboard");
   };
-  
+
   const handleLogout = () => {
-    // Limpiar datos y volver a welcome
     setCurrentUser(null);
-    setScreen("welcome");
+    goTo("welcome");
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentUser(null);
+    goTo("login");
   };
 
   return (
     <div className="App">
       {/* PANTALLA DE BIENVENIDA */}
       {screen === "welcome" && (
-        <WelcomeScreen onEnter={() => setScreen("login")} />
+        <WelcomeScreen onEnter={() => goTo("login")} />
       )}
-      
+
       {/* PANTALLA DE LOGIN */}
       {screen === "login" && (
-        <LoginScreen 
-          onBack={() => setScreen("welcome")} // ← Esto hace funcionar logo y botón "Volver"
-          onLoginSuccess={handleLoginSuccess} // ← Recibe datos del usuario
-          onForgotPassword={() => setScreen("forgot")}
+        <LoginScreen
+          onBack={() => goTo("welcome")}
+          onLoginSuccess={handleLoginSuccess}
+          onForgotPassword={() => goTo("forgot")}
         />
       )}
-      
+
+      {/* RECUPERACIÓN DE CONTRASEÑA */}
+      {screen === "forgot" && (
+        <ForgotPasswordScreen onBack={() => goTo("login")} />
+      )}
+
       {/* CAMBIO OBLIGATORIO DE CREDENCIALES */}
-      {screen === "forceChange" && currentUser && (
+      {screen === "forceChange" && (
         <ForceChangeCredentials
           userData={currentUser}
           onSuccess={handlePasswordChangeComplete}
-          onBack={() => {
-            // Si cancela, volver al login
-            setCurrentUser(null);
-            setScreen("login");
-          }}
+          onBack={handleBackToLogin}
         />
       )}
-      
-      {/* RECUPERACIÓN DE CONTRASEÑA */}
-      {screen === "forgot" && (
-        <ForgotPasswordScreen onBack={() => setScreen("login")} />
-      )}
-      
-      {/* DASHBOARD PRINCIPAL */}
+
+      {/* DASHBOARD */}
       {screen === "dashboard" && (
-        <DashboardScreen 
-          userData={currentUser} // Pasar datos del usuario al dashboard
-          onLogout={handleLogout}
-        />
+        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
       )}
     </div>
   );
