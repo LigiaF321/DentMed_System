@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import MetricCard from "./MetricCard";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import UrgentAlertsList from "./UrgentAlertsList";
+import AdminSidebar from "./AdminSidebar";
+import GestionarCuentasScreen from "./GestionarCuentasScreen";
+import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
 import logoDentMed from "../../assets/dentmed-logo.png";
 import "./dashboard.css";
 
@@ -51,8 +54,9 @@ export default function DashboardScreen({ userData, onLogout }) {
   const [weekly, setWeekly] = useState(MOCK.weekly);
   const [activity, setActivity] = useState(MOCK.activity);
   const [alerts, setAlerts] = useState(MOCK.alerts);
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [selectedDayIdx, setSelectedDayIdx] = useState(2);
+  const [adminView, setAdminView] = useState("dashboard");
+  const isAdmin = userData?.role === "admin";
   const userInitial = userData?.username ? userData.username.charAt(0).toUpperCase() : "A";
   const selectedDay = weekly[selectedDayIdx];
 
@@ -60,40 +64,16 @@ export default function DashboardScreen({ userData, onLogout }) {
     setLoading(false);
   }, []);
 
-  return (
-    <div className="dm-page">
-      <header className="dm-topbar">
-        <div className="container dm-topwrap py-3">
-          <div className="dm-toprow">
-            <div className="dm-left">
-              <img src={logoDentMed} alt="DentMed" className="dm-logo dm-logo-shift" />
-            </div>
-            <div className="dm-right">
-              <button className="dm-cta" type="button">
-                <i className="fa-solid fa-download me-2" />
-                DESCARGAR REPORTES
-              </button>
-              <div className="dm-userchip">
-                <div className="dm-userrole">
-                  {userData?.role === 'admin' ? 'Administrador' : 'Doctor(a)'}
-                </div>
-                <div className="dm-avatar">{userInitial}</div>
-              </div>
-              <button 
-                className="dm-logout-btn" 
-                type="button" 
-                onClick={onLogout}
-                title="Cerrar sesión"
-              >
-                <i className="fa-solid fa-sign-out-alt" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="container py-4">
-        <div className="row g-3">
-          {/* IZQUIERDA */}
+  const renderMainContent = () => {
+    if (isAdmin && adminView === "gestionar-cuentas") {
+      return <GestionarCuentasScreen />;
+    }
+    if (isAdmin && adminView === "crear-cuenta") {
+      return <CrearCuentaPlaceholder />;
+    }
+    return (
+      <div className="row g-3">
+        {/* IZQUIERDA */}
           <div className="col-12 col-lg-4">
             <div className="dm-card p-3 p-md-4">
               <div className="dm-card-title">
@@ -205,8 +185,50 @@ export default function DashboardScreen({ userData, onLogout }) {
               </div>
             </div>
           </div>
+      </div>
+    );
+  };
+
+
+  return (
+    <div className="dm-page">
+      <header className="dm-topbar">
+        <div className="container dm-topwrap py-3">
+          <div className="dm-toprow">
+            <div className="dm-left">
+              <img src={logoDentMed} alt="DentMed" className="dm-logo dm-logo-shift" />
+            </div>
+            <div className="dm-right">
+              <button className="dm-cta" type="button">
+                <i className="fa-solid fa-download me-2" />
+                DESCARGAR REPORTES
+              </button>
+              <div className="dm-userchip">
+                <div className="dm-userrole">
+                  {userData?.role === "admin" ? "Administrador" : "Doctor(a)"}
+                </div>
+                <div className="dm-avatar">{userInitial}</div>
+              </div>
+              <button
+                className="dm-logout-btn"
+                type="button"
+                onClick={onLogout}
+                title="Cerrar sesión"
+              >
+                <i className="fa-solid fa-sign-out-alt" />
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
+      </header>
+      <div className={isAdmin ? "dm-dashboard-body dm-dashboard-body-with-sidebar" : ""}>
+        {isAdmin && (
+          <AdminSidebar activeView={adminView} onSelect={setAdminView} />
+        )}
+        <main className={isAdmin ? "dm-main-with-sidebar" : "container py-4"}>
+          {renderMainContent()}
+        </main>
+      </div>
     </div>
   );
 }
