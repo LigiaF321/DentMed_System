@@ -9,6 +9,12 @@ const Usuario = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    // NUEVO CAMPO: Agregado para que coincida con tu ALTER TABLE
+    username: {
+      type: DataTypes.STRING(100),
+      allowNull: true, // Permite nulos si hay registros viejos sin username
+      unique: true,
+    },
     email: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -30,11 +36,17 @@ const Usuario = sequelize.define(
       allowNull: false,
       defaultValue: true,
     },
+    primer_acceso: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: 'primer_acceso' // Asegura el mapeo exacto a la columna SQL
+    },
   },
   {
     tableName: "usuarios",
-    timestamps: true,
-    underscored: true,
+    timestamps: true, // Usa created_at y updated_at automáticamente
+    underscored: true, // Convierte createdAt de JS a created_at de SQL
   }
 );
 

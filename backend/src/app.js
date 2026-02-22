@@ -2,27 +2,26 @@
 const express = require("express");
 const app = express();
 
-// 1. IMPORTANTE: Importar las rutas que creaste
-const dentistaRoutes = require('./routes/dentistaRoutes');
+// 1. IMPORTACIÓN DE RUTAS
 const authRoutes = require("./routes/auth.routes");
+const dentistaRoutes = require("./routes/dentistaRoutes");
+const medicoRoutes = require("./routes/medico.routes"); // <--- AGREGADO
 
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//Rutas auth
+// 2. CONEXIÓN DE RUTAS
 app.use("/api/auth", authRoutes);
-
-// 2. IMPORTANTE: Conectar la ruta con el prefijo /api/dentistas
-app.use('/api/dentistas', dentistaRoutes);
+app.use("/api/dentistas", dentistaRoutes);
+app.use("/api/medico", medicoRoutes); // <--- AGREGADO
 
 // Ruta de prueba
 app.get("/", (req, res) => {
     res.json({
         message: "API DentMed System funcionando",
         version: "1.0.0",
-        // Actualicé la lista aquí también para tu control
-        endpoints: ["/api/pacientes", "/api/dentistas", "/api/citas"]
+        endpoints: ["/api/auth", "/api/dentistas", "/api/medico"]
     });
 });
 

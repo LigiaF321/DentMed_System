@@ -1,7 +1,8 @@
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs'); // Requerido para el hasheo de la Tarea 175
 const { Usuario, Dentista } = require('../models');
 
-//  Configuración del correo
+// Configuración del correo (Tarea 3)
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -14,33 +15,47 @@ const transporter = nodemailer.createTransport({
 
 const dentistaController = {
 
-    // TAREA: Registro (POST)
+    // TAREA 1: Registro de Dentista (Completo y Corregido)
     registrar: async (req, res) => {
         try {
-            const { nombre, especialidad, telefono, email, password } = req.body;
+            const { nombre, apellidos, especialidad, telefono, email } = req.body;
 
-            // Crear el Usuario
+            // 1. Unificar nombre y apellidos (Evita error de columna faltante en DB)
+            const nombreCompleto = `${nombre} ${apellidos}`;
+
+            // 2. Generar contraseña genérica automáticamente (Tarea 2)
+            const passwordTemporal = "DentMed2026!"; 
+            const salt = await bcrypt.genSalt(10);
+            const hashedBuffer = await bcrypt.hash(passwordTemporal, salt);
+
+            // 3. Crear el Usuario vinculando email y password_hash
             const nuevoUsuario = await Usuario.create({
                 email: email,
-                password_hash: password, 
-                rol: "dentista",         
-                activo: true
+                password_hash: hashedBuffer,
+                rol: "dentista",          
+                activo: true,
+                primer_acceso: 1 // Indica cambio de contraseña obligatorio (Tarea 151)
             });
 
-            // Crear el Dentista
+            // 4. Crear el Dentista vinculado al usuario recién creado
             const nuevoDentista = await Dentista.create({
-                nombre: nombre,
+                nombre: nombreCompleto, 
                 especialidad: especialidad,
                 telefono: telefono,
                 id_usuario: nuevoUsuario.id 
             });
 
-            //  Enviar correo
+            // 5. Enviar correo de bienvenida con credenciales (Tarea 3)
             const mailOptions = {
                 from: '"Sistema DentMed" <alejandramonc23@gmail.com>',
                 to: email, 
                 subject: "¡Bienvenido al Sistema DentMed!",
-                text: `Hola ${nombre}, tu cuenta ha sido creada exitosamente.`
+                html: `
+                    <h1>Hola, Dr/a. ${nombre}</h1>
+                    <p>Su cuenta ha sido creada exitosamente.</p>
+                    <p><strong>Contraseña temporal:</strong> ${passwordTemporal}</p>
+                    <p>Deberá cambiarla en su primer inicio de sesión.</p>
+                `
             };
 
             await transporter.sendMail(mailOptions);
@@ -52,14 +67,11 @@ const dentistaController = {
 
         } catch (error) {
             console.error("ERROR EN REGISTRO:", error);
-            res.status(500).json({ 
-                error: "Error al registrar", 
-                detalle: error.message 
-            });
+            res.status(500).json({ error: "Error al registrar", detalle: error.message });
         }
     },
 
-    // Listar (GET)
+    // Listar todos los dentistas (Requerido por la ruta GET /)
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({
@@ -71,7 +83,7 @@ const dentistaController = {
         }
     },
 
-    // Editar (PUT)
+    // Editar datos del dentista (Requerido por la ruta PUT /:id)
     editarDatos: async (req, res) => {
         try {
             const { id } = req.params;
@@ -83,38 +95,26 @@ const dentistaController = {
         }
     },
 
-    // Estado + Email (PATCH)
+    // Cambiar estado de la cuenta (Requerido por la ruta PATCH /estado/:idUsuario)
     cambiarEstado: async (req, res) => {
         try {
             const { idUsuario } = req.params;
-            const { activo, emailDentista } = req.body; 
-
+            const { activo } = req.body; 
             await Usuario.update({ activo }, { where: { id: idUsuario } });
-
-            if (activo === false || activo === 0) {
-                const mailOptions = {
-                    from: '"Sistema DentMed" <alejandramonc23@gmail.com>', 
-                    to: emailDentista,
-                    subject: "Cuenta Inhabilitada",
-                    text: "Su acceso al sistema ha sido desactivado."
-                };
-                await transporter.sendMail(mailOptions);
-            }
-
-            res.json({ mensaje: "Estado actualizado" });
+            res.json({ mensaje: "Estado del usuario actualizado" });
         } catch (error) {
-            res.status(500).json({ error: "Error interno", detalle: error.message });
+            res.status(500).json({ error: "Error al cambiar estado" });
         }
     },
 
-    // Eliminar (DELETE)
+    // Eliminar cuenta (Requerido por la ruta DELETE /:id)
     eliminar: async (req, res) => {
         try {
             const { id } = req.params;
             await Dentista.destroy({ where: { id } });
-            res.json({ mensaje: "Dentista eliminado" });
+            res.json({ mensaje: "Dentista eliminado correctamente" });
         } catch (error) {
-            res.status(500).json({ error: "No se puede eliminar: registros vinculados" });
+            res.status(500).json({ error: "Error al eliminar" });
         }
     }
 };

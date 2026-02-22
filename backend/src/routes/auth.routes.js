@@ -1,9 +1,12 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const auth = require("../controllers/auth.controller");
+const authController = require('../controllers/auth.controller');
 
-router.post("/forgot-password", auth.forgotPassword);
-router.post("/verify-code", auth.verifyCode);
-router.post("/reset-password", auth.resetPassword);
+// Asegúrate de que estos nombres coincidan EXACTAMENTE con los 'exports' de arriba
+router.get('/validar-email', authController.validarEmail);
+router.post('/dentistas', authController.crearDentista);
+router.post('/login', authController.login);
+router.post('/force-change-password', authController.forceChangePassword);
+router.get('/medico-dashboard', authController.getMedicoDashboard);
 
 module.exports = router;

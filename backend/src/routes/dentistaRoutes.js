@@ -1,21 +1,16 @@
 const express = require('express');
 const router = express.Router();
-
-// Importamos el controlador
 const dentistaController = require('../controllers/dentistaControl');
 
-router.post('/', dentistaController.registrar); 
+// CORRECCIÓN: Quitamos la 's' para que coincida con tu carpeta física
+const { verifyToken } = require("../middleware/auth.middleware");
 
-// Listar
-router.get('/', dentistaController.listarTodos);
-
-//Editar
-router.put('/:id', dentistaController.editarDatos);
-
-// Inhabilitar/Habilitar
-router.patch('/estado/:idUsuario', dentistaController.cambiarEstado);
-
-// Eliminar cuenta
-router.delete('/:id', dentistaController.eliminar);
+// Tareas de Administrador (Tarea 2.1)
+// He añadido 'verifyToken' a las rutas para que solo el Admin con token pueda usarlas
+router.post('/', verifyToken, dentistaController.registrar); 
+router.get('/', verifyToken, dentistaController.listarTodos);
+router.put('/:id', verifyToken, dentistaController.editarDatos);
+router.patch('/estado/:idUsuario', verifyToken, dentistaController.cambiarEstado);
+router.delete('/:id', verifyToken, dentistaController.eliminar);
 
 module.exports = router;

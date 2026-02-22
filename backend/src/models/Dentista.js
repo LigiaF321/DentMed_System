@@ -20,17 +20,13 @@ const Dentista = sequelize.define(
     nombre: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      comment: "Nombres (p. ej. Juan Carlos). Mantener por compatibilidad.",
+      // Aquí guardaremos el nombre completo (Nombres + Apellidos) para que no falle
     },
-    apellidos: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      comment: "Apellidos (p. ej. Pérez García)",
-    },
-    licencia: {
+    // ELIMINAMOS 'apellidos' porque no existe en tu tabla de MySQL
+    numero_licencia: {
       type: DataTypes.STRING(100),
       allowNull: true,
-      comment: "Número de licencia profesional",
+      field: 'numero_licencia' // Nombre exacto que pusiste en el ALTER TABLE
     },
     especialidad: {
       type: DataTypes.STRING(255),
@@ -48,7 +44,7 @@ const Dentista = sequelize.define(
   {
     tableName: "dentistas",
     timestamps: true,
-    underscored: true,
+    underscored: true, // Esto hace que busque created_at y updated_at
   }
 );
 

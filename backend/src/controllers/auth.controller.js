@@ -1,165 +1,174 @@
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const { Usuario, Dentista, Auditoria } = require("../models");
+const { Op } = require("sequelize");
 
-const Usuario = require("../models/Usuario");
-const TokenRecuperacion = require("../models/TokenRecuperacion");
-const emailService = require("../services/email.service");
-
-const CODE_TTL_MIN = 15;
-const TOKEN_TTL_MIN = 15;
-
-function addMinutes(min) {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() + min);
-  return d;
-}
-
-function gen6DigitCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-function sha256Hmac(text) {
-  const secret = process.env.RESET_TOKEN_SECRET || "dev_secret";
-  return crypto.createHmac("sha256", secret).update(text).digest("hex");
-}
-
-function isStrongPassword(p) {
-  return (
-    typeof p === "string" &&
-    p.length >= 8 &&
-    /[A-Z]/.test(p) &&
-    /\d/.test(p) &&
-    /[^A-Za-z0-9]/.test(p)
-  );
-}
-
-// POST /api/auth/forgot-password  { email }
-exports.forgotPassword = async (req, res) => {
-  const email = String(req.body?.email || "").trim().toLowerCase();
-
-  // Respuesta genérica (no revelar si existe o no)
-  const generic = { message: "Si el correo existe, se enviará un código." };
-  if (!email) return res.status(200).json(generic);
-
-  try {
-    const user = await Usuario.findOne({ where: { email } });
-    if (!user) return res.status(200).json(generic);
-
-    // Opcional: invalidar tokens anteriores NO usados
-    await TokenRecuperacion.update(
-      { usado: true },
-      { where: { id_usuario: user.id, usado: false } }
-    );
-
-    const code = gen6DigitCode();
-    const codeHash = await bcrypt.hash(code, 10);
-
-    await TokenRecuperacion.create({
-      id_usuario: user.id,
-      token: codeHash, // guardamos el hash del código
-      fecha_expiracion: addMinutes(CODE_TTL_MIN),
-      usado: false,
-    });
-
-    // Enviar correo (o simular si no hay SMTP)
-    if (emailService?.sendPasswordResetCodeEmail) {
-      await emailService.sendPasswordResetCodeEmail({ to: email, code });
-    } else {
-      console.log(`[DEV] Código recuperación para ${email}: ${code}`);
+/**
+ * 3.1 Configuración de Email (Tarea 3.1)
+ */
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: "tu-correo@gmail.com", 
+        pass: "tu-password-de-aplicacion" 
     }
+});
 
-    return res.status(200).json(generic);
-  } catch (err) {
-    return res.status(200).json(generic);
-  }
+/**
+ * Funciones Auxiliares
+ */
+const isStrongPassword = (p) => (p.length >= 8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /\d/.test(p));
+
+const limpiarParaUsuario = (texto) => {
+    if (!texto) return "";
+    return texto.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Tarea 2.2
+        .replace(/\s+/g, '') 
+        .replace(/[^a-z0-9]/g, '');
 };
 
-// POST /api/auth/verify-code { email, code } -> { token }
-exports.verifyCode = async (req, res) => {
-  const email = String(req.body?.email || "").trim().toLowerCase();
-  const code = String(req.body?.code || "").trim();
-
-  if (!email || !code || code.length !== 6) {
-    return res.status(400).json({ message: "Código inválido." });
-  }
-
-  try {
-    const user = await Usuario.findOne({ where: { email } });
-    if (!user) return res.status(400).json({ message: "Código inválido o expirado." });
-
-    // Último código no usado
-    const codeRow = await TokenRecuperacion.findOne({
-      where: { id_usuario: user.id, usado: false },
-      order: [["createdAt", "DESC"]],
-    });
-
-    if (!codeRow) return res.status(400).json({ message: "Código inválido o expirado." });
-    if (new Date(codeRow.fecha_expiracion) < new Date()) {
-      return res.status(400).json({ message: "Código inválido o expirado." });
+// --- 1. VALIDAR EMAIL (Tarea 1.1) ---
+exports.validarEmail = async (req, res) => {
+    try {
+        const { email } = req.query;
+        const existe = await Usuario.findOne({ where: { email } });
+        res.json({ disponible: !existe });
+    } catch (error) {
+        res.status(500).json({ message: "Error al validar email" });
     }
-
-    // token de esta fila es bcrypt(code)
-    const ok = await bcrypt.compare(code, codeRow.token);
-    if (!ok) return res.status(400).json({ message: "Código inválido o expirado." });
-
-    // Marcar el código como usado (para que sea de un solo uso)
-    await codeRow.update({ usado: true });
-
-    // Crear token temporal (plain) y guardar hash en otra fila
-    const tokenPlain = crypto.randomBytes(32).toString("hex");
-    const tokenHash = sha256Hmac(tokenPlain);
-
-    await TokenRecuperacion.create({
-      id_usuario: user.id,
-      token: tokenHash, // aquí guardamos hash del token temporal
-      fecha_expiracion: addMinutes(TOKEN_TTL_MIN),
-      usado: false,
-    });
-
-    return res.json({ token: tokenPlain, message: "Código verificado." });
-  } catch (err) {
-    return res.status(500).json({ message: "Error del servidor." });
-  }
 };
 
-// POST /api/auth/reset-password { token, newPassword, confirmPassword }
-exports.resetPassword = async (req, res) => {
-  const token = String(req.body?.token || "").trim();
-  const newPassword = String(req.body?.newPassword || "");
-  const confirmPassword = String(req.body?.confirmPassword || "");
+// --- 2. CREAR DENTISTA (Tarea 2 completa) ---
+exports.crearDentista = async (req, res) => {
+    try {
+        const { nombres, apellidos, email, telefono, especialidad, numero_licencia, adminId } = req.body;
 
-  if (!token) return res.status(400).json({ message: "Token requerido." });
-  if (newPassword !== confirmPassword) return res.status(400).json({ message: "No coinciden." });
-  if (!isStrongPassword(newPassword)) {
-    return res.status(400).json({
-      message: "Debe tener 8+ caracteres, 1 mayúscula, 1 número y 1 especial.",
-    });
-  }
+        // Generación de usuario único (Tarea 2.2)
+        const base = `${limpiarParaUsuario(nombres.split(' ')[0])}.${limpiarParaUsuario(apellidos.split(' ')[0])}`;
+        let usuarioFinal = base;
+        let contador = 1;
+        while (await Usuario.findOne({ where: { username: usuarioFinal } })) {
+            contador++;
+            usuarioFinal = `${base}${contador}`;
+        }
 
-  try {
-    const tokenHash = sha256Hmac(token);
+        const passwordTemporal = "DentMed2026!"; 
+        const passHash = await bcrypt.hash(passwordTemporal, 10);
 
-    // Buscar fila del token temporal
-    const tokenRow = await TokenRecuperacion.findOne({
-      where: { token: tokenHash, usado: false },
-      order: [["createdAt", "DESC"]],
-    });
+        // Registro en USUARIOS (Tarea 2.3)
+        const nuevoUsuario = await Usuario.create({
+            username: usuarioFinal,
+            email: email,
+            password_hash: passHash,
+            rol: "dentista",
+            primer_acceso: true,
+            activo: true
+        });
 
-    if (!tokenRow) return res.status(400).json({ message: "Token inválido o expirado." });
-    if (new Date(tokenRow.fecha_expiracion) < new Date()) {
-      return res.status(400).json({ message: "Token inválido o expirado." });
+        // Registro en DENTISTAS (Tarea 2.3)
+        await Dentista.create({
+            id_usuario: nuevoUsuario.id,
+            nombre: nombres, // Ajustado a tu columna 'nombre'
+            apellidos: apellidos,
+            especialidad: especialidad,
+            telefono: telefono,
+            email: email,
+            numero_licencia: numero_licencia || null
+        });
+
+        // Auditoría (Tarea 2.4)
+        // Usamos 'detalles' y 'fecha_hora' como en tu imagen
+        await Auditoria.create({
+            id_usuario: adminId || 1,
+            accion: "CREAR_DENTISTA",
+            detalles: `Cuenta creada: ${usuarioFinal} (${email})`, 
+            ip: req.ip || "127.0.0.1",
+            fecha_hora: new Date() 
+        });
+
+        // Envío de Email (Tarea 3.3)
+        const mailOptions = {
+            to: email,
+            subject: 'Bienvenido a DentMed - Credenciales Temporales',
+            html: `<p>Usuario: <b>${usuarioFinal}</b></p><p>Contraseña: <b>${passwordTemporal}</b></p>`
+        };
+        transporter.sendMail(mailOptions).catch(e => console.log("Error mail"));
+
+        res.status(201).json({ message: "Éxito", usuario: usuarioFinal, passwordTemporal });
+    } catch (error) {
+        res.status(500).json({ message: "Error", error: error.message });
     }
+};
 
-    const user = await Usuario.findByPk(tokenRow.id_usuario);
-    if (!user) return res.status(400).json({ message: "No se pudo actualizar la contraseña." });
+// --- 4. LOGIN (Tarea 4.1) ---
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        // Búsqueda por email o username (Tarea 4.1)
+        const user = await Usuario.findOne({ where: { [Op.or]: [{ email }, { username: email }] } });
 
-    const passHash = await bcrypt.hash(newPassword, 10);
+        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+            return res.status(401).json({ message: "Credenciales incorrectas" });
+        }
 
-    await user.update({ password_hash: passHash });
-    await tokenRow.update({ usado: true });
+        const requiereCambio = user.primer_acceso === true || user.primer_acceso === 1;
 
-    return res.json({ message: "Contraseña actualizada correctamente." });
-  } catch (err) {
-    return res.status(500).json({ message: "Error del servidor." });
-  }
+        const token = jwt.sign(
+            { id: user.id, rol: user.rol, requiereCambio }, 
+            "SECRETO_DENTMED", 
+            { expiresIn: '8h' }
+        );
+
+        res.json({ token, requiereCambio, user: { id: user.id, rol: user.rol } });
+    } catch (error) {
+        res.status(500).json({ message: "Error en login" });
+    }
+};
+
+// --- 5. CAMBIO DE CONTRASEÑA OBLIGATORIO (Tarea 5.1) ---
+exports.forceChangePassword = async (req, res) => {
+    try {
+        const { usuarioId, nuevaPassword, confirmPassword } = req.body;
+
+        if (nuevaPassword !== confirmPassword) return res.status(400).json({ message: "No coinciden" });
+        if (!isStrongPassword(nuevaPassword)) return res.status(400).json({ message: "Contraseña débil" });
+
+        const passHash = await bcrypt.hash(nuevaPassword, 10);
+        await Usuario.update({ password_hash: passHash, primer_acceso: false }, { where: { id: usuarioId } }); 
+
+        await Auditoria.create({
+            id_usuario: usuarioId,
+            accion: "CAMBIO_PASSWORD_OBLIGATORIO",
+            detalles: "Primer cambio realizado exitosamente",
+            ip: req.ip,
+            fecha_hora: new Date()
+        });
+
+        res.json({ message: "Contraseña actualizada" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al cambiar password" });
+    }
+};
+
+// --- 6. DASHBOARD DE MÉDICO (Tarea 6.1) ---
+exports.getMedicoDashboard = async (req, res) => {
+    try {
+        const { usuarioId } = req.query;
+        const dentista = await Dentista.findOne({
+            where: { id_usuario: usuarioId }
+        });
+
+        res.json({
+            nombreCompleto: `${dentista.nombre} ${dentista.apellidos}`,
+            especialidad: dentista.especialidad,
+            email: dentista.email,
+            telefono: dentista.telefono,
+            proximasCitas: [] // Tarea 6.1
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error al cargar dashboard" });
+    }
 };
