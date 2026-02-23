@@ -154,7 +154,7 @@ exports.validarEmail = async (req, res) => {
     }
 };
 
-// Tarea 2 y 3: Crear Dentista y Envío de Email
+// Tarea 2 y 3: Crear Dentista
 exports.crearDentista = async (req, res) => {
     try {
         const { nombres, apellidos, email, telefono, especialidad, numero_licencia, adminId } = req.body;
@@ -193,15 +193,14 @@ exports.crearDentista = async (req, res) => {
             especialidad, 
             telefono, 
             email, 
-            numero_licencia: numero_licencia || null 
+            numero_licencia: numero_licencia || "S/N" // Evita el null si el admin no lo pone
         });
         
         await Auditoria.create({ 
             id_usuario: adminId || 1, 
             accion: "CREAR_DENTISTA", 
-            detalles: `Cuenta creada para: ${nombres} ${apellidos} (${email})`, 
-            ip: req.ip || "127.0.0.1",
-            fecha_hora: new Date()
+            detalles: `Cuenta creada para: ${nombres} ${apellidos}`, 
+            ip: req.ip || "127.0.0.1"
         });
         
         if (emailService?.sendWelcomeDentistEmail) {
@@ -217,96 +216,63 @@ exports.crearDentista = async (req, res) => {
             }
         }
 
-        return res.status(201).json({ 
-            message: "Éxito", 
-            usuario: usuarioFinal, 
-            passwordTemporal: passwordTemporal, 
-            dentista: { 
-                nombreCompleto: `${nombres} ${apellidos}`,
-                email: email,
-                especialidad: especialidad 
-            } 
-        });
+        return res.status(201).json({ message: "Éxito", usuario: usuarioFinal });
     } catch (error) {
         return res.status(500).json({ message: "Error", error: error.message });
     }
 };
 
-// Tarea 4.1: Login con detección de primer acceso
+// Tarea 4.1: Login
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
         const ident = String(email || "").trim();
-
         const user = await Usuario.findOne({ 
-            where: { 
-                [Op.or]: [{ email: ident }, { username: ident }] 
-            } 
+            where: { [Op.or]: [{ email: ident }, { username: ident }] } 
         });
         
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             return res.status(401).json({ message: "Credenciales incorrectas" });
         }
         
-        const requiereCambio = user.primer_acceso === true;
-        const token = jwt.sign(
-            { id: user.id, rol: user.rol, requiereCambio }, 
-            "SECRETO_DENTMED", 
-            { expiresIn: '8h' }
-        );
-        
-        return res.json({ 
-            token, 
-            requiereCambio, 
-            user: { id: user.id, rol: user.rol, username: user.username } 
-        });
+        const token = jwt.sign({ id: user.id, rol: user.rol }, "SECRETO_DENTMED", { expiresIn: '8h' });
+        return res.json({ token, requiereCambio: user.primer_acceso, user: { id: user.id, rol: user.rol } });
     } catch (error) {
         return res.status(500).json({ message: "Error en login" });
     }
 };
 
-// Tarea 5.1: Cambio de contraseña obligatorio
+// Tarea 5.1: Cambio de contraseña
 exports.forceChangePassword = async (req, res) => {
     try {
         const { usuarioId, nuevaPassword, confirmPassword } = req.body;
-
-        if (nuevaPassword !== confirmPassword) return res.status(400).json({ message: "Las contraseñas no coinciden" });
-        
-        if (!isStrongPassword(nuevaPassword)) {
-            return res.status(400).json({ message: "La clave debe tener 8+ caracteres, Mayúscula, Número y Especial." });
-        }
-        
+        if (nuevaPassword !== confirmPassword) return res.status(400).json({ message: "No coinciden" });
         const passHash = await bcrypt.hash(nuevaPassword, 10);
-        
-        await Usuario.update(
-            { password_hash: passHash, primer_acceso: false }, 
-            { where: { id: usuarioId } }
-        ); 
-
-        await Auditoria.create({ 
-            id_usuario: usuarioId, 
-            accion: "CAMBIO_PASSWORD_OBLIGATORIO", 
-            detalles: "El usuario actualizó su contraseña inicial", 
-            ip: req.ip || "127.0.0.1" 
-        });
-
-        return res.json({ message: "Contraseña actualizada correctamente", redirectTo: "/medico/dashboard" });
+        await Usuario.update({ password_hash: passHash, primer_acceso: false }, { where: { id: usuarioId } }); 
+        return res.json({ message: "Éxito" });
     } catch (error) {
-        return res.status(500).json({ message: "Error al cambiar password" });
+        return res.status(500).json({ message: "Error" });
     }
 };
 
-// Tarea 6.1: Dashboard Médico
+// Tarea 6.1: Dashboard Médico (RESUELVE EL PROBLEMA DE LOS NULLS)
 exports.getMedicoDashboard = async (req, res) => {
     try {
         const { usuarioId } = req.query;
-        const dentista = await Dentista.findOne({ where: { id_usuario: usuarioId } });
-        if (!dentista) return res.status(404).json({ message: "Información de perfil no encontrada" });
+        // Buscamos e incluimos la tabla Usuario por si el email en Dentista está nulo
+        const dentista = await Dentista.findOne({ 
+            where: { id_usuario: usuarioId },
+            include: [{ model: Usuario, attributes: ['email'] }]
+        });
+
+        if (!dentista) return res.status(404).json({ message: "Perfil no encontrado" });
         
         return res.json({ 
-            nombreCompleto: `${dentista.nombre} ${dentista.apellidos}`, 
+            // Si apellidos es null, ponemos "" para que no salga "Alejandra null"
+            nombreCompleto: `${dentista.nombre || ""} ${dentista.apellidos || ""}`.trim(), 
             especialidad: dentista.especialidad, 
-            email: dentista.email, 
+            // Si el email de dentista es null, usamos el de la cuenta de usuario
+            email: dentista.email || (dentista.Usuario ? dentista.Usuario.email : "Sin correo"), 
             telefono: dentista.telefono, 
             proximasCitas: [] 
         });
