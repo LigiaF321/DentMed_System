@@ -1,19 +1,24 @@
 // app.js - Configuración principal de Express
 const express = require("express");
-const cors = require("cors");
 const app = express();
 
-const dentistaRoutes = require("./routes/dentistaRoutes");
+// 1. IMPORTANTE: Importar las rutas que creaste
+const dentistaRoutes = require('./routes/dentistaRoutes');
 const authRoutes = require("./routes/auth.routes");
-const adminRoutes = require("./routes/adminDentists.routes");
+const adminPanelRoutes = require("./routes/adminPanel.routes");
+const horariosRoutes = require("./routes/horarios.routes");
 
-app.use(cors());
+// Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//Rutas auth
 app.use("/api/auth", authRoutes);
-app.use("/api/dentistas", dentistaRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminPanelRoutes);
+app.use("/api/admin/horarios", horariosRoutes);
+
+// 2. IMPORTANTE: Conectar la ruta con el prefijo /api/dentistas
+app.use('/api/dentistas', dentistaRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
@@ -21,7 +26,7 @@ app.get("/", (req, res) => {
         message: "API DentMed System funcionando",
         version: "1.0.0",
         // Actualicé la lista aquí también para tu control
-        endpoints: ["/api/auth", "/api/dentistas", "/api/admin/dentistas"]
+        endpoints: ["/api/pacientes", "/api/dentistas", "/api/citas"]
     });
 });
 
