@@ -79,25 +79,41 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   };
 
   const handleLogoClick = () => {
-    if (typeof onBack === "function") onBack();
+    console.log('Logo clicked, onBack:', onBack); // Para debug
+    if (onBack && typeof onBack === 'function') {
+      onBack();
+    }
   };
 
   const handleUserTypeSelect = (type) => {
+    if (userType === type) {
+      setUserType('');
+      setUsername('');
+      setPassword('');
+      setError('');
+      return;
+    }
     setUserType(type);
-    setUsername("");
-    setPassword("");
-    setError("");
+    setUsername('');
+    setPassword('');
+    setError('');
+    if (type === 'admin') setShowAdminModal(true);
+    else setShowAdminModal(false);
   };
 
   // Limpiar error cuando el usuario empieza a escribir (tu lógica)
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    if (error && error.includes("incorrect")) setError("");
+    if (error && error.includes('incorrect')) {
+      setError('');
+    }
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    if (error && error.includes("incorrect")) setError("");
+    if (error && error.includes('incorrect')) {
+      setError('');
+    }
   };
 
   useEffect(() => {
@@ -131,13 +147,49 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
-            <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-            <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
-
-            <div className="dental-icon">
-              <i className="fas fa-tooth"></i>
-              <i className="fas fa-stethoscope"></i>
-              <i className="fas fa-user-md"></i>
+            <div className={`visual-fade${userType === 'doctor' || userType === 'admin' ? ' hide' : ''}`}> 
+              <h2>Bienvenido al Sistema de Gestión DentMed</h2>
+              <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
+              <div className="dental-icon">
+                <i className="fas fa-tooth"></i>
+                <i className="fas fa-stethoscope"></i>
+                <i className="fas fa-user-md"></i>
+              </div>
+            </div>
+            <div className={`doctor-instructions-visual${userType === 'doctor' ? ' show' : ''}`}> 
+              {userType === 'doctor' && (
+                <>
+                  <h2><i className="fas fa-user-md"></i> Instrucciones para Doctores</h2>
+                  <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
+                  <p><i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123</p>
+                  <p><i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso</p>
+                  <p className="warning-text">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    Si no tiene credenciales, contacte al administrador
+                  </p>
+                </>
+              )}
+            </div>
+            <div className={`admin-instructions-visual${userType === 'admin' ? ' show' : ''}`}> 
+              {userType === 'admin' && (
+                <>
+                  <h2><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h2>
+                  <div className="credentials-box">
+                    <div className="credential-item">
+                      <span className="credential-label">Usuario:</span>
+                      <span className="credential-value">Admin</span>
+                    </div>
+                    <div className="credential-item">
+                      <span className="credential-label">Contraseña:</span>
+                      <span className="credential-value">Admin123</span>
+                    </div>
+                  </div>
+                  <p className="warning-text">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
+                  </p>
+                </>
+              )}
             </div>
 
             {/* INFORMACIÓN DINÁMICA */}
@@ -179,11 +231,15 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         {/* LADO DERECHO - FORMULARIO */}
         <div className="login-form-container">
           <div className="form-header">
-            <button className="back-button-desktop" onClick={handleLogoClick} type="button">
+            <button 
+              className="back-button-desktop" 
+              onClick={handleLogoClick}
+              type="button"
+            >
               <i className="fas fa-arrow-left"></i> Volver
             </button>
           </div>
-
+          
           <form className="login-form" onSubmit={handleSubmit}>
             <h2 className="form-title">
               <i className="fas fa-sign-in-alt"></i> Iniciar Sesión
@@ -230,17 +286,22 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 type="text"
                 id="username"
                 value={username}
-                onChange={handleUsernameChange}
-                placeholder={userType === "admin" ? "Ingrese: Admin" : "Ej: dra.garcia"}
+                onChange={handleUsernameChange} // Usa la función que limpia errores
+                placeholder={
+                  userType === 'admin' 
+                    ? 'Ingrese: Admin' 
+                    : 'Ej: dra.garcia'
+                }
                 required
                 disabled={!userType}
                 className="form-input"
               />
               <div className="input-hint">
                 <i className="fas fa-info-circle"></i>
-                {userType === "admin"
-                  ? "Credenciales maestras: Admin / Admin123"
-                  : "Use usuario asignado (ej: dra.garcia)"}
+                {userType === 'admin' 
+                  ? 'Credenciales maestras: Admin / Admin123'
+                  : 'Use usuario asignado (ej: dra.garcia)'
+                }
               </div>
             </div>
 
@@ -316,50 +377,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
             </button>
 
             {/* INSTRUCCIONES DINÁMICAS */}
-            <div className="special-instructions">
-              {userType === "admin" && (
-                <div className="admin-instructions">
-                  <h4>
-                    <i className="fas fa-key"></i> Credenciales Maestras Iniciales
-                  </h4>
-                  <div className="credentials-box">
-                    <div className="credential-item">
-                      <span className="credential-label">Usuario:</span>
-                      <span className="credential-value">Admin</span>
-                    </div>
-                    <div className="credential-item">
-                      <span className="credential-label">Contraseña:</span>
-                      <span className="credential-value">Admin123</span>
-                    </div>
-                  </div>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
-                  </p>
-                </div>
-              )}
-
-              {userType === "doctor" && (
-                <div className="doctor-instructions">
-                  <h4>
-                    <i className="fas fa-user-md"></i> Instrucciones para Doctores
-                  </h4>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Use credenciales temporales asignadas
-                  </p>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123
-                  </p>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso
-                  </p>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    Si no tiene credenciales, contacte al administrador
-                  </p>
-                </div>
-              )}
-            </div>
+            
 
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>

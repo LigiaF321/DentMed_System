@@ -1,5 +1,6 @@
 // app.js - Configuración principal de Express
 const express = require("express");
+const cors = require("cors");
 const app = express();
 
 // 1. IMPORTACIÓN DE RUTAS
@@ -7,7 +8,7 @@ const authRoutes = require("./routes/auth.routes");
 const dentistaRoutes = require("./routes/dentistaRoutes");
 const medicoRoutes = require("./routes/medico.routes"); // <--- AGREGADO
 
-// Middlewares básicos
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
