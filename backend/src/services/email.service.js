@@ -5,7 +5,6 @@ function getSMTPConfig() {
   const port = process.env.SMTP_PORT;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-
   return { host, port, user, pass };
 }
 
@@ -18,29 +17,20 @@ function createTransporter({ host, port, user, pass }) {
   });
 }
 
-async function sendDentistCredentialsEmail({ to, tempPassword, nombre }) {
+// ✅ Función DM02: Bienvenida al Dentista
+async function sendWelcomeDentistEmail({ to, nombres, usuario, password }) {
   const { host, port, user, pass } = getSMTPConfig();
-
   if (!host || !port || !user || !pass) {
-    console.warn("⚠️ SMTP no configurado. Simulando envío de correo. Credenciales:");
-    console.warn({ to, tempPassword, nombre });
+    console.warn("⚠️ SMTP no configurado. Simulando envío de bienvenida.");
     return { simulated: true };
   }
-
   const transporter = createTransporter({ host, port, user, pass });
-
-  const subject = "Credenciales de acceso - DentMed System";
-  const text = `Hola ${nombre || ""},
-
-Se ha creado tu cuenta en DentMed System.
-
-Usuario: ${to}
-Contraseña temporal: ${tempPassword}
-
-Por favor cambia tu contraseña al iniciar sesión.
-
-Saludos,
-Administración DentMed`;
+  const subject = "Bienvenido a DentMed - Tus Credenciales";
+  const text = `Hola ${nombres},
+Tu cuenta ha sido creada con éxito.
+Usuario: ${usuario}
+Contraseña temporal: ${password}
+Por seguridad, cambia tu contraseña al ingresar.`;
 
   const info = await transporter.sendMail({
     from: process.env.SMTP_FROM || user,
@@ -48,46 +38,44 @@ Administración DentMed`;
     subject,
     text,
   });
-
   return { simulated: false, messageId: info.messageId };
 }
 
-// ✅ NUEVO: enviar código de recuperación (6 dígitos)
+// ✅ Función: Recuperación (compañeros)
 async function sendPasswordResetCodeEmail({ to, code }) {
   const { host, port, user, pass } = getSMTPConfig();
-
   if (!host || !port || !user || !pass) {
-    console.warn("⚠️ SMTP no configurado. Simulando envío de correo. Recuperación:");
-    console.warn({ to, code });
+    console.warn("⚠️ SMTP no configurado. Simulando recuperación.");
     return { simulated: true };
   }
-
   const transporter = createTransporter({ host, port, user, pass });
-
   const subject = "Código de recuperación - DentMed System";
-  const text = `Hola,
-
-Recibimos una solicitud para restablecer tu contraseña en DentMed System.
-
-Tu código de verificación es: ${code}
-
-Este código expira en 15 minutos.
-Si tú no solicitaste este cambio, ignora este correo.
-
-Saludos,
-DentMed`;
-
+  const text = `Tu código de verificación es: ${code}\nExpira en 15 minutos.`;
   const info = await transporter.sendMail({
     from: process.env.SMTP_FROM || user,
     to,
     subject,
     text,
   });
+  return { simulated: false, messageId: info.messageId };
+}
 
+// Mantenemos sendDentistCredentialsEmail por si otro archivo lo usa
+async function sendDentistCredentialsEmail({ to, tempPassword, nombre }) {
+  const { host, port, user, pass } = getSMTPConfig();
+  if (!host || !port || !user || !pass) return { simulated: true };
+  const transporter = createTransporter({ host, port, user, pass });
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM || user,
+    to,
+    subject: "Credenciales de acceso",
+    text: `Hola ${nombre}, Usuario: ${to}, Clave: ${tempPassword}`,
+  });
   return { simulated: false, messageId: info.messageId };
 }
 
 module.exports = {
-  sendDentistCredentialsEmail,
+  sendWelcomeDentistEmail,
   sendPasswordResetCodeEmail,
+  sendDentistCredentialsEmail
 };

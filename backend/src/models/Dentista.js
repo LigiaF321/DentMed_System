@@ -27,7 +27,8 @@ const Dentista = sequelize.define(
       allowNull: true,
       comment: "Apellidos (p. ej. Pérez García)",
     },
-    licencia: {
+    // CORRECCIÓN: Se cambia 'licencia' por 'numero_licencia' para que coincida con el controlador
+    numero_licencia: {
       type: DataTypes.STRING(100),
       allowNull: true,
       comment: "Número de licencia profesional",
@@ -48,7 +49,7 @@ const Dentista = sequelize.define(
   {
     tableName: "dentistas",
     timestamps: true,
-    underscored: true,
+    underscored: true, // Esto hace que created_at y updated_at funcionen con guion bajo
   }
 );
 
