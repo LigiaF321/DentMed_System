@@ -54,7 +54,7 @@ export default function CreateDentistScreen() {
         </div>
       )}
 
-      {/* ✅ CONFIRMACIÓN SIMPLE (sin depender de SuccessModal) */}
+      {/*  CONFIRMACIÓN SIMPLE (sin depender de SuccessModal) */}
       {createdInfo && (
         <div className="adm-modal-backdrop" role="dialog" aria-modal="true">
           <div className="adm-modal">

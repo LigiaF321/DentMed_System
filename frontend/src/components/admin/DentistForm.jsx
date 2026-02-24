@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { checkEmailAvailability, createDentist } from "../../services/admin.service";
+import { useMemo, useState } from "react";
+import { createDentist } from "../../services/admin.service";
 import "./admin.css";
 
 const ESPECIALIDADES = [
@@ -17,8 +17,14 @@ function onlyDigits(str) {
 }
 
 function isValidEmail(email) {
-  // Simple y suficiente para frontend
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function generateTempPassword(length = 10) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+  let out = "";
+  for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
 }
 
 export default function DentistForm({ onCreated, onCancel }) {
@@ -34,14 +40,14 @@ export default function DentistForm({ onCreated, onCancel }) {
   const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Email check en tiempo real
-  const [emailStatus, setEmailStatus] = useState({
-    loading: false,
-    available: null, // true/false/null
-    message: "",
-  });
+  //  Mensaje fijo (backend no tiene endpoint de verificación)
+  const emailStatus = useMemo(() => {
+    const email = values.email.trim();
+    if (!email) return { type: "neutral", message: "" };
+    if (!isValidEmail(email)) return { type: "bad", message: "Formato de email inválido" };
+    return { type: "neutral", message: "Se validará al enviar el formulario" };
+  }, [values.email]);
 
-  // Validaciones campo a campo
   const errors = useMemo(() => {
     const e = {};
 
@@ -62,7 +68,6 @@ export default function DentistForm({ onCreated, onCancel }) {
 
     if (!values.especialidad) e.especialidad = "Especialidad es obligatoria.";
 
-    // licencia opcional (sin validación estricta)
     return e;
   }, [values]);
 
@@ -83,10 +88,8 @@ export default function DentistForm({ onCreated, onCancel }) {
     );
   }, [errors]);
 
-  const canSubmit = useMemo(() => {
-    // Para enviar, debe estar todo válido y el email debe estar disponible
-    return requiredValid && emailStatus.available === true && !submitting;
-  }, [requiredValid, emailStatus.available, submitting]);
+  //  Ahora el botón SOLO depende de validaciones locales
+  const canSubmit = useMemo(() => requiredValid && !submitting, [requiredValid, submitting]);
 
   function updateField(name, value) {
     setValues((v) => ({ ...v, [name]: value }));
@@ -106,55 +109,11 @@ export default function DentistForm({ onCreated, onCancel }) {
       licencia: "",
     });
     setTouched({});
-    setEmailStatus({ loading: false, available: null, message: "" });
   }
-
-  // ✅ Email check con debounce (evita spamear al backend)
-  useEffect(() => {
-    const email = values.email.trim();
-
-    // reset si no hay email o es inválido
-    if (!email || !isValidEmail(email)) {
-      setEmailStatus({ loading: false, available: null, message: "" });
-      return;
-    }
-
-    setEmailStatus((s) => ({ ...s, loading: true, message: "Verificando email..." }));
-
-    const timer = setTimeout(async () => {
-      try {
-        const { ok, data } = await checkEmailAvailability(email);
-
-        // Si backend no existe aún, lo tratamos como "pendiente"
-        if (!ok) {
-          setEmailStatus({
-            loading: false,
-            available: null,
-            message: "No se pudo verificar ahora (backend pendiente).",
-          });
-          return;
-        }
-
-        if (data?.available === true) {
-          setEmailStatus({ loading: false, available: true, message: "Email disponible" });
-        } else {
-          setEmailStatus({ loading: false, available: false, message: "Este email ya está registrado" });
-        }
-      } catch (err) {
-        setEmailStatus({
-          loading: false,
-          available: null,
-          message: "No se pudo verificar ahora (sin conexión).",
-        });
-      }
-    }, 450);
-
-    return () => clearTimeout(timer);
-  }, [values.email]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    // marcar todo touched
+
     setTouched({
       nombres: true,
       apellidos: true,
@@ -165,40 +124,29 @@ export default function DentistForm({ onCreated, onCancel }) {
     });
 
     if (!requiredValid) return;
-    if (emailStatus.available !== true) return;
 
     setSubmitting(true);
     try {
-      // Payload esperado por backend (ajústalo si tu backend usa otros nombres)
+      const tempPassword = generateTempPassword(10);
+
+      //  Payload adaptado a lo que backend espera
       const payload = {
-        nombres: values.nombres.trim(),
-        apellidos: values.apellidos.trim(),
-        email: values.email.trim(),
-        telefono: onlyDigits(values.telefono),
+        nombre: `${values.nombres.trim()} ${values.apellidos.trim()}`,
         especialidad: values.especialidad,
-        licencia: values.licencia.trim() ? values.licencia.trim() : null,
+        telefono: onlyDigits(values.telefono),
+        email: values.email.trim(),
+        password: tempPassword,
       };
 
-      const { ok, status, data } = await createDentist(payload);
+      const data = await createDentist(payload);
 
-      if (!ok) {
-        // si email repetido:
-        if (status === 409) {
-          setEmailStatus({ loading: false, available: false, message: "Este email ya está registrado" });
-          return;
-        }
-        alert(data?.error || "Error al crear la cuenta. Verifique el backend.");
-        return;
-      }
+      //  Devuelve también la contraseña temporal para mostrarla en modal o consola
+      onCreated?.({ ...data, credentials: { tempPassword, email: payload.email } });
 
-      // Esperamos que backend devuelva credenciales:
-      // data.credentials = { username, tempPassword }
-      // data.dentist = { nombreCompleto, email, especialidad }
-      onCreated?.(data);
-
-      // No reseteamos aquí: el modal dará opción "crear otra"
+      // opcional: reset y cerrar
+      // resetForm();
     } catch (err) {
-      alert("No se pudo conectar con el servidor.");
+      alert(err?.message || "No se pudo conectar con el servidor.");
     } finally {
       setSubmitting(false);
     }
@@ -241,22 +189,18 @@ export default function DentistForm({ onCreated, onCancel }) {
             onBlur={() => markTouched("email")}
           />
 
-          {/* Estado email */}
-          {values.email.trim() && isValidEmail(values.email.trim()) && (
-            <div
-              className={`adm-inline ${emailStatus.available === true ? "ok" : emailStatus.available === false ? "bad" : "neutral"}`}
-            >
-              {emailStatus.loading ? (
-                <>
-                  <i className="fa-solid fa-spinner fa-spin" /> {emailStatus.message || "Verificando..."}
-                </>
-              ) : (
-                <>
-                  <i className={`fa-solid ${emailStatus.available === true ? "fa-circle-check" : emailStatus.available === false ? "fa-circle-xmark" : "fa-circle-info"}`} />
-                  {" "}
-                  {emailStatus.message}
-                </>
-              )}
+          {values.email.trim() && (
+            <div className={`adm-inline ${emailStatus.type}`}>
+              <i
+                className={`fa-solid ${
+                  emailStatus.type === "bad"
+                    ? "fa-circle-xmark"
+                    : emailStatus.type === "ok"
+                    ? "fa-circle-check"
+                    : "fa-circle-info"
+                }`}
+              />{" "}
+              {emailStatus.message}
             </div>
           )}
 
@@ -288,10 +232,14 @@ export default function DentistForm({ onCreated, onCancel }) {
           >
             <option value="">Seleccione una opción</option>
             {ESPECIALIDADES.map((esp) => (
-              <option key={esp} value={esp}>{esp}</option>
+              <option key={esp} value={esp}>
+                {esp}
+              </option>
             ))}
           </select>
-          {touched.especialidad && errors.especialidad && <div className="adm-error">{errors.especialidad}</div>}
+          {touched.especialidad && errors.especialidad && (
+            <div className="adm-error">{errors.especialidad}</div>
+          )}
         </div>
 
         <div className="adm-field">
@@ -305,7 +253,14 @@ export default function DentistForm({ onCreated, onCancel }) {
       </div>
 
       <div className="adm-actions">
-        <button type="button" className="adm-btn secondary" onClick={() => { resetForm(); onCancel?.(); }}>
+        <button
+          type="button"
+          className="adm-btn secondary"
+          onClick={() => {
+            resetForm();
+            onCancel?.();
+          }}
+        >
           Cancelar
         </button>
 
@@ -320,9 +275,8 @@ export default function DentistForm({ onCreated, onCancel }) {
         </button>
       </div>
 
-      {/* Nota pequeña */}
       <div className="adm-note">
-        <i className="fa-solid fa-shield-halved" /> El botón se habilita cuando todos los campos obligatorios son válidos y el email está disponible.
+        <i className="fa-solid fa-shield-halved" /> Se validan campos en frontend; el servidor valida al enviar.
       </div>
     </form>
   );

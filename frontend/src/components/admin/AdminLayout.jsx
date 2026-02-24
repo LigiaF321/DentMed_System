@@ -9,7 +9,7 @@ export default function AdminLayout({ userData, onLogout }) {
 
   // Validación básica para evitar errores si userData es null
   if (!userData) {
-    return <div>Error: No se encontraron datos de usuario.</div>;
+    return <div>Error: No se encontraron datos de usuario.</div>;s
   }
 
   return (
