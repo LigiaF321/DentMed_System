@@ -1,74 +1,106 @@
 import React, { useState } from "react";
-
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
+import ResetPasswordScreen from "./components/ResetPasswordScreen"; 
 import ForceChangeCredentials from "./components/ForceChangeCredentials";
-
 import "./App.css";
 
 function App() {
   const [screen, setScreen] = useState("welcome");
   const [currentUser, setCurrentUser] = useState(null);
 
+  // token temporal para reset
+  const [resetToken, setResetToken] = useState(null);
+  const [resetEmail, setResetEmail] = useState(null);
+
+  const goTo = (next) => setScreen(next);
+
   const handleLoginSuccess = (userData) => {
+    if (!userData) {
+      setCurrentUser(null);
+      goTo("login");
+      return;
+    }
+
     setCurrentUser(userData);
 
-    // Siempre pasa por cambio de contraseña en primer login
-    if (userData?.requiresPasswordChange) {
-      setScreen("forceChange");
-    } else {
-      setScreen("dashboard");
-    }
-  };
+    const mustChange =
+      userData.mustChangePassword === true ||
+      userData.forcePasswordChange === true ||
+      userData.firstLogin === true ||
+      userData.requiresPasswordChange === true; 
 
-  const handlePasswordChangeComplete = () => {
-    setScreen("dashboard");
+    if (mustChange) goTo("forceChange");
+    else goTo("dashboard");
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    setScreen("welcome");
+    goTo("welcome");
+  };
+
+  // Forgot verifica el código
+  const handleVerifiedCode = ({ token, email }) => {
+    setResetToken(token);
+    setResetEmail(email);
+    goTo("resetPassword");
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentUser(null);
+    goTo("login");
+  };
+
+  const handleResetDone = () => {
+    setResetToken(null);
+    setResetEmail(null);
+    goTo("login");
   };
 
   return (
     <div className="App">
-      {screen === "welcome" && (
-        <WelcomeScreen onEnter={() => setScreen("login")} />
-      )}
+      {screen === "welcome" && <WelcomeScreen onEnter={() => goTo("login")} />}
 
       {screen === "login" && (
         <LoginScreen
-          onBack={() => setScreen("welcome")}
+          onBack={() => goTo("welcome")}
           onLoginSuccess={handleLoginSuccess}
-          onForgotPassword={() => setScreen("forgot")}
+          onForgotPassword={() => goTo("forgot")}
         />
       )}
 
-      {screen === "forceChange" && currentUser && (
+      {/* Pantalla 1-2: Email + Código */}
+      {screen === "forgot" && (
+        <ForgotPasswordScreen
+          onBack={() => goTo("login")}
+          onVerified={handleVerifiedCode}
+        />
+      )}
+
+      {/* Pantalla 3: Nueva contraseña */}
+      {screen === "resetPassword" && (
+        <ResetPasswordScreen
+          token={resetToken}
+          email={resetEmail}
+          onBack={() => goTo("login")}
+          onSuccess={handleResetDone}
+        />
+      )}
+
+      {screen === "forceChange" && (
         <ForceChangeCredentials
           userData={currentUser}
-          onSuccess={handlePasswordChangeComplete}
-          onBack={() => {
-            setCurrentUser(null);
-            setScreen("login");
-          }}
+          onSuccess={() => goTo("dashboard")}
+          onBack={handleBackToLogin}
         />
       )}
 
-      {screen === "forgot" && (
-        <ForgotPasswordScreen onBack={() => setScreen("login")} />
-      )}
-
-      {screen === "dashboard" && currentUser && (
-        <DashboardScreen
-          userData={currentUser}
-          onLogout={handleLogout}
-        />
+      {screen === "dashboard" && (
+        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
       )}
     </div>
   );
 }
-
 export default App;

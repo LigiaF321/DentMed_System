@@ -3,9 +3,21 @@
  * Uso: npm run db:seed
  * Ejecutar después de: npm run db:sync
  */
-require("dotenv").config({ path: require("path").resolve(process.cwd(), ".env") });
+require("dotenv").config({
+  path: require("path").resolve(process.cwd(), ".env"),
+});
+
 const bcrypt = require("bcryptjs");
-const { sequelize, Usuario, Dentista, Configuracion, HorarioClinica, Paciente, Consultorio, Material } = require("../models");
+const {
+  sequelize,
+  Usuario,
+  Dentista,
+  Configuracion,
+  HorarioClinica,
+  Paciente,
+  Consultorio,
+  Material,
+} = require("../models");
 
 async function seed() {
   try {
@@ -60,22 +72,52 @@ async function seed() {
     });
 
     const configKeys = [
-      { clave: "stock_minimo_alerta", valor: "5", descripcion: "Umbral para alerta de inventario bajo" },
-      { clave: "recordatorio_citas_horas", valor: "24", descripcion: "Horas antes para recordatorio de cita" },
+      {
+        clave: "stock_minimo_global",
+        valor: "5",
+        descripcion: "Stock mínimo global: umbral para alerta de inventario bajo",
+      },
+      {
+        clave: "recordatorio_citas_dias",
+        valor: "2",
+        descripcion: "Días de recordatorio de citas: días antes de la cita",
+      },
+      {
+        clave: "limite_intentos_login",
+        valor: "3",
+        descripcion:
+          "Límite de intentos fallidos de login: después de X se bloquea temporalmente",
+      },
     ];
+
     for (const c of configKeys) {
-      await Configuracion.findOrCreate({ where: { clave: c.clave }, defaults: c });
+      await Configuracion.findOrCreate({
+        where: { clave: c.clave },
+        defaults: c,
+      });
     }
 
-    const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-    for (const dia of dias) {
+    const weeklyDefaults = [
+      { dia: "Lunes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Martes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Miércoles", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Jueves", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Viernes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Sábado", inicio: "08:00:00", fin: "12:00:00", activo: true },
+      { dia: "Domingo", inicio: "08:00:00", fin: "12:00:00", activo: false },
+    ];
+
+    for (const d of weeklyDefaults) {
       await HorarioClinica.findOrCreate({
-        where: { dia_semana: dia },
+        where: { tipo: "SEMANAL", dia_semana: d.dia },
         defaults: {
-          dia_semana: dia,
-          hora_inicio: "08:00:00",
-          hora_fin: "12:00:00",
-          activo: true,
+          tipo: "SEMANAL",
+          dia_semana: d.dia,
+          fecha: null,
+          hora_inicio: d.inicio,
+          hora_fin: d.fin,
+          activo: d.activo,
+          descripcion: d.activo ? "Horario regular" : "Cerrado",
         },
       });
     }
@@ -115,7 +157,7 @@ async function seed() {
     console.log("✅ Seed completado. Usuario admin: admin@dentmed.com / admin123");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Error en seed:", err.message);
+    console.error("❌ Error en seed:", err);
     process.exit(1);
   }
 }

@@ -1,93 +1,228 @@
-.dm-sidebar {
-  width: 260px;
-  min-width: 260px;
-  background: rgba(255, 255, 255, 0.95);
-  border-right: 1px solid var(--dm-border, rgba(79, 70, 229, 0.18));
-  box-shadow: 4px 0 24px rgba(9, 2, 32, 0.06);
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
+:root{
+  --sb-bg:#171b22;
+  --sb-bg2:#141821;
+  --sb-card:rgba(255,255,255,.06);
+  --sb-border:rgba(255,255,255,.08);
+  --sb-border2:rgba(255,255,255,.10);
+  --sb-text:#f2f4f7;
+  --sb-muted:rgba(242,244,247,.65);
+  --sb-accent:#18b27a;
+  --sb-shadow:0 18px 40px rgba(0,0,0,.28);
 }
 
-.dm-sidebar-header {
+.dm2-side{
+  width: 280px;
+  min-width: 280px;
+  height: calc(100vh - 36px);
+  position: sticky;
+  top: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(23,27,34,.96) 0%, rgba(18,22,30,.96) 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: var(--sb-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dm2-side-top{
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm2-logoBox{
+  width: 100%;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 22px rgba(0,0,0,.18) inset;
+}
+
+.dm2-logoImg{
+  max-height: 44px;
+  max-width: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.20));
+}
+
+.dm2-side-sectionTitle{
+  margin-top: 6px;
+  font-size: 12px;
   font-weight: 800;
-  font-size: 14px;
-  color: #1a2366;
-  padding: 0 20px 16px;
-  border-bottom: 1px solid rgba(11, 16, 32, 0.08);
-  display: flex;
-  align-items: center;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: rgba(242,244,247,.55);
+  padding: 0 2px;
 }
 
-.dm-sidebar-nav {
+.dm2-side-nav{
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px 12px 0;
+  gap: 10px;
+  margin-top: 2px;
 }
 
-.dm-sidebar-item {
+.dm2-side-item{
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  color: var(--sb-text);
+  border-radius: 18px;
+  padding: 12px 12px;
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: rgba(11, 16, 32, 0.75);
-  font-weight: 700;
-  font-size: 14px;
-  text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  text-align: left;
 }
 
-.dm-sidebar-item:hover {
-  background: rgba(79, 70, 229, 0.08);
-  color: #1a2366;
+.dm2-side-item:hover{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
 }
 
-.dm-sidebar-item-active {
-  background: linear-gradient(90deg, rgba(79, 70, 229, 0.14), rgba(212, 38, 116, 0.1));
-  color: #1a2366;
-  border: 1px solid rgba(79, 70, 229, 0.2);
+.dm2-side-item:active{
+  transform: translateY(1px);
 }
 
-.dm-sidebar-icon {
-  width: 20px;
-  text-align: center;
+.dm2-side-item.is-active{
+  background: rgba(24,178,122,.12);
+  border-color: rgba(24,178,122,.32);
+  box-shadow: 0 0 0 3px rgba(24,178,122,.10);
+}
+
+.dm2-side-ico{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.dm2-side-item.is-active .dm2-side-ico{
+  background: rgba(24,178,122,.14);
+  border-color: rgba(24,178,122,.30);
+}
+
+.dm2-side-ico i{
   font-size: 16px;
-  opacity: 0.9;
+  color: rgba(242,244,247,.9);
 }
 
-@media (max-width: 991px) {
-  .dm-sidebar {
-    width: 100%;
-    min-width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 12px;
-    gap: 8px;
-    border-right: none;
-    border-bottom: 1px solid var(--dm-border, rgba(79, 70, 229, 0.18));
-  }
+.dm2-side-item.is-active .dm2-side-ico i{
+  color: rgba(24,178,122,1);
+}
 
-  .dm-sidebar-header {
-    width: 100%;
-    padding: 0 0 12px;
-  }
+.dm2-side-label{
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: .1px;
+}
 
-  .dm-sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0;
-    gap: 8px;
-  }
+.dm2-side-bottom{
+  margin-top: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,.00) 0%, rgba(0,0,0,.10) 100%);
+}
 
-  .dm-sidebar-item {
-    flex: 1;
-    min-width: 140px;
-    justify-content: center;
+.dm2-side-logout{
+  width: 100%;
+  border-radius: 18px;
+  padding: 12px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(242,244,247,.95);
+  font-weight: 850;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .08s ease;
+}
+
+.dm2-side-logout:hover{
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.13);
+}
+
+.dm2-side-logout:active{
+  transform: translateY(1px);
+}
+
+.dm2-side-logout i{
+  font-size: 16px;
+}
+
+.dm2-side-user{
+  width: 100%;
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.dm2-side-avatar{
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: rgba(242,244,247,.95);
+  background: rgba(24,178,122,.14);
+  border: 1px solid rgba(24,178,122,.30);
+  flex: 0 0 auto;
+}
+
+.dm2-side-usertext{
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dm2-side-username{
+  font-weight: 900;
+  color: rgba(242,244,247,.95);
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dm2-side-role{
+  margin-top: 1px;
+  font-weight: 750;
+  color: rgba(242,244,247,.60);
+  font-size: 12px;
+}
+
+@media (max-width: 1100px){
+  .dm2-side{
+    width: 250px;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 900px){
+  .dm2-side{
+    position: relative;
+    top: auto;
+    height: auto;
   }
 }
