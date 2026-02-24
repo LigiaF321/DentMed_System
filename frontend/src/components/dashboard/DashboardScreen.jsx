@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import GestionarCuentasScreen from "./GestionarCuentasScreen";
-import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
+import CreateDentistScreen from "./CreateDentistScreen"; 
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import "./dashboard.css";
@@ -269,7 +269,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 <i className="fa-solid fa-plus" /> NUEVA CITA
               </button>
 
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nuevo-dentista")}>
+              {/* CAMBIO: esto debe abrir Crear Cuenta */}
+              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("crear-cuenta")}>
                 <i className="fa-solid fa-user-doctor" /> NUEVO DENTISTA
               </button>
 
@@ -363,7 +364,10 @@ export default function DashboardScreen({ userData, onLogout }) {
 
   const renderMainContent = () => {
     if (isAdmin && adminView === "gestionar-cuentas") return <GestionarCuentasScreen />;
-    if (isAdmin && adminView === "crear-cuenta") return <CrearCuentaPlaceholder />;
+
+    // ✅ CAMBIO CLAVE: aquí estaba el placeholder
+    if (isAdmin && adminView === "crear-cuenta") return <CreateDentistScreen />;
+
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
 
     if (isAdmin && adminView !== "dashboard") {
