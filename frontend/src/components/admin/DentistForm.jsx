@@ -13,11 +13,11 @@ const ESPECIALIDADES = [
 ];
 
 function onlyDigits(str) {
-  return str.replace(/\D/g, "");
+  return String(str || "").replace(/\D/g, "");
 }
 
 function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
 }
 
 function generateTempPassword(length = 10) {
@@ -34,18 +34,18 @@ export default function DentistForm({ onCreated, onCancel }) {
     email: "",
     telefono: "",
     especialidad: "",
-    licencia: "",
+    numero_licencia: "", // ✅ coincide con el nombre que te pidió tu compañera
   });
 
   const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  //  Mensaje fijo (backend no tiene endpoint de verificación)
-  const emailStatus = useMemo(() => {
+  // ✅ Ya NO ponemos “sin conexión”, solo un hint neutral
+  const emailHint = useMemo(() => {
     const email = values.email.trim();
     if (!email) return { type: "neutral", message: "" };
     if (!isValidEmail(email)) return { type: "bad", message: "Formato de email inválido" };
-    return { type: "neutral", message: "Se validará al enviar el formulario" };
+    return { type: "neutral", message: "Se validará al enviar" };
   }, [values.email]);
 
   const errors = useMemo(() => {
@@ -68,6 +68,7 @@ export default function DentistForm({ onCreated, onCancel }) {
 
     if (!values.especialidad) e.especialidad = "Especialidad es obligatoria.";
 
+    // numero_licencia opcional
     return e;
   }, [values]);
 
@@ -88,7 +89,7 @@ export default function DentistForm({ onCreated, onCancel }) {
     );
   }, [errors]);
 
-  //  Ahora el botón SOLO depende de validaciones locales
+  // ✅ CLAVE: el botón ya NO depende de ninguna verificación externa
   const canSubmit = useMemo(() => requiredValid && !submitting, [requiredValid, submitting]);
 
   function updateField(name, value) {
@@ -106,7 +107,7 @@ export default function DentistForm({ onCreated, onCancel }) {
       email: "",
       telefono: "",
       especialidad: "",
-      licencia: "",
+      numero_licencia: "",
     });
     setTouched({});
   }
@@ -120,7 +121,7 @@ export default function DentistForm({ onCreated, onCancel }) {
       email: true,
       telefono: true,
       especialidad: true,
-      licencia: true,
+      numero_licencia: true,
     });
 
     if (!requiredValid) return;
@@ -129,24 +130,35 @@ export default function DentistForm({ onCreated, onCancel }) {
     try {
       const tempPassword = generateTempPassword(10);
 
-      //  Payload adaptado a lo que backend espera
+      // ✅ IMPORTANTE:
+      // Tu compañera dijo que el JSON debe llevar:
+      // nombres, apellidos, email, especialidad, teléfono, número_licencia
+      // OJO: "teléfono" con tilde NO es recomendable en JSON; normalmente backend usa "telefono".
+      // Por ahora mando "telefono" y "numero_licencia" (lo más estándar).
       const payload = {
-        nombre: `${values.nombres.trim()} ${values.apellidos.trim()}`,
+        nombres: values.nombres.trim(),
+        apellidos: values.apellidos.trim(),
+        email: values.email.trim(),
         especialidad: values.especialidad,
         telefono: onlyDigits(values.telefono),
-        email: values.email.trim(),
+        numero_licencia: values.numero_licencia.trim() ? values.numero_licencia.trim() : null,
+
+        // Si el backend también necesita password temporal:
         password: tempPassword,
       };
 
       const data = await createDentist(payload);
 
-      //  Devuelve también la contraseña temporal para mostrarla en modal o consola
-      onCreated?.({ ...data, credentials: { tempPassword, email: payload.email } });
+      // ✅ devolvemos también credenciales generadas para modal/Success
+      onCreated?.({
+        ...data,
+        credentials: { tempPassword, email: payload.email },
+      });
 
-      // opcional: reset y cerrar
+      // opcional: resetear después de crear
       // resetForm();
     } catch (err) {
-      alert(err?.message || "No se pudo conectar con el servidor.");
+      alert(err?.message || "No se pudo crear la cuenta. Verifica el backend.");
     } finally {
       setSubmitting(false);
     }
@@ -190,17 +202,17 @@ export default function DentistForm({ onCreated, onCancel }) {
           />
 
           {values.email.trim() && (
-            <div className={`adm-inline ${emailStatus.type}`}>
+            <div className={`adm-inline ${emailHint.type}`}>
               <i
                 className={`fa-solid ${
-                  emailStatus.type === "bad"
+                  emailHint.type === "bad"
                     ? "fa-circle-xmark"
-                    : emailStatus.type === "ok"
+                    : emailHint.type === "ok"
                     ? "fa-circle-check"
                     : "fa-circle-info"
                 }`}
               />{" "}
-              {emailStatus.message}
+              {emailHint.message}
             </div>
           )}
 
@@ -245,9 +257,10 @@ export default function DentistForm({ onCreated, onCancel }) {
         <div className="adm-field">
           <label>Número de licencia (opcional)</label>
           <input
-            value={values.licencia}
+            value={values.numero_licencia}
             placeholder="Ej: LIC-12345"
-            onChange={(e) => updateField("licencia", e.target.value)}
+            onChange={(e) => updateField("numero_licencia", e.target.value)}
+            onBlur={() => markTouched("numero_licencia")}
           />
         </div>
       </div>
@@ -260,6 +273,7 @@ export default function DentistForm({ onCreated, onCancel }) {
             resetForm();
             onCancel?.();
           }}
+          disabled={submitting}
         >
           Cancelar
         </button>
@@ -276,7 +290,7 @@ export default function DentistForm({ onCreated, onCancel }) {
       </div>
 
       <div className="adm-note">
-        <i className="fa-solid fa-shield-halved" /> Se validan campos en frontend; el servidor valida al enviar.
+        <i className="fa-solid fa-shield-halved" /> El botón se habilita cuando los campos obligatorios son válidos.
       </div>
     </form>
   );

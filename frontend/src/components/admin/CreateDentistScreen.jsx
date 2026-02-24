@@ -91,8 +91,6 @@ export default function CreateDentistScreen() {
                 <i className="fa-solid fa-triangle-exclamation" />
                 <div>
                   El dentista debe cambiar esta contraseña en su primer inicio de sesión.
-                  <br />
-                  (Si el correo no llega, esto NO es fallo del frontend.)
                 </div>
               </div>
             </div>
