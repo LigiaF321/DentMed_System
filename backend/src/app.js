@@ -7,6 +7,8 @@ const dentistaRoutes = require('./routes/dentistaRoutes');
 const authRoutes = require("./routes/auth.routes");
 const adminPanelRoutes = require("./routes/adminPanel.routes");
 const horariosRoutes = require("./routes/horarios.routes");
+const parametrosRoutes = require("./routes/parametros.routes");
+
 
 // Middlewares básicos
 app.use(express.json());
@@ -16,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminPanelRoutes);
 app.use("/api/admin/horarios", horariosRoutes);
+app.use("/api/admin/parametros", parametrosRoutes);
 
 // 2. IMPORTANTE: Conectar la ruta con el prefijo /api/dentistas
 app.use('/api/dentistas', dentistaRoutes);
