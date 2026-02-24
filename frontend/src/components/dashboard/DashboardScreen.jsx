@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import GestionarCuentasScreen from "./GestionarCuentasScreen";
-import CreateDentistScreen from "./CreateDentistScreen"; 
+import CreateDentistScreen from "../admin/CreateDentistScreen";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import "./dashboard.css";
@@ -269,7 +269,7 @@ export default function DashboardScreen({ userData, onLogout }) {
                 <i className="fa-solid fa-plus" /> NUEVA CITA
               </button>
 
-              {/* CAMBIO: esto debe abrir Crear Cuenta */}
+              {/* ✅ CAMBIO: esto debe abrir Crear Cuenta */}
               <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("crear-cuenta")}>
                 <i className="fa-solid fa-user-doctor" /> NUEVO DENTISTA
               </button>
