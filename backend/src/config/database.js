@@ -15,6 +15,7 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
   dialect: "mysql",
+  timezone: "-06:00",
   logging: process.env.NODE_ENV === "development" ? console.log : false,
   define: {
     timestamps: true,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./LoginScreen.css";
 
-const LoginScreen = ({ onBack, onLoginSuccess }) => {
+const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [userType, setUserType] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -35,14 +35,12 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
           return;
         }
 
-        //  Login exitoso para admin -> ENTRA DIRECTO AL DASHBOARD ADMIN (SIDEBAR)
-        if (onLoginSuccess) {
-          onLoginSuccess({
-            role: "admin",
-            requiresPasswordChange: false,
-            username: username,
-          });
-        }
+        // Login exitoso para admin
+        onLoginSuccess?.({
+          role: "admin",
+          requiresPasswordChange: true,
+          username: username,
+        });
         return;
       }
 
@@ -53,8 +51,7 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
           return;
         }
 
-        const storedPassword =
-          TEMPORARY_DOCTOR_CREDENTIALS[username.toLowerCase()];
+        const storedPassword = TEMPORARY_DOCTOR_CREDENTIALS[username.toLowerCase()];
 
         if (!storedPassword) {
           setError("Usuario no encontrado. Contacte al administrador.");
@@ -62,20 +59,16 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
         }
 
         if (password !== storedPassword) {
-          setError(
-            "Contraseña incorrecta. Contacte al administrador si la olvidó."
-          );
+          setError("Contraseña incorrecta. Contacte al administrador si la olvidó.");
           return;
         }
 
-        // ✅ Login exitoso para doctor -> OBLIGATORIO CAMBIAR CONTRASEÑA
-        if (onLoginSuccess) {
-          onLoginSuccess({
-            role: "doctor",
-            requiresPasswordChange: true,
-            username: username,
-          });
-        }
+        // Login exitoso para doctor
+        onLoginSuccess?.({
+          role: "doctor",
+          requiresPasswordChange: true,
+          username: username,
+        });
         return;
       }
     } catch (err) {
@@ -86,26 +79,41 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
   };
 
   const handleLogoClick = () => {
-    if (onBack && typeof onBack === "function") {
+    console.log('Logo clicked, onBack:', onBack); // Para debug
+    if (onBack && typeof onBack === 'function') {
       onBack();
     }
   };
 
   const handleUserTypeSelect = (type) => {
+    if (userType === type) {
+      setUserType('');
+      setUsername('');
+      setPassword('');
+      setError('');
+      return;
+    }
     setUserType(type);
-    setUsername("");
-    setPassword("");
-    setError("");
+    setUsername('');
+    setPassword('');
+    setError('');
+    if (type === 'admin') setShowAdminModal(true);
+    else setShowAdminModal(false);
   };
 
+  // Limpiar error cuando el usuario empieza a escribir (tu lógica)
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    if (error && error.includes("incorrect")) setError("");
+    if (error && error.includes('incorrect')) {
+      setError('');
+    }
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    if (error && error.includes("incorrect")) setError("");
+    if (error && error.includes('incorrect')) {
+      setError('');
+    }
   };
 
   useEffect(() => {
@@ -139,15 +147,49 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
         {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
-            <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-            <p className="visual-subtitle">
-              Acceso exclusivo para personal autorizado
-            </p>
-
-            <div className="dental-icon">
-              <i className="fas fa-tooth"></i>
-              <i className="fas fa-stethoscope"></i>
-              <i className="fas fa-user-md"></i>
+            <div className={`visual-fade${userType === 'doctor' || userType === 'admin' ? ' hide' : ''}`}> 
+              <h2>Bienvenido al Sistema de Gestión DentMed</h2>
+              <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
+              <div className="dental-icon">
+                <i className="fas fa-tooth"></i>
+                <i className="fas fa-stethoscope"></i>
+                <i className="fas fa-user-md"></i>
+              </div>
+            </div>
+            <div className={`doctor-instructions-visual${userType === 'doctor' ? ' show' : ''}`}> 
+              {userType === 'doctor' && (
+                <>
+                  <h2><i className="fas fa-user-md"></i> Instrucciones para Doctores</h2>
+                  <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
+                  <p><i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123</p>
+                  <p><i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso</p>
+                  <p className="warning-text">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    Si no tiene credenciales, contacte al administrador
+                  </p>
+                </>
+              )}
+            </div>
+            <div className={`admin-instructions-visual${userType === 'admin' ? ' show' : ''}`}> 
+              {userType === 'admin' && (
+                <>
+                  <h2><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h2>
+                  <div className="credentials-box">
+                    <div className="credential-item">
+                      <span className="credential-label">Usuario:</span>
+                      <span className="credential-value">Admin</span>
+                    </div>
+                    <div className="credential-item">
+                      <span className="credential-label">Contraseña:</span>
+                      <span className="credential-value">Admin123</span>
+                    </div>
+                  </div>
+                  <p className="warning-text">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
+                  </p>
+                </>
+              )}
             </div>
 
             {/* INFORMACIÓN DINÁMICA */}
@@ -189,15 +231,15 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
         {/* LADO DERECHO - FORMULARIO */}
         <div className="login-form-container">
           <div className="form-header">
-            <button
-              className="back-button-desktop"
+            <button 
+              className="back-button-desktop" 
               onClick={handleLogoClick}
               type="button"
             >
               <i className="fas fa-arrow-left"></i> Volver
             </button>
           </div>
-
+          
           <form className="login-form" onSubmit={handleSubmit}>
             <h2 className="form-title">
               <i className="fas fa-sign-in-alt"></i> Iniciar Sesión
@@ -217,9 +259,7 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
               <div className="user-type-options">
                 <button
                   type="button"
-                  className={`user-type-btn ${
-                    userType === "admin" ? "selected" : ""
-                  }`}
+                  className={`user-type-btn ${userType === "admin" ? "selected" : ""}`}
                   onClick={() => handleUserTypeSelect("admin")}
                 >
                   <i className="fas fa-user-shield"></i>
@@ -228,9 +268,7 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
 
                 <button
                   type="button"
-                  className={`user-type-btn ${
-                    userType === "doctor" ? "selected" : ""
-                  }`}
+                  className={`user-type-btn ${userType === "doctor" ? "selected" : ""}`}
                   onClick={() => handleUserTypeSelect("doctor")}
                 >
                   <i className="fas fa-user-md"></i>
@@ -248,17 +286,22 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
                 type="text"
                 id="username"
                 value={username}
-                onChange={handleUsernameChange}
-                placeholder={userType === "admin" ? "Ingrese: Admin" : "Ej: dra.garcia"}
+                onChange={handleUsernameChange} // Usa la función que limpia errores
+                placeholder={
+                  userType === 'admin' 
+                    ? 'Ingrese: Admin' 
+                    : 'Ej: dra.garcia'
+                }
                 required
                 disabled={!userType}
                 className="form-input"
               />
               <div className="input-hint">
                 <i className="fas fa-info-circle"></i>
-                {userType === "admin"
-                  ? "Credenciales maestras: Admin / Admin123"
-                  : "Use usuario asignado (ej: dra.garcia)"}
+                {userType === 'admin' 
+                  ? 'Credenciales maestras: Admin / Admin123'
+                  : 'Use usuario asignado (ej: dra.garcia)'
+                }
               </div>
             </div>
 
@@ -273,9 +316,7 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder={
-                  userType === "admin"
-                    ? "Ingrese: Admin123"
-                    : "Contraseña temporal asignada"
+                  userType === "admin" ? "Ingrese: Admin123" : "Contraseña temporal asignada"
                 }
                 required
                 disabled={!userType}
@@ -304,7 +345,16 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
                   Recordar mi sesión
                 </label>
               </div>
-              <a href="#forgot" className="forgot-password">
+
+              {/* ✅ CAMBIADO: ahora abre la pantalla forgot */}
+              <a
+                href="#"
+                className="forgot-password"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onForgotPassword?.();
+                }}
+              >
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
@@ -325,6 +375,9 @@ const LoginScreen = ({ onBack, onLoginSuccess }) => {
                 </>
               )}
             </button>
+
+            {/* INSTRUCCIONES DINÁMICAS */}
+            
 
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./GestionarCuentasScreen.css";
 
-const API_BASE = "http://localhost:3000/api/admin/dentistas";
+const API_BASE = "/api/admin/dentistas";
 
 export default function GestionarCuentasScreen() {
   const [dentistas, setDentistas] = useState([]);
@@ -27,7 +27,16 @@ export default function GestionarCuentasScreen() {
       ...(f.estado && { estado: f.estado }),
     });
     fetch(`${API_BASE}?${params}`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          const text = await res.text();
+          throw new Error(`El servidor devolvió ${res.status}. Verifica que el backend esté corriendo (puerto 3000).`);
+        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+        return data;
+      })
       .then((data) => {
         setDentistas(data.data || []);
         setPaginacion(data.paginacion || { total: 0, pagina: 1, por_pagina: 10, total_paginas: 0 });
