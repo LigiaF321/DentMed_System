@@ -8,6 +8,7 @@ const MENU_ITEMS = [
   { id: "gestionar-cuentas", label: "Gestionar cuentas", icon: "fa-users" },
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
+  { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
 ];
 
 export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {

@@ -5,6 +5,7 @@ import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
+import MonitoringScreen from "./MonitoringScreen";
 import "./dashboard.css";
 
 function Dot({ variant = "info" }) {
@@ -367,6 +368,7 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "crear-cuenta") return <CrearCuentaPlaceholder />;
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
+    if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
