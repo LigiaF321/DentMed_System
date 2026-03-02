@@ -4,6 +4,8 @@ import GestionarCuentasScreen from "./GestionarCuentasScreen";
 import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
+import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
+import MonitoringScreen from "./MonitoringScreen";
 import "./dashboard.css";
 
 function Dot({ variant = "info" }) {
@@ -89,7 +91,7 @@ function notifLevel(tipo) {
 }
 
 export default function DashboardScreen({ userData, onLogout }) {
-  const isAdmin = userData?.role === "admin";
+  const isAdmin = (userData?.role || userData?.rol) === "admin";
   const [adminView, setAdminView] = useState("dashboard");
 
   const [loading, setLoading] = useState(true);
@@ -365,6 +367,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "gestionar-cuentas") return <GestionarCuentasScreen />;
     if (isAdmin && adminView === "crear-cuenta") return <CrearCuentaPlaceholder />;
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
+    if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
+    if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (

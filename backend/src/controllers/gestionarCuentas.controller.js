@@ -117,8 +117,6 @@ async function actualizarDentista(req, res, next) {
   try {
     const { id } = req.params;
     const { nombres, apellidos, nombre, email, telefono, especialidad, licencia } = req.body;
-    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
-    const ip = getClientIp(req);
 
     const dentista = await Dentista.findByPk(id, {
       include: [{ model: Usuario }],
@@ -152,6 +150,9 @@ async function actualizarDentista(req, res, next) {
       await dentista.Usuario.update({ email: nuevoEmail });
     }
 
+    // Registrar en auditoría
+    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
+    const ip = getClientIp(req);
     await Auditoria.create({
       id_usuario: adminId,
       accion: "ACTUALIZAR_DENTISTA",
@@ -167,7 +168,7 @@ async function actualizarDentista(req, res, next) {
   } catch (err) {
     return next(err);
   }
-}
+}}
 
 /**
  * PATCH /api/admin/dentistas/:id/estado
@@ -195,6 +196,9 @@ async function cambiarEstado(req, res, next) {
     const nuevoEstado = activo === true || activo === "true" || activo === 1;
     await dentista.Usuario.update({ activo: nuevoEstado });
 
+    // Registrar en auditoría
+    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
+    const ip = getClientIp(req);
     await Auditoria.create({
       id_usuario: adminId,
       accion: nuevoEstado ? "HABILITAR_DENTISTA" : "INHABILITAR_DENTISTA",
@@ -257,8 +261,6 @@ async function verificarDependencias(req, res, next) {
 async function eliminarDentista(req, res, next) {
   try {
     const { id } = req.params;
-    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
-    const ip = getClientIp(req);
 
     const dentista = await Dentista.findByPk(id, { include: [{ model: Usuario }] });
 
@@ -283,12 +285,15 @@ async function eliminarDentista(req, res, next) {
     }
 
     const idUsuario = dentista.id_usuario;
+    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
+    const ip = getClientIp(req);
 
     // Eliminar citas asociadas (pasadas) para poder borrar el dentista (FK RESTRICT)
     await Cita.destroy({ where: { id_dentista: id } });
     await Dentista.destroy({ where: { id } });
     await Usuario.destroy({ where: { id: idUsuario } });
 
+    // Registrar en auditoría
     await Auditoria.create({
       id_usuario: adminId,
       accion: "ELIMINAR_DENTISTA",

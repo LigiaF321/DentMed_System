@@ -1,12 +1,9 @@
-/**
- * Índice de modelos - Carga modelos y define asociaciones
- * Orden: primero modelos sin FK, luego los que dependen
- */
 const sequelize = require("../config/database");
 
 const Usuario = require("./Usuario");
 const Dentista = require("./Dentista");
 const Configuracion = require("./Configuracion");
+const HistorialConfiguracion = require("./HistorialConfiguracion");
 const HorarioClinica = require("./HorarioClinica");
 const Auditoria = require("./Auditoria");
 const TokenRecuperacion = require("./TokenRecuperacion");
@@ -22,8 +19,13 @@ Dentista.belongsTo(Usuario, { foreignKey: "id_usuario" });
 // Usuario -> Auditoria, TokenRecuperacion
 Usuario.hasMany(Auditoria, { foreignKey: "id_usuario" });
 Auditoria.belongsTo(Usuario, { foreignKey: "id_usuario" });
+
 Usuario.hasMany(TokenRecuperacion, { foreignKey: "id_usuario" });
 TokenRecuperacion.belongsTo(Usuario, { foreignKey: "id_usuario" });
+
+// Configuracion -> HistorialConfiguracion
+Configuracion.hasMany(HistorialConfiguracion, { foreignKey: "clave", sourceKey: "clave" });
+HistorialConfiguracion.belongsTo(Configuracion, { foreignKey: "clave", targetKey: "clave" });
 
 // Paciente -> Citas
 Paciente.hasMany(Cita, { foreignKey: "id_paciente" });
@@ -42,6 +44,7 @@ module.exports = {
   Usuario,
   Dentista,
   Configuracion,
+  HistorialConfiguracion,
   HorarioClinica,
   Auditoria,
   TokenRecuperacion,

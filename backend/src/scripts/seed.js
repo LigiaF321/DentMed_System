@@ -3,10 +3,11 @@
  * Uso: npm run db:seed
  * Ejecutar después de: npm run db:sync
  */
-require('dotenv').config({
-  path: require('path').resolve(process.cwd(), '.env'),
+require("dotenv").config({
+  path: require("path").resolve(process.cwd(), ".env"),
 });
-const bcrypt = require('bcryptjs');
+
+const bcrypt = require("bcryptjs");
 const {
   sequelize,
   Usuario,
@@ -16,31 +17,31 @@ const {
   Paciente,
   Consultorio,
   Material,
-} = require('../models');
+} = require("../models");
 
 async function seed() {
   try {
     await sequelize.authenticate();
-    console.log('✅ Conexión OK. Insertando datos iniciales...');
+    console.log("✅ Conexión OK. Insertando datos iniciales...");
 
-    const passwordHash = await bcrypt.hash('admin123', 10);
+    const passwordHash = await bcrypt.hash("admin123", 10);
 
     const [adminUser] = await Usuario.findOrCreate({
-      where: { email: 'admin@dentmed.com' },
+      where: { email: "admin@dentmed.com" },
       defaults: {
-        email: 'admin@dentmed.com',
+        email: "admin@dentmed.com",
         password_hash: passwordHash,
-        rol: 'admin',
+        rol: "admin",
         activo: true,
       },
     });
 
     const [dentistaUser] = await Usuario.findOrCreate({
-      where: { email: 'dentista@dentmed.com' },
+      where: { email: "dentista@dentmed.com" },
       defaults: {
-        email: 'dentista@dentmed.com',
+        email: "dentista@dentmed.com",
         password_hash: passwordHash,
-        rol: 'dentista',
+        rol: "dentista",
         activo: true,
       },
     });
@@ -49,10 +50,10 @@ async function seed() {
       where: { id_usuario: adminUser.id },
       defaults: {
         id_usuario: adminUser.id,
-        nombre: 'Administradora',
-        apellidos: 'DENTMED',
-        especialidad: 'General',
-        telefono: '99999999',
+        nombre: "Administradora",
+        apellidos: "DENTMED",
+        especialidad: "General",
+        telefono: "99999999",
         email: adminUser.email,
       },
     });
@@ -61,27 +62,34 @@ async function seed() {
       where: { id_usuario: dentistaUser.id },
       defaults: {
         id_usuario: dentistaUser.id,
-        nombre: 'Dr. Ejemplo',
-        apellidos: 'Ortodoncista',
-        especialidad: 'Ortodoncia',
-        telefono: '88888888',
+        nombre: "Dr. Ejemplo",
+        apellidos: "Ortodoncista",
+        especialidad: "Ortodoncia",
+        telefono: "88888888",
         email: dentistaUser.email,
-        licencia: '12345',
+        licencia: "12345",
       },
     });
 
     const configKeys = [
       {
-        clave: 'stock_minimo_alerta',
-        valor: '5',
-        descripcion: 'Umbral para alerta de inventario bajo',
+        clave: "stock_minimo_global",
+        valor: "5",
+        descripcion: "Stock mínimo global: umbral para alerta de inventario bajo",
       },
       {
-        clave: 'recordatorio_citas_horas',
-        valor: '24',
-        descripcion: 'Horas antes para recordatorio de cita',
+        clave: "recordatorio_citas_dias",
+        valor: "2",
+        descripcion: "Días de recordatorio de citas: días antes de la cita",
+      },
+      {
+        clave: "limite_intentos_login",
+        valor: "3",
+        descripcion:
+          "Límite de intentos fallidos de login: después de X se bloquea temporalmente",
       },
     ];
+
     for (const c of configKeys) {
       await Configuracion.findOrCreate({
         where: { clave: c.clave },
@@ -89,59 +97,67 @@ async function seed() {
       });
     }
 
-    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
-    for (const dia of dias) {
+    const weeklyDefaults = [
+      { dia: "Lunes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Martes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Miércoles", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Jueves", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Viernes", inicio: "08:00:00", fin: "17:00:00", activo: true },
+      { dia: "Sábado", inicio: "08:00:00", fin: "12:00:00", activo: true },
+      { dia: "Domingo", inicio: "08:00:00", fin: "12:00:00", activo: false },
+    ];
+
+    for (const d of weeklyDefaults) {
       await HorarioClinica.findOrCreate({
-        where: { tipo: 'semanal', dia_semana: dia },
+        where: { tipo: "SEMANAL", dia_semana: d.dia },
         defaults: {
-          tipo: 'semanal',
-          dia_semana: dia,
-          hora_inicio: '08:00:00',
-          hora_fin: '12:00:00',
-          activo: true,
-          descripcion: 'Horario regular',
+          tipo: "SEMANAL",
+          dia_semana: d.dia,
+          fecha: null,
+          hora_inicio: d.inicio,
+          hora_fin: d.fin,
+          activo: d.activo,
+          descripcion: d.activo ? "Horario regular" : "Cerrado",
         },
       });
     }
 
     await Paciente.findOrCreate({
-      where: { telefono: '12345678' },
+      where: { telefono: "12345678" },
       defaults: {
-        nombre: 'Juan Pérez',
-        telefono: '12345678',
-        email: 'juan@email.com',
-        direccion: 'Tegucigalpa',
-        fecha_nacimiento: '1985-05-15',
+        nombre: "Juan Pérez",
+        telefono: "12345678",
+        email: "juan@email.com",
+        direccion: "Tegucigalpa",
+        fecha_nacimiento: "1985-05-15",
         alergias: null,
       },
     });
 
     await Consultorio.findOrCreate({
-      where: { nombre: 'Consultorio 1' },
+      where: { nombre: "Consultorio 1" },
       defaults: {
-        nombre: 'Consultorio 1',
-        ubicacion: 'Planta baja',
-        estado: 'Disponible',
+        nombre: "Consultorio 1",
+        ubicacion: "Planta baja",
+        estado: "Disponible",
         capacidad: 1,
       },
     });
 
     await Material.findOrCreate({
-      where: { nombre: 'Guantes latex' },
+      where: { nombre: "Guantes latex" },
       defaults: {
-        nombre: 'Guantes latex',
+        nombre: "Guantes latex",
         stock_minimo: 10,
-        unidad_medida: 'caja',
+        unidad_medida: "caja",
         cantidad_actual: 50,
       },
     });
 
-    console.log(
-      '✅ Seed completado. Usuario admin: admin@dentmed.com / admin123'
-    );
+    console.log("✅ Seed completado. Usuario admin: admin@dentmed.com / admin123");
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error en seed:', err.message);
+    console.error("❌ Error en seed:", err);
     process.exit(1);
   }
 }
