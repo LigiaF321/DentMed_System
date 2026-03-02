@@ -168,7 +168,7 @@ async function actualizarDentista(req, res, next) {
   } catch (err) {
     return next(err);
   }
-}}
+} // <-- CORREGIDO: Se eliminó la llave extra que sobraba aquí
 
 /**
  * PATCH /api/admin/dentistas/:id/estado
@@ -197,8 +197,6 @@ async function cambiarEstado(req, res, next) {
     await dentista.Usuario.update({ activo: nuevoEstado });
 
     // Registrar en auditoría
-    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
-    const ip = getClientIp(req);
     await Auditoria.create({
       id_usuario: adminId,
       accion: nuevoEstado ? "HABILITAR_DENTISTA" : "INHABILITAR_DENTISTA",
