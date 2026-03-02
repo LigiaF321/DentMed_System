@@ -157,7 +157,7 @@ async function actualizarDentista(req, res, next) {
       id_usuario: adminId,
       accion: "ACTUALIZAR_DENTISTA",
       modulo: "GESTION_USUARIOS",
-      detalles: JSON.stringify({ dentistaId: dentista.id, email: nuevoEmail }),
+      details: JSON.stringify({ dentistaId: dentista.id, email: nuevoEmail }),
       ip,
     });
 
@@ -168,7 +168,7 @@ async function actualizarDentista(req, res, next) {
   } catch (err) {
     return next(err);
   }
-}}
+} // <--- AQUÍ SE CORRIGIÓ EL ERROR (Se quitó una llave extra)
 
 /**
  * PATCH /api/admin/dentistas/:id/estado
@@ -178,7 +178,6 @@ async function cambiarEstado(req, res, next) {
   try {
     const { id } = req.params;
     const { activo } = req.body;
-    const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
     const ip = getClientIp(req);
 
     const dentista = await Dentista.findByPk(id, {
@@ -198,7 +197,6 @@ async function cambiarEstado(req, res, next) {
 
     // Registrar en auditoría
     const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
-    const ip = getClientIp(req);
     await Auditoria.create({
       id_usuario: adminId,
       accion: nuevoEstado ? "HABILITAR_DENTISTA" : "INHABILITAR_DENTISTA",

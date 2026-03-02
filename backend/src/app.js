@@ -1,4 +1,5 @@
 // app.js - Configuración principal de Express
+require("dotenv").config(); // <--- ÚNICO CAMBIO: Carga las variables del .env para el correo
 const express = require("express");
 const app = express();
 
@@ -15,7 +16,7 @@ const monitoringRoutes = require("./routes/monitoring.routes");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//Rutas auth
+// Rutas auth
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminPanelRoutes);
 app.use("/api/admin", adminDentistsRoutes);
@@ -31,7 +32,6 @@ app.get("/", (req, res) => {
     res.json({
         message: "API DentMed System funcionando",
         version: "1.0.0",
-        // Actualicé la lista aquí también para tu control
         endpoints: ["/api/pacientes", "/api/dentistas", "/api/citas"]
     });
 });
