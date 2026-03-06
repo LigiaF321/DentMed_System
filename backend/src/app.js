@@ -2,6 +2,14 @@
 require("dotenv").config(); // <--- ÚNICO CAMBIO: Carga las variables del .env para el correo
 const express = require("express");
 const app = express();
+const cors = require("cors");
+
+// Configuración específica de CORS para permitir frontend
+app.use(cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 
 // 1. IMPORTANTE: Importar las rutas que creaste
 const dentistaRoutes = require('./routes/dentistaRoutes');
