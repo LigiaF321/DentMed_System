@@ -9,6 +9,8 @@ const MENU_ITEMS = [
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
+  // NUEVA OPCIÓN: Restauración (Integrada sin modificar lo anterior)
+  { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
 ];
 
 export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
@@ -32,11 +34,15 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
         <nav className="dm2-side-nav">
           {MENU_ITEMS.map((item) => {
             const isActive = activeView === item.id;
+            // Estilo especial para Restauración (Rojo de emergencia) para destacar su importancia
+            const isEmergency = item.id === "restauracion";
+            
             return (
               <button
                 key={item.id}
                 type="button"
                 className={`dm2-side-item ${isActive ? "is-active" : ""}`}
+                style={isEmergency ? { color: '#e74c3c', fontWeight: 'bold' } : {}}
                 onClick={() => onSelect(item.id)}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -44,6 +50,7 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
                   <i className={`fa-solid ${item.icon}`} />
                 </span>
                 <span className="dm2-side-label">{item.label}</span>
+                {isEmergency && <span style={{ marginLeft: '5px' }}>⚠️</span>}
               </button>
             );
           })}

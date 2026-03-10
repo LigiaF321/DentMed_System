@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>DentMed | Restauración de Emergencia</title>
+  <link rel="stylesheet" href="../styles/admin.css">
+  <style>
+    /* Estilos específicos de emergencia */
+    .danger-zone { border: 2px solid #e74c3c; padding: 20px; border-radius: 12px; background: #fff5f5; }
+    .warning-text { color: #e74c3c; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 10px; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+    th { background-color: #f8f9fa; }
+    .btn-restore { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .impact-box { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width: 800px;">
+    <h1>🔄 Restauración del Sistema</h1>
+    <p class="subtitle">Recuperación del sistema en caso de emergencia</p>
+
+    <div id="section-auth" class="danger-zone">
+      <span class="warning-text">⚠️ ÁREA RESTRINGIDA - AUTENTICACIÓN ADICIONAL</span>
+      <p>Ingrese la contraseña especial para continuar.</p>
+      <div class="form-group">
+        <label>Contraseña Especial</label>
+        <input type="password" id="specialPassword" placeholder="••••••••••••">
+      </div>
+      <button onclick="verificarSeguridad()" class="btn-primary" style="background: #c0392b;">🔐 VERIFICAR CREDENCIALES</button>
+    </div>
+
+    <div id="section-main" class="hidden">
+      <div class="danger-zone">
+         <span class="warning-text">⚠️ USE ESTA HERRAMIENTA SOLO EN CASO DE EMERGENCIA</span>
+         <h3>Backups Disponibles</h3>
+         <table id="backupsTable">
+           <thead>
+             <tr>
+               <th>Fecha</th>
+               <th>Tamaño</th>
+               <th>Estado</th>
+               <th>Acción</th>
+             </tr>
+           </thead>
+           <tbody id="backupsBody"></tbody>
+         </table>
+      </div>
+
+      <div id="section-impact" class="impact-box hidden">
+        <h4>📊 Simulación de Impacto Real</h4>
+        <div id="impactDetails"></div>
+        <hr>
+        <p>Escriba <b>RESTAURAR</b> para confirmar la acción definitiva:</p>
+        <input type="text" id="confirmText" placeholder="RESTAURAR">
+        <button onclick="ejecutarRestauracion()" class="btn-primary" style="background: #e74c3c; margin-top: 15px;">🚀 EJECUTAR RESTAURACIÓN</button>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="./restauracion.js"></script>
+</body>
+</html>

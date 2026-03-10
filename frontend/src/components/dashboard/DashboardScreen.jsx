@@ -6,6 +6,7 @@ import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
+import RestauracionScreen from "./RestauracionScreen"; // <--- IMPORTACIÓN AGREGADA
 import "./dashboard.css";
 
 function Dot({ variant = "info" }) {
@@ -369,6 +370,9 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
+    
+    // CASO AGREGADO PARA RESTAURACIÓN
+    if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
@@ -381,7 +385,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               </button>
             </div>
             <div className="dm2-card-body">
-              <div className="dm2-empty">...</div>
+              <div className="dm2-empty">Cargando configuración de {adminView}...</div>
             </div>
           </div>
         </div>
