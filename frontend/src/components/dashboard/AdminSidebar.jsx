@@ -8,12 +8,15 @@ const MENU_ITEMS = [
   { id: "gestionar-cuentas", label: "Gestionar cuentas", icon: "fa-users" },
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
+  // Sección Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
+  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
+  { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
 ];
 
-export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
+export default function AdminSidebar({ activeView, onSelect, onLogout, userData, alertCount = 0 }) {
   const name =
     userData?.username ||
     userData?.email?.split("@")?.[0] ||
@@ -33,24 +36,22 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
 
         <nav className="dm2-side-nav">
           {MENU_ITEMS.map((item) => {
+            // Solo mostrar auditoría si es admin
+            if (item.adminOnly && userData?.role !== "admin") return null;
             const isActive = activeView === item.id;
-            // Estilo especial para Restauración (Rojo de emergencia) para destacar su importancia
-            const isEmergency = item.id === "restauracion";
-            
+            const displayLabel = item.id === "alertas" ? `🔔 Alertas (${alertCount})` : item.label;
             return (
               <button
                 key={item.id}
                 type="button"
                 className={`dm2-side-item ${isActive ? "is-active" : ""}`}
-                style={isEmergency ? { color: '#e74c3c', fontWeight: 'bold' } : {}}
                 onClick={() => onSelect(item.id)}
                 aria-current={isActive ? "page" : undefined}
               >
                 <span className="dm2-side-ico" aria-hidden="true">
                   <i className={`fa-solid ${item.icon}`} />
                 </span>
-                <span className="dm2-side-label">{item.label}</span>
-                {isEmergency && <span style={{ marginLeft: '5px' }}>⚠️</span>}
+                <span className="dm2-side-label">{displayLabel}</span>
               </button>
             );
           })}

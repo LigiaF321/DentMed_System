@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminSidebar from "./AdminSidebar";
+import AuditScreen from "./AuditScreen";
 import GestionarCuentasScreen from "./GestionarCuentasScreen";
 import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
 import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
@@ -8,7 +9,10 @@ import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
 import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
+import RestauracionScreen from "./RestauracionScreen";
+import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
 import "./dashboard.css";
+import ErrorBoundary from "./ErrorBoundary";
 
 function Dot({ variant = "info" }) {
   return <span className={`dm2-dot dm2-dot--${variant}`} />;
@@ -95,6 +99,7 @@ function notifLevel(tipo) {
 export default function DashboardScreen({ userData, onLogout }) {
   const isAdmin = (userData?.role || userData?.rol) === "admin";
   const [adminView, setAdminView] = useState("dashboard");
+  const [alertCount, setAlertCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [fechaLabel, setFechaLabel] = useState("");
@@ -371,6 +376,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
+  if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
+  if (isAdmin && adminView === "auditoria") return <AuditScreen />;
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
     if (isAdmin && adminView === "catalogo-insumos") return <CatalogoInsumosScreen />;
 
@@ -399,7 +406,7 @@ export default function DashboardScreen({ userData, onLogout }) {
     <div className="dm2-app">
       <div className={`dm2-layout ${isAdmin ? "dm2-layout--withSidebar" : ""}`}>
         {isAdmin ? (
-          <AdminSidebar activeView={adminView} onSelect={setAdminView} userData={userData} onLogout={onLogout} />
+          <AdminSidebar activeView={adminView} onSelect={setAdminView} userData={userData} onLogout={onLogout} alertCount={alertCount} />
         ) : null}
 
         <main className="dm2-main">

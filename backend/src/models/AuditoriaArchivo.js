@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Auditoria = sequelize.define('Auditoria', {
+const AuditoriaArchivo = sequelize.define('AuditoriaArchivo', {
   id: {
     type: DataTypes.BIGINT,
     autoIncrement: true,
@@ -9,8 +9,7 @@ const Auditoria = sequelize.define('Auditoria', {
   },
   fecha_hora: {
     type: DataTypes.DATE,
-    allowNull: false,
-    index: true
+    allowNull: false
   },
   usuario_id: {
     type: DataTypes.INTEGER,
@@ -61,16 +60,8 @@ const Auditoria = sequelize.define('Auditoria', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'auditoria',
-  timestamps: false,
-  indexes: [
-    { fields: ['fecha_hora'] },
-    { fields: ['usuario_id', 'fecha_hora'] },
-    { fields: ['accion', 'fecha_hora'] },
-    { fields: ['modulo', 'fecha_hora'] },
-    { fields: ['ip', 'fecha_hora'] },
-    { fields: ['usuario_nombre', 'accion', 'modulo'] }
-  ]
+  tableName: 'auditoria_archivo',
+  timestamps: false
 });
 
-module.exports = Auditoria;
+module.exports = AuditoriaArchivo;
