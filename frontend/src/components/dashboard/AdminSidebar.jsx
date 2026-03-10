@@ -12,8 +12,6 @@ const MENU_ITEMS = [
   // Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
   { id: "alertas-seguridad", label: "Alertas de Seguridad", icon: "fa-bell" },
-  { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
-  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
   { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
 
