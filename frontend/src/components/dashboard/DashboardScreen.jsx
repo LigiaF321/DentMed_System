@@ -7,13 +7,8 @@ import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
-<<<<<<< HEAD
 import RestauracionScreen from "./RestauracionScreen";
 import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
-=======
-import RestauracionScreen from "./RestauracionScreen"; // <--- IMPORTACIÓN AGREGADA
-import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
->>>>>>> 38dc58c59dce20d76507b199b510fadbd7f1b700
 import "./dashboard.css";
 import ErrorBoundary from "./ErrorBoundary";
 
@@ -379,13 +374,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-<<<<<<< HEAD
-    if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
-=======
-    if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
->>>>>>> 38dc58c59dce20d76507b199b510fadbd7f1b700
+  if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
+  if (isAdmin && adminView === "auditoria") return <AuditScreen />;
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
     if (isAdmin && adminView === "catalogo-insumos") return <div className="dm2-page"><div className="dm2-card"><div className="dm2-card-head"><div className="dm2-card-title">Catálogo de Insumos</div></div><div className="dm2-card-body"><div className="dm2-empty">Componente en desarrollo...</div></div></div></div>;
 
