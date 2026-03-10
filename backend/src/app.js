@@ -4,7 +4,6 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
-// Configuración específica de CORS para permitir frontend
 app.use(cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -19,10 +18,8 @@ const adminDentistsRoutes = require("./routes/adminDentists.routes");
 const horariosRoutes = require("./routes/horarios.routes");
 const parametrosRoutes = require("./routes/parametros.routes");
 const monitoringRoutes = require("./routes/monitoring.routes");
-// --- TU NUEVA RUTA AQUÍ ---
-const restauracionRoutes = require("./routes/restauracion.routes");
+const restauracionRoutes = require("./routes/restauracion.routes"); // IMPORTADO
 
-// Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,24 +31,17 @@ app.use("/api/admin/horarios", horariosRoutes);
 app.use("/api/admin/parametros", parametrosRoutes);
 app.use("/api/admin/monitoring", monitoringRoutes);
 
-// --- TU PUNTO DE ACCESO AQUÍ ---
+// --- PUNTO DE ACCESO DEFINIDO ---
 app.use("/api/restauracion", restauracionRoutes); 
 
-// Rutas de otros módulos
 app.use('/api/dentistas', dentistaRoutes);
 
-// Ruta de prueba
 app.get("/", (req, res) => {
     res.json({
         message: "API DentMed System funcionando",
         version: "1.0.0",
         endpoints: ["/api/pacientes", "/api/dentistas", "/api/citas", "/api/restauracion"]
     });
-});
-
-// Ruta de salud
-app.get("/health", (req, res) => {
-    res.json({ status: "OK", timestamp: new Date() });
 });
 
 module.exports = app;
