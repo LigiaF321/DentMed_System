@@ -9,7 +9,6 @@ import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
 import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
-import RestauracionScreen from "./RestauracionScreen";
 import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
 import "./dashboard.css";
 import ErrorBoundary from "./ErrorBoundary";
