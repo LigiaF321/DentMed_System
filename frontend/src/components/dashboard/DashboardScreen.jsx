@@ -7,8 +7,9 @@ import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
-import RestauracionScreen from "./RestauracionScreen"; // <--- IMPORTACIÓN AGREGADA
+import RestauracionScreen from "./RestauracionScreen";
 import "./dashboard.css";
+import ErrorBoundary from "./ErrorBoundary";
 
 function Dot({ variant = "info" }) {
   return <span className={`dm2-dot dm2-dot--${variant}`} />;
@@ -371,7 +372,11 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
+    if (isAdmin && adminView === "auditoria") return (
+      <ErrorBoundary>
+        <AuditScreen />
+      </ErrorBoundary>
+    );
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
     if (isAdmin && adminView === "catalogo-insumos") return <div className="dm2-page"><div className="dm2-card"><div className="dm2-card-head"><div className="dm2-card-title">Catálogo de Insumos</div></div><div className="dm2-card-body"><div className="dm2-empty">Componente en desarrollo...</div></div></div></div>;
 
