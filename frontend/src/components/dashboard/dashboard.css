@@ -447,3 +447,354 @@
   .dm2-miniStats{grid-template-columns:1fr;}
   .dm2-search{width:52vw;}
 }
+
+/* Estilos para Alertas de Seguridad */
+.dm2-alerts-summary {
+  margin-bottom: 24px;
+}
+
+.dm2-alerts-badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dm2-alerts-badge {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm2-alerts-badge--critica {
+  background: rgba(240, 68, 56, 0.1);
+  color: var(--dm2-crit);
+  border: 1px solid rgba(240, 68, 56, 0.2);
+}
+
+.dm2-alerts-badge--advertencia {
+  background: rgba(247, 144, 9, 0.1);
+  color: var(--dm2-warn);
+  border: 1px solid rgba(247, 144, 9, 0.2);
+}
+
+.dm2-alerts-badge--informativa {
+  background: rgba(46, 144, 250, 0.1);
+  color: var(--dm2-info);
+  border: 1px solid rgba(46, 144, 250, 0.2);
+}
+
+.dm2-alerts-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--dm2-shadow);
+}
+
+.dm2-alerts-filters {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--dm2-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.dm2-filters-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dm2-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.dm2-filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dm2-text);
+}
+
+.dm2-filter-group select,
+.dm2-filter-group input {
+  padding: 8px 12px;
+  border: 1px solid var(--dm2-border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.dm2-filters-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dm2-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm2-btn--primary {
+  background: var(--dm2-accent);
+  color: white;
+}
+
+.dm2-btn--secondary {
+  background: var(--dm2-muted);
+  color: white;
+}
+
+.dm2-btn--outline {
+  background: transparent;
+  color: var(--dm2-text);
+  border: 1px solid var(--dm2-border);
+}
+
+.dm2-btn--small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.dm2-btn--success {
+  background: var(--dm2-ok);
+  color: white;
+}
+
+.dm2-alerts-list h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dm2-alerts-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dm2-alert-item {
+  border: 1px solid var(--dm2-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: white;
+  border-left: 4px solid var(--dm2-info);
+}
+
+.dm2-alert-item--critica {
+  background: rgba(240, 68, 56, 0.05);
+  border-left-color: var(--dm2-crit);
+}
+
+.dm2-alert-item--advertencia {
+  background: rgba(247, 144, 9, 0.05);
+  border-left-color: var(--dm2-warn);
+}
+
+.dm2-alert-item--informativa {
+  background: rgba(46, 144, 250, 0.05);
+  border-left-color: var(--dm2-info);
+}
+
+.dm2-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dm2-alert-time {
+  font-weight: 600;
+  color: var(--dm2-text);
+}
+
+.dm2-alert-priority {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dm2-alert-content {
+  margin-bottom: 12px;
+}
+
+.dm2-alert-type {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dm2-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.dm2-alert-detail {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dm2-alert-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Modal */
+.dm2-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dm2-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dm2-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--dm2-border);
+}
+
+.dm2-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dm2-modal-header button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dm2-modal-body {
+  padding: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dm2-filters-row {
+    flex-direction: column;
+  }
+
+  .dm2-filter-group {
+    min-width: auto;
+  }
+
+  .dm2-alerts-badges {
+    justify-content: center;
+  }
+
+  .dm2-alert-actions {
+    flex-direction: column;
+  }
+}
+
+/* Estilos adicionales para Fase 3 */
+.dm2-alert-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dm2-muted);
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.dm2-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+}
+
+.dm2-pagination span {
+  font-size: 14px;
+  color: var(--dm2-text);
+}
+
+.dm2-silenciar-info {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.dm2-silenciar-info p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.dm2-form-group {
+  margin-bottom: 16px;
+}
+
+.dm2-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dm2-text);
+  margin-bottom: 4px;
+}
+
+.dm2-form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--dm2-border);
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.dm2-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dm2-radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dm2-radio-group input[type="radio"] {
+  margin: 0;
+}
+
+.dm2-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
