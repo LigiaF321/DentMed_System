@@ -10,13 +10,18 @@ const MENU_ITEMS = [
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
   // Sección Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
-  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell" },
-  { id: "auditoria", label: " Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
+<<<<<<< HEAD
+  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
+  { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
+=======
+  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
+  { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
+>>>>>>> 38dc58c59dce20d76507b199b510fadbd7f1b700
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
 ];
 
-export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
+export default function AdminSidebar({ activeView, onSelect, onLogout, userData, alertCount = 0 }) {
   const name =
     userData?.username ||
     userData?.email?.split("@")?.[0] ||
@@ -39,6 +44,7 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
             // Solo mostrar auditoría si es admin
             if (item.adminOnly && userData?.role !== "admin") return null;
             const isActive = activeView === item.id;
+            const displayLabel = item.id === "alertas" ? `🔔 Alertas (${alertCount})` : item.label;
             return (
               <button
                 key={item.id}
@@ -50,7 +56,7 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
                 <span className="dm2-side-ico" aria-hidden="true">
                   <i className={`fa-solid ${item.icon}`} />
                 </span>
-                <span className="dm2-side-label">{item.label}</span>
+                <span className="dm2-side-label">{displayLabel}</span>
               </button>
             );
           })}
