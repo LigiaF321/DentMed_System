@@ -8,7 +8,6 @@ import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
-import AlertasScreen from "./AlertasScreen";
 import AlertasInventarioScreen from "./AlertasInventarioScreen";
 import AlertasInventarioWidget from "./AlertasInventarioWidget";
 import "./dashboard.css";
