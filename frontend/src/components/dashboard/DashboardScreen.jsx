@@ -6,7 +6,8 @@ import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
-import RestauracionScreen from "./RestauracionScreen"; // <--- IMPORTACIÓN AGREGADA
+import RestauracionScreen from "./RestauracionScreen";
+import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
 import "./dashboard.css";
 
 function Dot({ variant = "info" }) {
@@ -371,7 +372,7 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
-    if (isAdmin && adminView === "catalogo-insumos") return <div className="dm2-page"><div className="dm2-card"><div className="dm2-card-head"><div className="dm2-card-title">Catálogo de Insumos</div></div><div className="dm2-card-body"><div className="dm2-empty">Componente en desarrollo...</div></div></div></div>;
+    if (isAdmin && adminView === "catalogo-insumos") return <CatalogoInsumosScreen />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
