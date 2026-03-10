@@ -1,5 +1,5 @@
 // Utilidad para registrar acciones de auditoría
-const Auditoria = require('../src/models/Auditoria');
+const Auditoria = require('../models/Auditoria');
 
 /**
  * Registra una acción en la tabla de auditoría

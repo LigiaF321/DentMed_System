@@ -10,13 +10,8 @@ const MENU_ITEMS = [
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
   // Sección Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
-<<<<<<< HEAD
   { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
   { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
-=======
-  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
-  { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
->>>>>>> 38dc58c59dce20d76507b199b510fadbd7f1b700
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
 ];
