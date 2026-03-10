@@ -10,7 +10,9 @@ import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
 import AlertasInventarioScreen from "./AlertasInventarioScreen";
 import AlertasInventarioWidget from "./AlertasInventarioWidget";
+import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
 import "./dashboard.css";
+import ErrorBoundary from "./ErrorBoundary";
 
 function Dot({ variant = "info" }) {
   return <span className={`dm2-dot dm2-dot--${variant}`} />;
@@ -97,6 +99,7 @@ function notifLevel(tipo) {
 export default function DashboardScreen({ userData, onLogout }) {
   const isAdmin = (userData?.role || userData?.rol) === "admin";
   const [adminView, setAdminView] = useState("dashboard");
+  const [alertCount, setAlertCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [fechaLabel, setFechaLabel] = useState("");
@@ -403,7 +406,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
+  if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
+  if (isAdmin && adminView === "auditoria") return <AuditScreen />;
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
     if (isAdmin && adminView === "catalogo-insumos") {
       return (
@@ -448,7 +452,7 @@ export default function DashboardScreen({ userData, onLogout }) {
     <div className="dm2-app">
       <div className={`dm2-layout ${isAdmin ? "dm2-layout--withSidebar" : ""}`}>
         {isAdmin ? (
-          <AdminSidebar activeView={adminView} onSelect={setAdminView} userData={userData} onLogout={onLogout} />
+          <AdminSidebar activeView={adminView} onSelect={setAdminView} userData={userData} onLogout={onLogout} alertCount={alertCount} />
         ) : null}
 
         <main className="dm2-main">

@@ -13,6 +13,8 @@ const MENU_ITEMS = [
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
   { id: "alertas-seguridad", label: "Alertas de Seguridad", icon: "fa-bell" },
   { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
+  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
+  { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
 
   // Inventario
@@ -20,7 +22,7 @@ const MENU_ITEMS = [
   { id: "alertas-inventario", label: "Alertas de Inventario", icon: "fa-triangle-exclamation" },
 ];
 
-export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
+export default function AdminSidebar({ activeView, onSelect, onLogout, userData, alertCount = 0 }) {
   const name =
     userData?.username ||
     userData?.email?.split("@")?.[0] ||
@@ -43,6 +45,7 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
             if (item.adminOnly && userData?.role !== "admin") return null;
             const isActive = activeView === item.id;
 
+            const displayLabel = item.id === "alertas" ? `🔔 Alertas (${alertCount})` : item.label;
             return (
               <button
                 key={item.id}
@@ -54,7 +57,7 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
                 <span className="dm2-side-ico" aria-hidden="true">
                   <i className={`fa-solid ${item.icon}`} />
                 </span>
-                <span className="dm2-side-label">{item.label}</span>
+                <span className="dm2-side-label">{displayLabel}</span>
               </button>
             );
           })}

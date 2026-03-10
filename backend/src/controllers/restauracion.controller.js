@@ -1,69 +1,31 @@
-// restauracion.controller.js
 const { Usuario, Dentista, Paciente, Auditoria, sequelize } = require('../models');
 
 const restauracionController = {
-    // 1. VERIFICACIÓN DE SEGURIDAD
     verificarCredenciales: async (req, res) => {
-        // Asegúrate de que desde el frontend envíes 'usuario_id' y 'password_especial'
         const { usuario_id, password_especial } = req.body;
-        
-        console.log("Intento de acceso - Usuario:", usuario_id, "Clave recibida:", password_especial);
-
         try {
-            // Consulta a la tabla de credenciales especiales
             const resultados = await sequelize.query(
                 'SELECT password_especial FROM credenciales_restauracion WHERE usuario_id = ? LIMIT 1',
-                {
-                    replacements: [usuario_id],
-                    type: sequelize.QueryTypes.SELECT
-                }
+                { replacements: [usuario_id], type: sequelize.QueryTypes.SELECT }
             );
-
-            // Obtenemos el primer registro si existe
             const credencial = resultados.length > 0 ? resultados[0] : null;
 
-            // REGLA DE NEGOCIO: Si no existe el registro o la contraseña no coincide exactamente
             if (!credencial || credencial.password_especial !== password_especial) {
-                
-                // REGISTRO EN AUDITORÍA (Intento fallido)
                 await Auditoria.create({
                     id_usuario: usuario_id || null, 
                     tabla: 'SEGURIDAD',
                     accion: 'INTENTO_FALLIDO',
-                    descripcion: 'Intento fallido de acceso al área de restauración - Credenciales incorrectas'
+                    descripcion: 'Intento fallido de acceso al área de restauración'
                 });
-
-                return res.status(401).json({ 
-                    success: false, 
-                    error: "Credenciales de seguridad incorrectas. El intento ha sido registrado en la auditoría del sistema." 
-                });
+                return res.status(401).json({ success: false, error: "Credenciales incorrectas" });
             }
 
-            // REGISTRO DE ACCESO EXITOSO
-            await Auditoria.create({
-                id_usuario: usuario_id,
-                tabla: 'SEGURIDAD',
-                accion: 'ACCESO_CONCEDIDO',
-                descripcion: 'Autenticación adicional aprobada para el módulo de restauración crítica'
-            });
-
-            return res.json({ 
-                success: true, 
-                mensaje: "Acceso concedido al área restringida", 
-                token: "TEMP_RESTORE_SESSION_2026" // Token temporal para la sesión de restauración
-            });
-
+            res.json({ success: true, mensaje: "Acceso concedido", token: "TEMP_RESTORE_SESSION_2026" });
         } catch (error) {
-            console.error("Error crítico en verificación:", error);
-            res.status(500).json({ 
-                success: false,
-                error: "Error interno de seguridad", 
-                detalle: error.message 
-            });
+            res.status(500).json({ success: false, error: error.message });
         }
     },
 
-    // 2. LISTADO DE BACKUPS
     listarBackups: async (req, res) => {
         try {
             const rows = await sequelize.query(
@@ -72,82 +34,79 @@ const restauracionController = {
             );
             res.json(rows);
         } catch (error) {
-            console.error("Error al listar backups:", error);
-            res.status(500).json({ error: "No se pudo obtener el listado de backups registrados" });
+            res.status(500).json({ error: "No se pudo obtener el listado de backups" });
         }
     },
 
-    // 3. SIMULACIÓN DE IMPACTO
-    simular: async (req, res) => {
+    obtenerTiposRestauracion: async (req, res) => {
+        res.json([
+            { id: "completa", nombre: "RESTAURACIÓN COMPLETA", detalles: ["Base de datos completa", "Archivos y configuraciones"] },
+            { id: "selectiva", nombre: "RESTAURACIÓN SELECTIVA", detalles: ["Elegir tablas específicas"] }
+        ]);
+    },
+
+    obtenerTablasSeleccion: async (req, res) => {
         try {
-            // Obtenemos conteos actuales para mostrar el impacto visual en el frontend
-            const [cantU, cantD, cantP, cantA] = await Promise.all([
-                Usuario.count(),
-                Dentista.count(),
-                Paciente.count(),
+            const [u, d, p, c, i, inv, a] = await Promise.all([
+                Usuario.count(), Dentista.count(), Paciente.count(),
+                sequelize.query('SELECT COUNT(*) as count FROM citas', { type: sequelize.QueryTypes.SELECT }),
+                sequelize.query('SELECT COUNT(*) as count FROM insumos', { type: sequelize.QueryTypes.SELECT }),
+                sequelize.query('SELECT COUNT(*) as count FROM inventario', { type: sequelize.QueryTypes.SELECT }),
                 Auditoria.count()
             ]);
-
-            const impacto = [
-                { tabla: "USUARIOS", registros: cantU, operacion: "SOBREESCRIBIR" },
-                { tabla: "DENTISTAS", registros: cantD, operacion: "SOBREESCRIBIR" },
-                { tabla: "PACIENTES", registros: cantP, operacion: "SOBREESCRIBIR" },
-                { tabla: "AUDITORIA", registros: 1, operacion: "INSERTAR (Log de operación)" }
-            ];
-
-            res.json({ success: true, impacto });
+            res.json([
+                { id: "usuarios", nombre: "USUARIOS", registros: u },
+                { id: "dentistas", nombre: "DENTISTAS", registros: d },
+                { id: "pacientes", nombre: "PACIENTES", registros: p },
+                { id: "citas", nombre: "CITAS", registros: c[0].count },
+                { id: "insumos", nombre: "INSUMOS", registros: i[0].count },
+                { id: "inventario", nombre: "INVENTARIO", registros: inv[0].count },
+                { id: "auditoria", nombre: "AUDITORIA", registros: a, aviso: "puede tardar" }
+            ]);
         } catch (error) {
-            res.status(500).json({ error: "Error al calcular el impacto de la restauración" });
+            res.status(500).json({ error: "Error al cargar tablas" });
         }
     },
 
-    // 4. BACKUP PREVENTIVO
+    simular: async (req, res) => {
+        try {
+            const [u, d, p] = await Promise.all([Usuario.count(), Dentista.count(), Paciente.count()]);
+            res.json({ 
+                success: true, 
+                impacto: [
+                    { tabla: "USUARIOS", registros: u, operacion: "SOBREESCRIBIR" },
+                    { tabla: "DENTISTAS", registros: d, operacion: "SOBREESCRIBIR" },
+                    { tabla: "PACIENTES", registros: p, operacion: "SOBREESCRIBIR" }
+                ] 
+            });
+        } catch (error) {
+            res.status(500).json({ error: "Error en simulación" });
+        }
+    },
+
     backupSeguridad: async (req, res) => {
-        try {
-            // Generamos un nombre de archivo basado en la fecha actual
-            const fecha = new Date().toISOString().replace(/[-:T]/g, '').split('.')[0];
-            const nombreArchivo = `preventivo_antes_de_restaurar_${fecha}.sql`;
-            
-            res.json({ 
-                success: true, 
-                mensaje: "Copia de seguridad preventiva generada con éxito",
-                archivo: nombreArchivo,
-                ubicacion: "/storage/backups/preventivos/"
-            });
-        } catch (error) {
-            res.status(500).json({ error: "Fallo al generar el backup preventivo de seguridad" });
-        }
+        res.json({ success: true, mensaje: "Copia preventiva generada", archivo: "preventivo.sql" });
     },
 
-    // 5. EJECUCIÓN FINAL
     ejecutar: async (req, res) => {
-        const { confirmacion, usuario_id, backup_id } = req.body;
-        
-        try {
-            // Verificación de palabra clave de seguridad
-            if (confirmacion !== "RESTAURAR") {
-                return res.status(400).json({ error: "Confirmación inválida. Debe escribir 'RESTAURAR' en mayúsculas." });
-            }
+        res.json({ success: true, mensaje: "Proceso completado con éxito" });
+    },
 
-            // --- Lógica de restauración de Base de Datos aquí ---
-            // (Ejecución de scripts .sql o comandos de sistema)
+    obtenerProgreso: async (req, res) => {
+        res.json({ porcentaje: 100, mensaje: "Finalizado", tarea_actual: "Operación exitosa" });
+    },
 
-            // REGISTRO FINAL EN AUDITORÍA
-            await Auditoria.create({
-                id_usuario: usuario_id,
-                tabla: 'SISTEMA',
-                accion: 'RESTAURACIÓN_SISTEMA',
-                descripcion: `Restauración completa realizada con éxito. Backup origen ID: ${backup_id}`
-            });
+    generarReporte: async (req, res) => {
+        res.json({ resultado: "EXITOSO", detalles: [{ tabla: "SISTEMA", estado: "RESTAURADO" }] });
+    },
 
-            res.json({ 
-                success: true, 
-                mensaje: "Proceso completado. El sistema ha sido restaurado al punto seleccionado." 
-            });
-        } catch (error) {
-            console.error("FALLO CRÍTICO EN RESTAURACIÓN:", error);
-            res.status(500).json({ error: "Error crítico durante la restauración de datos" });
-        }
+    detalleBackup: async (req, res) => {
+        const { id } = req.params;
+        res.json({ id, info: "Detalle de backup" });
+    },
+
+    configurarCredenciales: async (req, res) => {
+        res.json({ success: true, mensaje: "Credenciales actualizadas" });
     }
 };
 

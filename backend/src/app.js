@@ -34,6 +34,10 @@ app.use("/api/admin/alertas", alertasInventarioRoutes);
 
 app.use("/api/restauracion", restauracionRoutes);
 app.use("/api/dentistas", dentistaRoutes);
+// --- PUNTO DE ACCESO DEFINIDO ---
+app.use("/api/restauracion", restauracionRoutes); 
+
+app.use('/api/dentistas', dentistaRoutes);
 
 app.get("/", (req, res) => {
   res.json({
