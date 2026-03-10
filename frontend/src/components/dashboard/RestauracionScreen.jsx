@@ -60,19 +60,19 @@ export default function RestauracionScreen({ userData }) {
     });
   };
 
-  // --- 1. PANTALLA DE VERIFICACIÓN (Con contador de intentos) ---
+  // --- 1. PANTALLA DE VERIFICACIÓN ---
   if (!isAuth) {
     return (
       <div className="dm2-page">
-        <div className="dm2-card" style={{ border: '2px solid #e74c3c', maxWidth: '400px', margin: 'auto' }}>
-          <div className="dm2-card-head" style={{ background: '#fff5f5' }}>
-            <div className="dm2-card-title" style={{ color: '#e74c3c' }}>🔒 ÁREA RESTRINGIDA</div>
+        <div className="dm2-card" style={{ borderTop: '4px solid #3498db', maxWidth: '400px', margin: 'auto' }}>
+          <div className="dm2-card-head" style={{ background: '#f0f7ff' }}>
+            <div className="dm2-card-title" style={{ color: '#3498db' }}>VERIFICACIÓN DE USUARIO</div>
           </div>
           <div className="dm2-card-body">
             <p className="dm2-muted" style={{textAlign:'center'}}>Autenticación adicional requerida.</p>
-            <input type="password" disabled={attempts >= 3} className="dm2-search-input" style={{width:'100%', marginBottom:'10px'}} placeholder="Contraseña Especial" value={pass} onChange={e=>setPass(e.target.value)} />
-            <button className="dm2-updateBtn" style={{background: attempts >= 3 ? '#ccc' : '#e74c3c', width:'100%', justifyContent:'center'}} onClick={handleVerify}>
-              {attempts >= 3 ? "ACCESO BLOQUEADO" : "VERIFICAR CREDENCIALES"}
+            <input type="password" disabled={attempts >= 3} className="dm2-search-input" style={{width:'100%', marginBottom:'10px'}} placeholder="Ingrese código especial" value={pass} onChange={e=>setPass(e.target.value)} />
+            <button className="dm2-updateBtn" style={{background: attempts >= 3 ? '#ccc' : '#3498db', width:'100%', justifyContent:'center', color:'white'}} onClick={handleVerify}>
+              {attempts >= 3 ? "ACCESO BLOQUEADO" : "INGRESAR AL MÓDULO"}
             </button>
           </div>
         </div>
@@ -80,16 +80,17 @@ export default function RestauracionScreen({ userData }) {
     );
   }
 
-  // --- 2. VISTA DE PROGRESO (Bloqueo de sistema) ---
+  // --- 2. VISTA DE PROGRESO ---
   if (view === 'progress') {
     return (
       <div className="dm2-page">
         <div className="dm2-card" style={{ textAlign: 'center', padding: '50px' }}>
-          <div className="dm2-card-title" style={{ color: '#e74c3c', marginBottom: '30px' }}>
-            <i className="fa-solid fa-sync fa-spin" /> {isSimulated ? "SIMULANDO PROCESO..." : "RESTAURANDO SISTEMA..."}
+          <div className="dm2-card-title" style={{ color: '#3498db', marginBottom: '30px' }}>
+            {/* CAMBIO: "CARGANDO PROCESO..." en lugar de "SIMULANDO PROCESO..." */}
+            <i className="fa-solid fa-sync fa-spin" /> {isSimulated ? "CARGANDO PROCESO..." : "RESTAURANDO SISTEMA..."}
           </div>
           <div style={{ background: '#eee', borderRadius: '10px', height: '20px', marginBottom: '20px' }}>
-            <div style={{ background: '#e74c3c', width: `${percent}%`, height: '100%', borderRadius: '10px', transition: 'width 0.4s' }} />
+            <div style={{ background: '#3498db', width: `${percent}%`, height: '100%', borderRadius: '10px', transition: 'width 0.4s' }} />
           </div>
           <div className="dm2-strong">{percent}%</div>
           <p className="dm2-muted">{currentStepText}</p>
@@ -98,13 +99,13 @@ export default function RestauracionScreen({ userData }) {
     );
   }
 
-  // --- 3. VISTA DE REPORTE (Completa según el diagrama TXT) ---
+  // --- 3. VISTA DE REPORTE ---
   if (view === 'report') {
     return (
       <div className="dm2-page">
         <div className="dm2-card" style={{ borderTop: '5px solid #27ae60' }}>
           <div className="dm2-card-head">
-            <div className="dm2-card-title">✅ REPORTE FINAL DE RESTAURACIÓN</div>
+            <div className="dm2-card-title">REPORTE FINAL DE RESTAURACIÓN</div>
           </div>
           <div className="dm2-card-body">
             <div className="dm2-table">
@@ -131,8 +132,8 @@ export default function RestauracionScreen({ userData }) {
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
-              <button className="dm2-updateBtn" style={{ flex: 1, background: '#3498db', justifyContent:'center' }}>📥 DESCARGAR REPORTE</button>
-              <button className="dm2-updateBtn" style={{ flex: 1, background: '#27ae60', justifyContent:'center' }} onClick={() => window.location.reload()}>🔄 REINICIAR SESIÓN</button>
+              <button className="dm2-updateBtn" style={{ flex: 1, background: '#3498db', justifyContent:'center', color:'white' }}>DESCARGAR REPORTE</button>
+              <button className="dm2-updateBtn" style={{ flex: 1, background: '#27ae60', justifyContent:'center', color:'white' }} onClick={() => window.location.reload()}>REINICIAR SESIÓN</button>
             </div>
           </div>
         </div>
@@ -140,16 +141,16 @@ export default function RestauracionScreen({ userData }) {
     );
   }
 
-  // --- 4. VISTA DE LISTA (Principal) ---
+  // --- 4. VISTA DE LISTA ---
   return (
     <div className="dm2-page">
-      <div className="dm2-card" style={{ borderTop: '4px solid #e74c3c' }}>
+      <div className="dm2-card" style={{ borderTop: '4px solid #3498db' }}>
         <div className="dm2-card-head">
-          <div className="dm2-card-title">🔄 Restauración Guiada de Información</div>
+          <div className="dm2-card-title">Restauración de Información</div>
         </div>
         <div className="dm2-card-body">
-          <div style={{ background: '#fff5f5', padding: '10px', color: '#e74c3c', marginBottom: '20px', borderRadius: '5px', fontWeight: 'bold' }}>
-            ⚠️ USE ESTA HERRAMIENTA SOLO EN CASOS DE EMERGENCIA
+          <div style={{ background: '#f0f7ff', padding: '10px', color: '#3498db', marginBottom: '20px', borderRadius: '5px', fontWeight: 'bold' }}>
+            Seleccione un punto de restauración para actualizar el sistema.
           </div>
           <div className="dm2-table">
             <div className="dm2-thead">
@@ -165,7 +166,7 @@ export default function RestauracionScreen({ userData }) {
                   <button 
                     className="dm2-linkBtn" 
                     disabled={b.estado === 'Incompleto'}
-                    style={{color: b.estado === 'Incompleto' ? '#ccc' : '#e74c3c'}}
+                    style={{color: b.estado === 'Incompleto' ? '#ccc' : '#3498db'}}
                     onClick={() => { setSelectedBackup(b); setShowConfirm(true); setConfirmText(""); }}
                   >
                     <i className="fa-solid fa-clock-rotate-left" /> Restaurar
@@ -178,10 +179,10 @@ export default function RestauracionScreen({ userData }) {
       </div>
 
       {showConfirm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div className="dm2-card" style={{ width: '480px' }}>
-            <div className="dm2-card-head" style={{ background: '#e74c3c', color: 'white' }}>
-              <div className="dm2-card-title">CONFIRMAR RESTAURACIÓN</div>
+            <div className="dm2-card-head" style={{ background: '#3498db' }}>
+              <div className="dm2-card-title" style={{ color: 'white' }}>CONFIRMAR ACCIÓN</div>
             </div>
             <div className="dm2-card-body">
               <p>¿Desea restaurar el backup del {selectedBackup?.fecha}?</p>
@@ -189,11 +190,25 @@ export default function RestauracionScreen({ userData }) {
                 <input type="checkbox" checked={isSimulated} onChange={e=>setIsSimulated(e.target.checked)} style={{marginRight:'10px'}} /> 
                 Ejecutar en Modo Simulación
               </label>
-              <p style={{fontSize:'0.8rem', color:'#e74c3c'}}>Escriba <strong>RESTAURAR</strong> para confirmar:</p>
+              <p style={{fontSize:'0.8rem', color:'#3498db'}}>Escriba <strong>RESTAURAR</strong> para confirmar:</p>
               <input type="text" className="dm2-search-input" style={{width:'100%', textAlign:'center'}} value={confirmText} onChange={e=>setConfirmText(e.target.value.toUpperCase())} />
+              
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                 <button className="dm2-updateBtn" style={{ flex: 1, background: '#ccc' }} onClick={() => setShowConfirm(false)}>CANCELAR</button>
-                <button className="dm2-updateBtn" style={{ flex: 1, background: confirmText === "RESTAURAR" ? '#e74c3c' : '#fab1a0' }} disabled={confirmText !== "RESTAURAR"} onClick={startRestoration}>EJECUTAR</button>
+                
+                <button 
+                  className="dm2-updateBtn" 
+                  style={{ 
+                    flex: 1, 
+                    background: confirmText === "RESTAURAR" ? '#3498db' : '#e0e0e0', 
+                    color: confirmText === "RESTAURAR" ? 'white' : '#777',
+                    cursor: confirmText === "RESTAURAR" ? 'pointer' : 'not-allowed'
+                  }} 
+                  disabled={confirmText !== "RESTAURAR"} 
+                  onClick={startRestoration}
+                >
+                  EJECUTAR
+                </button>
               </div>
             </div>
           </div>
