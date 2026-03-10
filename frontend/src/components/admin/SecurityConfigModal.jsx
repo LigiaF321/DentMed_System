@@ -3,15 +3,13 @@ import './SecurityAlerts.css';
 
 /**
  * Componente: SecurityConfigModal
- * Modal para configurar umbrales, horarios y notificaciones de seguridad
+ * Modal para configurar alertas de seguridad
  */
-function SecurityConfigModal({ config, isOpen, onClose, onSave }) {
+function SecurityConfigModal({ config, onClose, onSave }) {
   const [formData, setFormData] = useState(config);
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     setFormData(config);
-    setHasChanges(false);
   }, [config]);
 
   const handleChange = (field, value) => {
@@ -19,34 +17,91 @@ function SecurityConfigModal({ config, isOpen, onClose, onSave }) {
       ...prev,
       [field]: value,
     }));
-    setHasChanges(true);
-  };
-
-  const handleDayToggle = (dayIndex) => {
-    const newDays = formData.dias_laborales.includes(dayIndex)
-      ? formData.dias_laborales.filter((d) => d !== dayIndex)
-      : [...formData.dias_laborales, dayIndex];
-    handleChange('dias_laborales', newDays.sort());
   };
 
   const handleSave = () => {
     onSave(formData);
-    setHasChanges(false);
   };
 
-  const handleReset = () => {
-    setFormData(config);
-    setHasChanges(false);
-  };
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Configuración de Alertas de Seguridad</h2>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
+        </div>
 
-  const handleClose = () => {
-    handleReset();
-    onClose();
-  };
+        <div className="modal-body">
+          {/* Umbrales de alertas críticas */}
+          <div className="config-section">
+            <h3>Umbrales de Alertas Críticas</h3>
+            <div className="form-group">
+              <label htmlFor="intentos_fallidos_umbral">
+                Número de intentos fallidos para alerta crítica:
+              </label>
+              <input
+                id="intentos_fallidos_umbral"
+                type="number"
+                min="1"
+                value={formData.intentos_fallidos_umbral}
+                onChange={(e) =>
+                  handleChange('intentos_fallidos_umbral', parseInt(e.target.value))
+                }
+              />
+            </div>
+          </div>
 
-  if (!isOpen) return null;
+          {/* Notificaciones por email */}
+          <div className="config-section">
+            <h3>Notificaciones por Email</h3>
+            <div className="form-group checkbox-group">
+              <label className="checkbox-option">
+                <input
+                  type="checkbox"
+                  checked={formData.enviar_email_criticas}
+                  onChange={(e) => handleChange('enviar_email_criticas', e.target.checked)}
+                />
+                <span>Enviar email por alertas críticas</span>
+              </label>
+            </div>
+          </div>
 
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+          {/* Duración automática de silenciamiento */}
+          <div className="config-section">
+            <h3>Duración Automática de Silenciamiento</h3>
+            <div className="form-group">
+              <label htmlFor="silencio_duracion_horas">
+                Duración en horas:
+              </label>
+              <input
+                id="silencio_duracion_horas"
+                type="number"
+                min="1"
+                value={formData.silencio_duracion_horas}
+                onChange={(e) =>
+                  handleChange('silencio_duracion_horas', parseInt(e.target.value))
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn btn-primary" onClick={handleSave}>
+            Guardar Configuración
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default SecurityConfigModal;
 
   return (
     <div className="modal-overlay" onClick={handleClose}>

@@ -56,8 +56,6 @@ function AlertCard({ alert, onSilence, onReview }) {
         return 'alert-status-silenced';
       case 'revisada':
         return 'alert-status-reviewed';
-      case 'resuelta':
-        return 'alert-status-resolved';
       default:
         return '';
     }
@@ -139,13 +137,7 @@ function AlertCard({ alert, onSilence, onReview }) {
           </>
         )}
         {isSilenced && (
-          <button
-            className="btn btn-reactivate"
-            onClick={() => onReview(alert)}
-            title="Reactivar alerta"
-          >
-            ↻ REACTIVAR
-          </button>
+          <span className="alert-silenced-info">Alerta silenciada</span>
         )}
         {isReviewed && (
           <span className="alert-reviewed-info">Revisada anteriormente</span>

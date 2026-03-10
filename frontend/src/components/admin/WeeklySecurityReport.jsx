@@ -15,16 +15,16 @@ function WeeklySecurityReport() {
     return `${inicioStr} al ${finStr}`;
   };
 
-  const handleExport = (format) => {
+  const handleExport = () => {
     // Simulación de exportación
-    console.log(`Exportando reporte en formato: ${format}`);
-    alert(`Exportando reporte semanal en formato ${format.toUpperCase()}`);
+    console.log('Exportando reporte');
+    alert('Exportando reporte semanal');
   };
 
   return (
     <div className="weekly-report">
       <div className="report-header">
-        <h2>📊 Reporte Semanal de Seguridad</h2>
+        <h2>Reporte Semanal de Seguridad</h2>
         <p className="report-period">Semana del {formatDateRange(reporte.periodo.inicio, reporte.periodo.fin)}</p>
       </div>
 
@@ -51,24 +51,16 @@ function WeeklySecurityReport() {
         </div>
       </div>
 
-      {/* GRÁFICO DE EVOLUCIÓN */}
-      <div className="report-chart">
+      {/* EVOLUCIÓN POR DÍA */}
+      <div className="report-evolution">
         <h3>Evolución por Día</h3>
-        <div className="chart-placeholder">
-          <div className="chart-bars">
-            {reporte.por_dia.map((dia, index) => (
-              <div key={index} className="chart-bar-container">
-                <div
-                  className="chart-bar"
-                  style={{ height: `${(dia.alertas / 15) * 100}%` }}
-                  title={`${dia.alertas} alertas`}
-                >
-                  <span className="bar-value">{dia.alertas}</span>
-                </div>
-                <div className="bar-label">{dia.dia}</div>
-              </div>
-            ))}
-          </div>
+        <div className="evolution-list">
+          {reporte.por_dia.map((dia, index) => (
+            <div key={index} className="evolution-item">
+              <span className="evolution-day">{dia.dia}:</span>
+              <span className="evolution-count">{dia.alertas} alertas</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -112,21 +104,12 @@ function WeeklySecurityReport() {
 
       {/* BOTÓN DE EXPORTACIÓN */}
       <div className="report-export">
-        <h3>Exportar Reporte</h3>
-        <div className="export-buttons">
-          <button
-            className="btn btn-secondary"
-            onClick={() => handleExport('pdf')}
-          >
-            📄 Exportar a PDF
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => handleExport('excel')}
-          >
-            📊 Exportar a Excel
-          </button>
-        </div>
+        <button
+          className="btn btn-secondary"
+          onClick={handleExport}
+        >
+          Exportar Reporte
+        </button>
       </div>
     </div>
   );

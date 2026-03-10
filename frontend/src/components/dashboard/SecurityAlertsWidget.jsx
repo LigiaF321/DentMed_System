@@ -78,6 +78,15 @@ function SecurityAlertsWidget({ onViewAll }) {
           ))
         )}
       </div>
+
+      <div className="security-widget-footer">
+        <button
+          className="security-view-all-btn"
+          onClick={onViewAll}
+        >
+          Ver todas →
+        </button>
+      </div>
     </div>
   );
 }

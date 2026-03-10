@@ -5,40 +5,28 @@ import './SecurityAlerts.css';
  * Componente: AlertSummary
  * Muestra un resumen de alertas por prioridad en forma de badges/tarjetas
  */
-function AlertSummary({ resumen, onFilterByPriority }) {
+function AlertSummary({ resumen }) {
   return (
     <div className="alert-summary">
       <h3 className="summary-title">Resumen por Prioridad</h3>
       <div className="summary-badges">
-        <button
-          className="summary-badge badge-critical"
-          onClick={() => onFilterByPriority('critica')}
-          title="Filtrar por alertas críticas"
-        >
+        <div className="summary-badge badge-critical">
           <span className="badge-icon">🔴</span>
           <span className="badge-label">CRÍTICAS</span>
           <span className="badge-count">{resumen.total_criticas}</span>
-        </button>
+        </div>
 
-        <button
-          className="summary-badge badge-warning"
-          onClick={() => onFilterByPriority('advertencia')}
-          title="Filtrar por advertencias"
-        >
+        <div className="summary-badge badge-warning">
           <span className="badge-icon">🟡</span>
           <span className="badge-label">ADVERTENCIAS</span>
           <span className="badge-count">{resumen.total_advertencias}</span>
-        </button>
+        </div>
 
-        <button
-          className="summary-badge badge-info"
-          onClick={() => onFilterByPriority('informativa')}
-          title="Filtrar por alertas informativas"
-        >
+        <div className="summary-badge badge-info">
           <span className="badge-icon">ℹ️</span>
           <span className="badge-label">INFORMATIVAS</span>
           <span className="badge-count">{resumen.total_informativas}</span>
-        </button>
+        </div>
       </div>
     </div>
   );

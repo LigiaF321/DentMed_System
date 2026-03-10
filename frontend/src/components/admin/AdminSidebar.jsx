@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './admin.css';
 
 function AdminSidebar({
@@ -8,8 +8,6 @@ function AdminSidebar({
   sidebarOpen,
   onToggleSidebar,
 }) {
-  const [unreadAlerts, setUnreadAlerts] = useState(3); // Simulación de alertas no leídas
-
   // Menú de opciones
   const menuItems = [
     {
@@ -22,7 +20,7 @@ function AdminSidebar({
       id: 'securityAlerts',
       label: 'Alertas de Seguridad',
       icon: '🔔',
-      badge: unreadAlerts > 0 ? unreadAlerts : null,
+      badge: null,
     },
     {
       id: 'reports',
