@@ -6,6 +6,7 @@ import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
 import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
+import SecurityAlertsWidget from "./SecurityAlertsWidget";
 import "./dashboard.css";
 
 function Dot({ variant = "info" }) {
@@ -358,6 +359,17 @@ export default function DashboardScreen({ userData, onLogout }) {
               )}
             </div>
           </CardSection>
+
+          <CardSection
+            title="Alertas de Seguridad"
+            rightAction={
+              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView("security-alerts")}>
+                Ver todas →
+              </button>
+            }
+          >
+            <SecurityAlertsWidget onViewAll={() => setAdminView("security-alerts")} />
+          </CardSection>
         </div>
       </div>
     </div>
@@ -369,6 +381,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
+    if (isAdmin && adminView === "security-alerts") return <div>Security Alerts Screen Placeholder</div>;
+    if (isAdmin && adminView === "security-alerts") return <div>Security Alerts Screen Placeholder</div>;
 
     if (isAdmin && adminView !== "dashboard") {
       return (

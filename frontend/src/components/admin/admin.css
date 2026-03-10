@@ -1,0 +1,471 @@
+/* ===== ADMIN SHELL ===== */
+:root {
+  --admin-sidebar-bg: #2c3e50;
+  --admin-sidebar-text: #ecf0f1;
+  --admin-sidebar-hover: #34495e;
+  --admin-active: #3498db;
+  --admin-accent: #e74c3c;
+}
+
+.adm-shell {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* ===== SIDEBAR ===== */
+.admin-sidebar {
+  width: 280px;
+  background-color: var(--admin-sidebar-bg);
+  color: var(--admin-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1a252f;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: 2rem 1.5rem;
+  border-bottom: 2px solid var(--admin-sidebar-hover);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+}
+
+.sidebar-close {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  color: var(--admin-sidebar-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  position: relative;
+}
+
+.sidebar-item:hover {
+  background-color: var(--admin-sidebar-hover);
+  padding-left: 2rem;
+}
+
+.sidebar-item.active {
+  background-color: var(--admin-active);
+  color: white;
+  font-weight: 700;
+  border-left: 4px solid #2980b9;
+  padding-left: calc(1.5rem - 4px);
+}
+
+.sidebar-icon {
+  font-size: 1.3rem;
+  min-width: 1.5rem;
+}
+
+.sidebar-label {
+  flex: 1;
+}
+
+.sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--admin-accent);
+  color: white;
+  border-radius: 50%;
+  min-width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--admin-sidebar-hover);
+}
+
+.sidebar-logout {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--admin-accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.sidebar-logout:hover {
+  background-color: #c0392b;
+}
+
+/* ===== MAIN CONTENT ===== */
+.adm-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.adm-topbar {
+  background-color: white;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+}
+
+.adm-burger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+}
+
+.adm-topbar-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.adm-topbar-sub {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 400;
+}
+
+.adm-content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
+/* ===== SIDEBAR OVERLAY (Mobile) ===== */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.adm-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.adm-notifications-btn {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm-notifications-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.adm-notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    width: 250px;
+    z-index: 101;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .sidebar-close {
+    display: block;
+  }
+
+  .adm-burger {
+    display: block;
+  }
+
+  .adm-topbar {
+    padding: 1rem;
+  }
+
+  .adm-topbar-title {
+    font-size: 1rem;
+  }
+
+  .sidebar-item {
+    padding: 0.875rem 1.25rem;
+  }
+
+  .sidebar-item:hover {
+    padding-left: 1.75rem;
+  }
+
+  .sidebar-header {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .adm-topbar {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .adm-topbar-title {
+    font-size: 0.95rem;
+  }
+
+  .adm-topbar-sub {
+    display: none;
+  }
+
+  .adm-topbar {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .adm-topbar-title {
+    font-size: 0.95rem;
+  }
+
+  .adm-topbar-sub {
+    display: none;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+  }
+}
+
+/* ===== SECURITY ALERTS WIDGET ===== */
+.security-widget {
+  width: 100%;
+}
+
+.security-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.security-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.security-icon {
+  font-size: 1.2rem;
+}
+
+.security-view-all {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.security-view-all:hover {
+  color: #0056b3;
+}
+
+.security-widget-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.security-stat {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+.security-stat.critical {
+  background-color: #ffe4e4;
+  border: 1px solid #ffcccc;
+}
+
+.security-stat.total {
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.stat-number.critical {
+  color: #e74c3c;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.security-widget-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.security-no-alerts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.security-check {
+  font-size: 1.2rem;
+}
+
+.security-alert-item {
+  padding: 0.75rem;
+  border-left: 3px solid;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.security-alert-item.critical {
+  border-left-color: #e74c3c;
+  background-color: #ffe4e4;
+}
+
+.security-alert-item.warning {
+  border-left-color: #ff9800;
+  background-color: #fff3e0;
+}
+
+.security-alert-item.info {
+  border-left-color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.alert-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.alert-priority-icon {
+  font-size: 1rem;
+}
+
+.alert-type {
+  flex: 1;
+  font-weight: 600;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.alert-time {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.alert-description {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
