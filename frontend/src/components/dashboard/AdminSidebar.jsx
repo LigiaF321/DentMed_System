@@ -10,6 +10,7 @@ const MENU_ITEMS = [
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
+  { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
 ];
 
 export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
