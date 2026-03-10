@@ -8,12 +8,16 @@ const MENU_ITEMS = [
   { id: "gestionar-cuentas", label: "Gestionar cuentas", icon: "fa-users" },
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
-  // Sección Monitoreo
+
+  // Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
-  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell" },
+  { id: "alertas-seguridad", label: "Alertas de Seguridad", icon: "fa-bell" },
   { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
+
+  // Inventario
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
+  { id: "alertas-inventario", label: "Alertas de Inventario", icon: "fa-triangle-exclamation" },
 ];
 
 export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
@@ -36,9 +40,9 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData 
 
         <nav className="dm2-side-nav">
           {MENU_ITEMS.map((item) => {
-            // Solo mostrar auditoría si es admin
             if (item.adminOnly && userData?.role !== "admin") return null;
             const isActive = activeView === item.id;
+
             return (
               <button
                 key={item.id}
