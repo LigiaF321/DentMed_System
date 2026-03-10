@@ -370,9 +370,8 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-    
-    // CASO AGREGADO PARA RESTAURACIÓN
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
+    if (isAdmin && adminView === "catalogo-insumos") return <div className="dm2-page"><div className="dm2-card"><div className="dm2-card-head"><div className="dm2-card-title">Catálogo de Insumos</div></div><div className="dm2-card-body"><div className="dm2-empty">Componente en desarrollo...</div></div></div></div>;
 
     if (isAdmin && adminView !== "dashboard") {
       return (

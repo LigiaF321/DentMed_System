@@ -9,8 +9,8 @@ const MENU_ITEMS = [
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
-  // NUEVA OPCIÓN: Restauración (Integrada sin modificar lo anterior)
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
+  { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
 ];
 
 export default function AdminSidebar({ activeView, onSelect, onLogout, userData }) {
