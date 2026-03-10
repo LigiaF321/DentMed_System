@@ -18,4 +18,20 @@ const Configuracion = sequelize.define(
   }
 );
 
+// Parámetro de retención en modelo Configuracion
+Configuracion.init({
+  clave: {
+    type: DataTypes.STRING(100),
+    primaryKey: true
+  },
+  valor: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  }
+}, {
+  sequelize,
+  tableName: 'configuracion',
+  timestamps: false
+});
+
 module.exports = Configuracion;

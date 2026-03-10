@@ -3,6 +3,30 @@ import "./AuditScreen.css";
 import TimelineScreen from "./TimelineScreen";
 
 export default function AuditScreen() {
+        const [modalOpen, setModalOpen] = React.useState(false);
+        const [modalData, setModalData] = React.useState(null);
+        const [timelineOpen, setTimelineOpen] = React.useState(false);
+        const [timelineUser, setTimelineUser] = React.useState({ usuario: '', nombre: '' });
+        // Ejemplo de evento para el modal
+        const exampleEvent = {
+          id: 1,
+          fecha: "21/02/2026 10:35:22",
+          usuario: "jperez",
+          nombreCompleto: "Dr. Juan Pérez",
+          rol: "Dentista",
+          ip: "10.0.0.12",
+          modulo: "Citas",
+          accion: "Crear cita",
+          descripcion: "Paciente: María González",
+          infoAdicional: {
+            pacienteId: "1234",
+            fechaCita: "21/02/2026",
+            doctor: "Dr. Juan Pérez",
+            consultorio: "A1",
+            estado: "Confirmada"
+          },
+          metadatos: { browser: "Chrome", sistema: "Windows", version: "1.0.0" }
+        };
       // Datos simulados de resultados
       const auditResults = [
         {
@@ -51,6 +75,11 @@ export default function AuditScreen() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    // Ejemplo básico usando window.print (puedes mejorar con jsPDF o html2pdf)
+    window.print();
   };
 
     // Abrir modal con datos simulados
@@ -151,41 +180,23 @@ export default function AuditScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Datos simulados */}
-                  <tr>
-                    <td>21/02/2026 10:35:22</td>
-                    <td title="Dr. Juan Pérez" style={{ cursor: 'pointer', color: '#17604a' }} onClick={() => handleOpenTimeline("jperez", "Dr. Juan Pérez")}>jperez</td>
-                    <td><span className="audit-role audit-role-dentista">👨‍⚕️ Dentista</span></td>
-                    <td><span className="audit-action audit-action-create">🟢 Crear cita</span></td>
-                    <td><span className="audit-module">Citas</span></td>
-                    <td>Paciente: María González</td>
-                    <td style={{ cursor: 'pointer', color: '#17604a' }}>10.0.0.12</td>
-                    <td>
-                      <button className="audit-action-btn" onClick={handleOpenModal}>👁️</button>
-                      <button className="audit-action-btn">📋</button>
-                    </td>
-                  </tr>
-                  {/* Puedes agregar más filas aquí si lo deseas */}
+                  {auditResults.map((ev, idx) => (
+                    <tr key={idx}>
+                      <td>{ev.fecha}</td>
+                      <td title={ev.usuario} style={{ cursor: 'pointer', color: '#17604a' }} onClick={() => handleOpenTimeline(ev.usuario, ev.usuario)}>{ev.usuario}</td>
+                      <td><span className="audit-role audit-role-dentista">{ev.rol === 'Dentista' ? '👨‍⚕️' : '🛡️'} {ev.rol}</span></td>
+                      <td><span className="audit-action audit-action-create">{ev.accion === 'Crear cita' ? '🟢' : '⚙️'} {ev.accion}</span></td>
+                      <td><span className="audit-module">{ev.modulo}</span></td>
+                      <td>{ev.detalle}</td>
+                      <td style={{ cursor: 'pointer', color: '#17604a' }}>{ev.ip}</td>
+                      <td>
+                        <button className="audit-action-btn" onClick={handleOpenModal}>👁️</button>
+                        <button className="audit-action-btn">📋</button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
-            </div>
-            {/* Tarjetas de eventos para móvil */}
-            <div className="audit-events-cards">
-              {auditResults.map((ev, idx) => (
-                <div className="audit-event-card" key={idx}>
-                  <div><strong>Fecha:</strong> {ev.fecha}</div>
-                  <div><strong>Usuario:</strong> <span style={{ color: '#17604a', cursor: 'pointer' }} onClick={() => handleOpenTimeline(ev.usuario, ev.usuario)}>{ev.usuario}</span></div>
-                  <div><strong>Rol:</strong> {ev.rol}</div>
-                  <div><strong>Acción:</strong> {ev.accion}</div>
-                  <div><strong>Módulo:</strong> {ev.modulo}</div>
-                  <div><strong>Detalle:</strong> {ev.detalle}</div>
-                  <div><strong>IP:</strong> {ev.ip}</div>
-                  <div className="audit-event-actions">
-                    <button className="audit-action-btn" onClick={handleOpenModal}>👁️</button>
-                    <button className="audit-action-btn">📋</button>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
           {/* Modal de detalle de auditoría */}
