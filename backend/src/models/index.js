@@ -12,6 +12,11 @@ const Consultorio = require("./Consultorio");
 const Material = require("./Material");
 const Cita = require("./Cita");
 
+// NUEVOS MODELOS
+const AlertaInventario = require("./AlertaInventario");
+const ConfiguracionAlerta = require("./ConfiguracionAlerta");
+const HistorialNotificacion = require("./HistorialNotificacion");
+
 // Usuario 1:1 Dentista
 Usuario.hasOne(Dentista, { foreignKey: "id_usuario" });
 Dentista.belongsTo(Usuario, { foreignKey: "id_usuario" });
@@ -39,6 +44,27 @@ Cita.belongsTo(Dentista, { foreignKey: "id_dentista" });
 Consultorio.hasMany(Cita, { foreignKey: "id_consultorio" });
 Cita.belongsTo(Consultorio, { foreignKey: "id_consultorio" });
 
+// NUEVAS RELACIONES PARA ALERTAS DE INVENTARIO
+Material.hasMany(AlertaInventario, {
+  foreignKey: "id_insumo",
+  sourceKey: "id",
+});
+AlertaInventario.belongsTo(Material, {
+  foreignKey: "id_insumo",
+  targetKey: "id",
+  as: "insumo",
+});
+
+Usuario.hasMany(AlertaInventario, {
+  foreignKey: "tratada_por",
+  sourceKey: "id",
+});
+AlertaInventario.belongsTo(Usuario, {
+  foreignKey: "tratada_por",
+  targetKey: "id",
+  as: "usuarioTratante",
+});
+
 module.exports = {
   sequelize,
   Usuario,
@@ -52,4 +78,7 @@ module.exports = {
   Consultorio,
   Material,
   Cita,
+  AlertaInventario,
+  ConfiguracionAlerta,
+  HistorialNotificacion,
 };

@@ -9,6 +9,8 @@ import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
 import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
+import AlertasInventarioScreen from "./AlertasInventarioScreen";
+import AlertasInventarioWidget from "./AlertasInventarioWidget";
 import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
 import "./dashboard.css";
 import ErrorBoundary from "./ErrorBoundary";
@@ -78,7 +80,7 @@ function normalizeDateLabel(fechaFromApi) {
 function inventoryLevel(actual, minimo, nivelFromApi) {
   const n = String(nivelFromApi || "").toLowerCase();
   if (n === "critico") return "crit";
-  if (n === "alerta") return "warn";
+  if (n === "alerta" || n === "preventivo") return "warn";
 
   const a = Number(actual ?? 0);
   const m = Math.max(1, Number(minimo ?? 1));
@@ -124,6 +126,7 @@ export default function DashboardScreen({ userData, onLogout }) {
   const loadPanel = useCallback(async () => {
     try {
       setLoading(true);
+
       if (!isAdmin) {
         setLoading(false);
         return;
@@ -211,6 +214,33 @@ export default function DashboardScreen({ userData, onLogout }) {
     });
   }, [fechaLabel]);
 
+  const topbarTitle = useMemo(() => {
+    switch (adminView) {
+      case "alertas-inventario":
+        return "ALERTAS DE INVENTARIO";
+      case "alertas-seguridad":
+        return "ALERTAS DE SEGURIDAD";
+      case "gestionar-cuentas":
+        return "GESTIONAR CUENTAS";
+      case "crear-cuenta":
+        return "CREAR CUENTA";
+      case "horarios":
+        return "HORARIOS DE ATENCIÓN";
+      case "parametros":
+        return "PARÁMETROS DEL SISTEMA";
+      case "monitoreo":
+        return "MONITOREO DEL SISTEMA";
+      case "auditoria":
+        return "AUDITORÍA Y ACTIVIDAD";
+      case "restauracion":
+        return "RESTAURACIÓN DEL SISTEMA";
+      case "catalogo-insumos":
+        return "CATÁLOGO DE INSUMOS";
+      default:
+        return "PANEL DE CONTROL";
+    }
+  }, [adminView]);
+
   const renderDashboard = () => (
     <div className="dm2-page">
       <div className="dm2-statsRow">
@@ -273,7 +303,7 @@ export default function DashboardScreen({ userData, onLogout }) {
 
           <CardSection title="Accesos rápidos">
             <div className="dm2-quickbar">
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nueva-cita")}>
+<button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nueva-rata")}>
                 <i className="fa-solid fa-plus" /> NUEVA CITA
               </button>
 
@@ -281,22 +311,24 @@ export default function DashboardScreen({ userData, onLogout }) {
                 <i className="fa-solid fa-user-doctor" /> NUEVO DENTISTA
               </button>
 
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nuevo-producto")}>
-                <i className="fa-solid fa-box" /> NUEVO PRODUCTO
+              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("catalogo-insumos")}>
+                <i className="fa-solid fa-box" /> INSUMOS
               </button>
 
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("configuracion")}>
-                <i className="fa-solid fa-gear" /> CONFIGURACIÓN
+              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView("alertas-inventario")}>
+                <i className="fa-solid fa-triangle-exclamation" /> ALERTAS STOCK
               </button>
             </div>
           </CardSection>
         </div>
 
         <div className="dm2-colRight">
+          <AlertasInventarioWidget onViewAll={() => setAdminView("alertas-inventario")} />
+
           <CardSection
             title="Stock crítico"
             rightAction={
-              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView("inventario")}>
+              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView("catalogo-insumos")}>
                 Ver inventario →
               </button>
             }
@@ -332,7 +364,7 @@ export default function DashboardScreen({ userData, onLogout }) {
           <CardSection
             title="Notificaciones"
             rightAction={
-              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView("notificaciones")}>
+              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView("alertas-seguridad")}>
                 Ver centro →
               </button>
             }
@@ -375,10 +407,12 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "horarios") return <HorariosAtencionScreen userData={userData} />;
     if (isAdmin && adminView === "parametros") return <ParametrosSistemaScreen userData={userData} />;
     if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-  if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
-  if (isAdmin && adminView === "auditoria") return <AuditScreen />;
+    if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
+    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
     if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
     if (isAdmin && adminView === "catalogo-insumos") return <CatalogoInsumosScreen />;
+    if (isAdmin && adminView === "alertas-seguridad") return <AlertasSeguridadScreen userData={userData} />;
+    if (isAdmin && adminView === "alertas-inventario") return <AlertasInventarioScreen userData={userData} />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
@@ -411,7 +445,7 @@ export default function DashboardScreen({ userData, onLogout }) {
         <main className="dm2-main">
           <div className="dm2-topbar">
             <div className="dm2-topbar-left">
-              <div className="dm2-topbar-title">PANEL DE CONTROL</div>
+              <div className="dm2-topbar-title">{topbarTitle}</div>
               <div className="dm2-topbar-sub">Clínica DentMed</div>
             </div>
 
@@ -439,3 +473,4 @@ export default function DashboardScreen({ userData, onLogout }) {
     </div>
   );
 }
+
