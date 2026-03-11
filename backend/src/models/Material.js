@@ -9,23 +9,60 @@ const Material = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+
+    codigo: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true,
+    },
+
     nombre: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+
+    categoria: {
+      type: DataTypes.STRING(120),
+      allowNull: true,
+    },
+
+    proveedor_principal: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+    },
+
     stock_minimo: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
       comment: "Para alertas de inventario bajo",
     },
+
     unidad_medida: {
       type: DataTypes.STRING(50),
       allowNull: true,
       comment: "piezas, ml, gramos, etc.",
     },
+
     cantidad_actual: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: "Stock actual del insumo",
+    },
+
+    ultima_entrada: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    ultima_salida: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    costo_promedio: {
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
     },

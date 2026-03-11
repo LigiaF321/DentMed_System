@@ -1,19 +1,13 @@
 const express = require("express");
+const controller = require("../controllers/monitoring.controller");
+
 const router = express.Router();
 
-const {
-  getActivities,
-  getSecurityAlerts,
-  getHourlyStats,
-  getSessionTimes,
-  getUsuarios,
-} = require("../controllers/monitoring.controller");
-
-// Rutas de monitoreo
-router.get("/activities", getActivities);
-router.get("/security-alerts", getSecurityAlerts);
-router.get("/hourly-stats", getHourlyStats);
-router.get("/session-times", getSessionTimes);
-router.get("/usuarios", getUsuarios);
+router.get("/overview", controller.getOverview);
+router.get("/activities", controller.getActivities);
+router.get("/users", controller.getUsuarios);
+router.get("/session-times", controller.getSessionTimes);
+router.get("/module-stats", controller.getModuleStats);
+router.get("/recent-errors", controller.getRecentErrors);
 
 module.exports = router;

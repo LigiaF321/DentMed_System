@@ -36,7 +36,11 @@ function calcularNivel(stockActual, stockMinimo, umbralPreventivo = 20) {
 
 async function ejecutarCalculoAlertas() {
   const config = await obtenerConfiguracion();
-  const materiales = await Material.findAll();
+
+  const materiales = await Material.findAll({
+    attributes: ["id", "nombre", "stock_minimo", "unidad_medida", "cantidad_actual"],
+    order: [["nombre", "ASC"]],
+  });
 
   let procesadas = 0;
   let criticas = 0;
@@ -44,8 +48,8 @@ async function ejecutarCalculoAlertas() {
   let normales = 0;
 
   for (const material of materiales) {
-    const stockActual = material.cantidad_actual;
-    const stockMinimo = material.stock_minimo;
+    const stockActual = Number(material.cantidad_actual || 0);
+    const stockMinimo = Number(material.stock_minimo || 0);
     const nivel = calcularNivel(stockActual, stockMinimo, config.umbral_preventivo);
 
     const alertaActiva = await AlertaInventario.findOne({
@@ -85,8 +89,8 @@ async function ejecutarCalculoAlertas() {
       });
     } else if (
       alertaActiva.nivel !== nivel ||
-      alertaActiva.stock_actual !== stockActual ||
-      alertaActiva.stock_minimo !== stockMinimo
+      Number(alertaActiva.stock_actual) !== stockActual ||
+      Number(alertaActiva.stock_minimo) !== stockMinimo
     ) {
       await alertaActiva.update({
         stock_actual: stockActual,
@@ -132,12 +136,12 @@ async function listarAlertas(query = {}) {
 
   if (desde || hasta) {
     where.fecha_alerta = {};
-    if (desde) where.fecha_alerta[Op.gte] = new Date(desde);
-    if (hasta) where.fecha_alerta[Op.lte] = new Date(hasta);
+    if (desde) where.fecha_alerta[Op.gte] = new Date(`${desde}T00:00:00`);
+    if (hasta) where.fecha_alerta[Op.lte] = new Date(`${hasta}T23:59:59.999`);
   }
 
-  const page = Number(pagina);
-  const pageSize = Number(limite);
+  const page = Number(pagina) || 1;
+  const pageSize = Number(limite) || 10;
   const offset = (page - 1) * pageSize;
 
   const { rows, count } = await AlertaInventario.findAndCountAll({
@@ -146,7 +150,7 @@ async function listarAlertas(query = {}) {
       {
         model: Material,
         as: "insumo",
-        attributes: ["id", "nombre", "cantidad_actual", "stock_minimo", "unidad_medida"],
+        attributes: ["id", "nombre", "stock_minimo", "unidad_medida", "cantidad_actual"],
       },
     ],
     limit: pageSize,
@@ -287,8 +291,8 @@ async function actualizarConfiguracion(payload = {}) {
 }
 
 async function obtenerHistorialNotificaciones({ pagina = 1, limite = 10 } = {}) {
-  const page = Number(pagina);
-  const pageSize = Number(limite);
+  const page = Number(pagina) || 1;
+  const pageSize = Number(limite) || 10;
   const offset = (page - 1) * pageSize;
 
   const { rows, count } = await HistorialNotificacion.findAndCountAll({

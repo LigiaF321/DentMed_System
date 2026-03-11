@@ -9,27 +9,32 @@ const MENU_ITEMS = [
   { id: "horarios", label: "Horarios de Atención", icon: "fa-clock" },
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
 
-  // Monitoreo
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
   { id: "alertas-seguridad", label: "Alertas de Seguridad", icon: "fa-bell" },
-  { id: "auditoria", label: "📋 Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
-  { id: "alertas", label: "Alertas de Seguridad", icon: "fa-bell", adminOnly: true },
   { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
 
-  // Inventario
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
+  { id: "kardex-movimientos", label: "Kardex / Movimientos", icon: "fa-right-left" },
   { id: "alertas-inventario", label: "Alertas de Inventario", icon: "fa-triangle-exclamation" },
 ];
 
-export default function AdminSidebar({ activeView, onSelect, onLogout, userData, alertCount = 0 }) {
+export default function AdminSidebar({
+  activeView,
+  onSelect,
+  onLogout,
+  userData,
+  alertCount = 0,
+}) {
+  const currentRole = userData?.role || userData?.rol;
+
   const name =
     userData?.username ||
     userData?.email?.split("@")?.[0] ||
-    (userData?.role === "admin" ? "Admin" : "Doctor(a)");
+    (currentRole === "admin" ? "Admin" : "Doctor(a)");
 
   const userInitial = String(name || "A").charAt(0).toUpperCase();
-  const roleLabel = userData?.role === "admin" ? "Administrador" : "Doctor(a)";
+  const roleLabel = currentRole === "admin" ? "Administrador" : "Doctor(a)";
 
   return (
     <aside className="dm2-side">
@@ -42,10 +47,14 @@ export default function AdminSidebar({ activeView, onSelect, onLogout, userData,
 
         <nav className="dm2-side-nav">
           {MENU_ITEMS.map((item) => {
-            if (item.adminOnly && userData?.role !== "admin") return null;
+            if (item.adminOnly && currentRole !== "admin") return null;
             const isActive = activeView === item.id;
 
-            const displayLabel = item.id === "alertas" ? `🔔 Alertas (${alertCount})` : item.label;
+            const displayLabel =
+              item.id === "alertas-seguridad" && alertCount > 0
+                ? `${item.label} (${alertCount})`
+                : item.label;
+
             return (
               <button
                 key={item.id}
