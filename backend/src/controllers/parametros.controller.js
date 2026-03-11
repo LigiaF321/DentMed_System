@@ -102,19 +102,22 @@ function getUserLabelFromReq(req) {
 
 async function ensureDefaults() {
   const keys = Object.keys(DEFAULTS);
+
   for (const clave of keys) {
     const def = DEFAULTS[clave];
-    await Configuracion.findOrCreate({
+
+    const [config, created] = await Configuracion.findOrCreate({
       where: { clave },
       defaults: {
         clave,
         valor: def.valor,
-        tipo_dato: def.tipo_dato,
-        descripcion: def.descripcion,
-        activo: true,
-        fecha_modificacion: new Date(),
       },
     });
+
+    if (!created && (config.valor === null || config.valor === undefined || config.valor === "")) {
+      config.valor = def.valor;
+      await config.save();
+    }
   }
 }
 
