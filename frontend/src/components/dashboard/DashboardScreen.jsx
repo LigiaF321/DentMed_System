@@ -8,6 +8,7 @@ import HorariosAtencionScreen from "./HorariosAtencionScreen";
 import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
 import MonitoringScreen from "./MonitoringScreen";
 import RestauracionScreen from "./RestauracionScreen";
+import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
 import AlertasInventarioScreen from "./AlertasInventarioScreen";
 import AlertasInventarioWidget from "./AlertasInventarioWidget";
 import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
@@ -345,6 +346,7 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("nueva-cita")}
               >
+<button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nueva-rata")}>
                 <i className="fa-solid fa-plus" /> NUEVA CITA
               </button>
 
@@ -520,6 +522,12 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "alertas-inventario") {
       return <AlertasInventarioScreen userData={userData} />;
     }
+    if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
+    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
+    if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
+    if (isAdmin && adminView === "catalogo-insumos") return <CatalogoInsumosScreen />;
+    if (isAdmin && adminView === "alertas-seguridad") return <AlertasSeguridadScreen userData={userData} />;
+    if (isAdmin && adminView === "alertas-inventario") return <AlertasInventarioScreen userData={userData} />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
@@ -586,3 +594,4 @@ export default function DashboardScreen({ userData, onLogout }) {
     </div>
   );
 }
+
