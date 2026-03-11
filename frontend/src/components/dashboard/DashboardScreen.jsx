@@ -85,6 +85,7 @@ function inventoryLevel(actual, minimo, nivelFromApi) {
   const a = Number(actual ?? 0);
   const m = Math.max(1, Number(minimo ?? 1));
   const ratio = a / m;
+
   if (ratio <= 1) return "crit";
   if (ratio <= 1.5) return "warn";
   return "ok";
@@ -346,8 +347,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("nueva-cita")}
               >
-<button className="dm2-quickbtn" type="button" onClick={() => setAdminView("nueva-rata")}>
-                <i className="fa-solid fa-plus" /> NUEVA CITA
+                <i className="fa-solid fa-plus" />
+                <span>NUEVA CITA</span>
               </button>
 
               <button
@@ -355,7 +356,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("nuevo-dentista")}
               >
-                <i className="fa-solid fa-user-doctor" /> NUEVO DENTISTA
+                <i className="fa-solid fa-user-doctor" />
+                <span>NUEVO DENTISTA</span>
               </button>
 
               <button
@@ -363,7 +365,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("catalogo-insumos")}
               >
-                <i className="fa-solid fa-box" /> INSUMOS
+                <i className="fa-solid fa-box" />
+                <span>INSUMOS</span>
               </button>
 
               <button
@@ -371,7 +374,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("kardex-movimientos")}
               >
-                <i className="fa-solid fa-right-left" /> KARDEX
+                <i className="fa-solid fa-right-left" />
+                <span>KARDEX</span>
               </button>
 
               <button
@@ -379,7 +383,8 @@ export default function DashboardScreen({ userData, onLogout }) {
                 type="button"
                 onClick={() => setAdminView("alertas-inventario")}
               >
-                <i className="fa-solid fa-triangle-exclamation" /> ALERTAS STOCK
+                <i className="fa-solid fa-triangle-exclamation" />
+                <span>ALERTAS STOCK</span>
               </button>
             </div>
           </CardSection>
@@ -506,28 +511,18 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === "restauracion") {
       return <RestauracionScreen userData={userData} />;
     }
-
     if (isAdmin && adminView === "catalogo-insumos") {
-      return renderPlaceholderCard("Catálogo de Insumos");
+      return <CatalogoInsumosScreen />;
     }
-
     if (isAdmin && adminView === "kardex-movimientos") {
       return <KardexMovimientosScreen userData={userData} />;
     }
-
     if (isAdmin && adminView === "alertas-seguridad") {
       return <AlertasSeguridadScreen userData={userData} />;
     }
-
     if (isAdmin && adminView === "alertas-inventario") {
       return <AlertasInventarioScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "alertas") return <AlertasSeguridadScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
-    if (isAdmin && adminView === "restauracion") return <RestauracionScreen userData={userData} />;
-    if (isAdmin && adminView === "catalogo-insumos") return <CatalogoInsumosScreen />;
-    if (isAdmin && adminView === "alertas-seguridad") return <AlertasSeguridadScreen userData={userData} />;
-    if (isAdmin && adminView === "alertas-inventario") return <AlertasInventarioScreen userData={userData} />;
 
     if (isAdmin && adminView !== "dashboard") {
       return (
@@ -594,4 +589,3 @@ export default function DashboardScreen({ userData, onLogout }) {
     </div>
   );
 }
-
