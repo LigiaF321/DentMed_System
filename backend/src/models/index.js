@@ -21,18 +21,24 @@ const HistorialNotificacion = require("./HistorialNotificacion");
 const MovimientoInventario = require("./MovimientoInventario");
 const MovimientoEliminado = require("./MovimientoEliminado");
 
-// Usuario 1:1 Dentista
+// ===============================
+// USUARIO 1:1 DENTISTA
+// ===============================
 Usuario.hasOne(Dentista, { foreignKey: "id_usuario" });
 Dentista.belongsTo(Usuario, { foreignKey: "id_usuario" });
 
-// Usuario -> Auditoria, TokenRecuperacion
+// ===============================
+// USUARIO -> AUDITORIA / TOKEN
+// ===============================
 Usuario.hasMany(Auditoria, { foreignKey: "id_usuario" });
 Auditoria.belongsTo(Usuario, { foreignKey: "id_usuario" });
 
 Usuario.hasMany(TokenRecuperacion, { foreignKey: "id_usuario" });
 TokenRecuperacion.belongsTo(Usuario, { foreignKey: "id_usuario" });
 
-// Configuracion -> HistorialConfiguracion
+// ===============================
+// CONFIGURACION -> HISTORIAL
+// ===============================
 Configuracion.hasMany(HistorialConfiguracion, {
   foreignKey: "clave",
   sourceKey: "clave",
@@ -42,19 +48,21 @@ HistorialConfiguracion.belongsTo(Configuracion, {
   targetKey: "clave",
 });
 
-// Paciente -> Citas
+// ===============================
+// PACIENTE / DENTISTA / CONSULTORIO -> CITA
+// ===============================
 Paciente.hasMany(Cita, { foreignKey: "id_paciente" });
 Cita.belongsTo(Paciente, { foreignKey: "id_paciente" });
 
-// Dentista -> Citas
 Dentista.hasMany(Cita, { foreignKey: "id_dentista" });
 Cita.belongsTo(Dentista, { foreignKey: "id_dentista" });
 
-// Consultorio -> Citas
 Consultorio.hasMany(Cita, { foreignKey: "id_consultorio" });
 Cita.belongsTo(Consultorio, { foreignKey: "id_consultorio" });
 
-// Alertas de inventario
+// ===============================
+// ALERTAS DE INVENTARIO
+// ===============================
 Material.hasMany(AlertaInventario, {
   foreignKey: "id_insumo",
   sourceKey: "id",
@@ -75,7 +83,9 @@ AlertaInventario.belongsTo(Usuario, {
   as: "usuarioTratante",
 });
 
-// Kardex / movimientos
+// ===============================
+// KARDEX / MOVIMIENTOS
+// ===============================
 Material.hasMany(MovimientoInventario, {
   foreignKey: "id_insumo",
   sourceKey: "id",
@@ -120,6 +130,9 @@ MovimientoInventario.belongsTo(Cita, {
   as: "citaRelacionada",
 });
 
+// ===============================
+// MOVIMIENTOS ELIMINADOS
+// ===============================
 Usuario.hasMany(MovimientoEliminado, {
   foreignKey: "eliminado_por",
   sourceKey: "id",

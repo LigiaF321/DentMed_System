@@ -16,6 +16,7 @@ const MENU_ITEMS = [
 
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
   { id: "kardex-movimientos", label: "Kardex / Movimientos", icon: "fa-right-left" },
+  { id: "reportes-consumo", label: "Reportes de Consumo", icon: "fa-chart-column", adminOnly: true },
   { id: "alertas-inventario", label: "Alertas de Inventario", icon: "fa-triangle-exclamation" },
 ];
 

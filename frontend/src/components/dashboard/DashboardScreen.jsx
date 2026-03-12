@@ -1,25 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import AdminSidebar from "./AdminSidebar";
-import AuditScreen from "./AuditScreen";
-import GestionarCuentasScreen from "./GestionarCuentasScreen";
-import CrearCuentaPlaceholder from "./CrearCuentaPlaceholder";
-import WeeklyAppointmentsChart from "./WeeklyAppointmentsChart";
-import HorariosAtencionScreen from "./HorariosAtencionScreen";
-import ParametrosSistemaScreen from "./ParametrosSistemaScreen";
-import MonitoringScreen from "./MonitoringScreen";
-import RestauracionScreen from "./RestauracionScreen";
-import CatalogoInsumosScreen from "./CatalogoInsumosScreen";
-import AlertasInventarioScreen from "./AlertasInventarioScreen";
-import AlertasInventarioWidget from "./AlertasInventarioWidget";
-import AlertasSeguridadScreen from "./AlertasSeguridadScreen";
-import KardexMovimientosScreen from "./KardexMovimientosScreen";
-import "./dashboard.css";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import AdminSidebar from './AdminSidebar';
+import AuditScreen from './AuditScreen';
+import GestionarCuentasScreen from './GestionarCuentasScreen';
+import CrearCuentaPlaceholder from './CrearCuentaPlaceholder';
+import WeeklyAppointmentsChart from './WeeklyAppointmentsChart';
+import HorariosAtencionScreen from './HorariosAtencionScreen';
+import ParametrosSistemaScreen from './ParametrosSistemaScreen';
+import MonitoringScreen from './MonitoringScreen';
+import RestauracionScreen from './RestauracionScreen';
+import CatalogoInsumosScreen from './CatalogoInsumosScreen';
+import AlertasInventarioScreen from './AlertasInventarioScreen';
+import AlertasInventarioWidget from './AlertasInventarioWidget';
+import AlertasSeguridadScreen from './AlertasSeguridadScreen';
+import KardexMovimientosScreen from './KardexMovimientosScreen';
+import ReportesConsumoScreen from './ReportesConsumoScreen';
+import './dashboard.css';
 
-function Dot({ variant = "info" }) {
+function Dot({ variant = 'info' }) {
   return <span className={`dm2-dot dm2-dot--${variant}`} />;
 }
 
-function StatCard({ label, icon, value, variant = "info" }) {
+function StatCard({ label, icon, value, variant = 'info' }) {
   return (
     <div className="dm2-statcard">
       <div className="dm2-statcard-top">
@@ -38,7 +39,9 @@ function CardSection({ title, children, rightAction }) {
     <section className="dm2-card">
       <div className="dm2-card-head">
         <div className="dm2-card-title">{title}</div>
-        {rightAction ? <div className="dm2-card-action">{rightAction}</div> : null}
+        {rightAction ? (
+          <div className="dm2-card-action">{rightAction}</div>
+        ) : null}
       </div>
       <div className="dm2-card-body">{children}</div>
     </section>
@@ -46,31 +49,31 @@ function CardSection({ title, children, rightAction }) {
 }
 
 function parseLocalYMD(ymd) {
-  const [y, m, d] = String(ymd).split("-").map(Number);
+  const [y, m, d] = String(ymd).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
 function normalizeDateLabel(fechaFromApi) {
-  if (!fechaFromApi) return "";
+  if (!fechaFromApi) return '';
   const s = String(fechaFromApi).trim();
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const d = parseLocalYMD(s);
-    return d.toLocaleDateString("es-HN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    return d.toLocaleDateString('es-HN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     });
   }
 
   const d = new Date(s);
   if (!Number.isNaN(d.getTime())) {
-    return d.toLocaleDateString("es-HN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    return d.toLocaleDateString('es-HN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     });
   }
 
@@ -78,35 +81,35 @@ function normalizeDateLabel(fechaFromApi) {
 }
 
 function inventoryLevel(actual, minimo, nivelFromApi) {
-  const n = String(nivelFromApi || "").toLowerCase();
-  if (n === "critico") return "crit";
-  if (n === "alerta" || n === "preventivo") return "warn";
+  const n = String(nivelFromApi || '').toLowerCase();
+  if (n === 'critico') return 'crit';
+  if (n === 'alerta' || n === 'preventivo') return 'warn';
 
   const a = Number(actual ?? 0);
   const m = Math.max(1, Number(minimo ?? 1));
   const ratio = a / m;
 
-  if (ratio <= 1) return "crit";
-  if (ratio <= 1.5) return "warn";
-  return "ok";
+  if (ratio <= 1) return 'crit';
+  if (ratio <= 1.5) return 'warn';
+  return 'ok';
 }
 
 function notifLevel(tipo) {
-  const t = String(tipo || "").toLowerCase();
-  if (t === "urgente") return "crit";
-  if (t === "advertencia") return "warn";
-  return "info";
+  const t = String(tipo || '').toLowerCase();
+  if (t === 'urgente') return 'crit';
+  if (t === 'advertencia') return 'warn';
+  return 'info';
 }
 
 export default function DashboardScreen({ userData, onLogout }) {
-  const isAdmin = (userData?.role || userData?.rol) === "admin";
-  const [adminView, setAdminView] = useState("dashboard");
+  const isAdmin = (userData?.role || userData?.rol) === 'admin';
+  const [adminView, setAdminView] = useState('dashboard');
   const [alertCount, setAlertCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [fechaLabel, setFechaLabel] = useState("");
-  const [lastUpdated, setLastUpdated] = useState("—");
-  const [query, setQuery] = useState("");
+  const [fechaLabel, setFechaLabel] = useState('');
+  const [lastUpdated, setLastUpdated] = useState('—');
+  const [query, setQuery] = useState('');
 
   const [resumen, setResumen] = useState({
     citasHoy: 0,
@@ -132,8 +135,8 @@ export default function DashboardScreen({ userData, onLogout }) {
         return;
       }
 
-      const res = await fetch("/api/admin/panel-principal");
-      if (!res.ok) throw new Error("No se pudo cargar panel principal");
+      const res = await fetch('/api/admin/panel-principal');
+      if (!res.ok) throw new Error('No se pudo cargar panel principal');
 
       const data = await res.json();
 
@@ -181,24 +184,29 @@ export default function DashboardScreen({ userData, onLogout }) {
       setNotifs(mappedNotifs);
       setAlertCount(mappedNotifs.length);
 
-      const ua = data.ultima_actualizacion ? new Date(data.ultima_actualizacion) : null;
+      const ua = data.ultima_actualizacion
+        ? new Date(data.ultima_actualizacion)
+        : null;
       setLastUpdated(
         ua && !Number.isNaN(ua.getTime())
-          ? ua.toLocaleTimeString("es-HN", { hour: "2-digit", minute: "2-digit" })
-          : "—"
+          ? ua.toLocaleTimeString('es-HN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '—'
       );
     } catch (e) {
-      console.error("Error cargando panel principal:", e);
+      console.error('Error cargando panel principal:', e);
       setNotifs([
         {
           id: 1,
-          tipo: "urgente",
-          mensaje: "Error cargando panel",
-          accion: "",
+          tipo: 'urgente',
+          mensaje: 'Error cargando panel',
+          accion: '',
         },
       ]);
       setAlertCount(1);
-      setLastUpdated("—");
+      setLastUpdated('—');
     } finally {
       setLoading(false);
     }
@@ -216,40 +224,42 @@ export default function DashboardScreen({ userData, onLogout }) {
 
   const topDate = useMemo(() => {
     if (fechaLabel) return fechaLabel;
-    return new Date().toLocaleDateString("es-HN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    return new Date().toLocaleDateString('es-HN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     });
   }, [fechaLabel]);
 
   const topbarTitle = useMemo(() => {
     switch (adminView) {
-      case "alertas-inventario":
-        return "ALERTAS DE INVENTARIO";
-      case "alertas-seguridad":
-        return "ALERTAS DE SEGURIDAD";
-      case "kardex-movimientos":
-        return "KARDEX / MOVIMIENTOS";
-      case "gestionar-cuentas":
-        return "GESTIONAR CUENTAS";
-      case "crear-cuenta":
-        return "CREAR CUENTA";
-      case "horarios":
-        return "HORARIOS DE ATENCIÓN";
-      case "parametros":
-        return "PARÁMETROS DEL SISTEMA";
-      case "monitoreo":
-        return "MONITOREO DEL SISTEMA";
-      case "auditoria":
-        return "AUDITORÍA Y ACTIVIDAD";
-      case "restauracion":
-        return "RESTAURACIÓN DEL SISTEMA";
-      case "catalogo-insumos":
-        return "CATÁLOGO DE INSUMOS";
+      case 'alertas-inventario':
+        return 'ALERTAS DE INVENTARIO';
+      case 'alertas-seguridad':
+        return 'ALERTAS DE SEGURIDAD';
+      case 'kardex-movimientos':
+        return 'KARDEX / MOVIMIENTOS';
+      case 'gestionar-cuentas':
+        return 'GESTIONAR CUENTAS';
+      case 'crear-cuenta':
+        return 'CREAR CUENTA';
+      case 'horarios':
+        return 'HORARIOS DE ATENCIÓN';
+      case 'parametros':
+        return 'PARÁMETROS DEL SISTEMA';
+      case 'monitoreo':
+        return 'MONITOREO DEL SISTEMA';
+      case 'auditoria':
+        return 'AUDITORÍA Y ACTIVIDAD';
+      case 'restauracion':
+        return 'RESTAURACIÓN DEL SISTEMA';
+      case 'catalogo-insumos':
+        return 'CATÁLOGO DE INSUMOS';
+      case 'reportes-consumo':
+        return 'REPORTES DE CONSUMO';
       default:
-        return "PANEL DE CONTROL";
+        return 'PANEL DE CONTROL';
     }
   }, [adminView]);
 
@@ -322,7 +332,7 @@ export default function DashboardScreen({ userData, onLogout }) {
           <CardSection title="Actualización">
             <div className="dm2-updateRow">
               <div className="dm2-updateLeft">
-                <span className="dm2-muted">Última actualización:</span>{" "}
+                <span className="dm2-muted">Última actualización:</span>{' '}
                 <span className="dm2-strong">{lastUpdated}</span>
               </div>
 
@@ -332,12 +342,16 @@ export default function DashboardScreen({ userData, onLogout }) {
                 onClick={loadPanel}
                 disabled={loading}
               >
-                <i className={`fa-solid ${loading ? "fa-spinner fa-spin" : "fa-rotate"}`} />
-                <span>{loading ? "ACTUALIZANDO..." : "ACTUALIZAR AHORA"}</span>
+                <i
+                  className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-rotate'}`}
+                />
+                <span>{loading ? 'ACTUALIZANDO...' : 'ACTUALIZAR AHORA'}</span>
               </button>
             </div>
 
-            <div className="dm2-muted">Actualización automática cada 5 minutos</div>
+            <div className="dm2-muted">
+              Actualización automática cada 5 minutos
+            </div>
           </CardSection>
 
           <CardSection title="Accesos rápidos">
@@ -345,7 +359,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView("nueva-cita")}
+                onClick={() => setAdminView('nueva-cita')}
               >
                 <i className="fa-solid fa-plus" />
                 <span>NUEVA CITA</span>
@@ -354,7 +368,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView("nuevo-dentista")}
+                onClick={() => setAdminView('nuevo-dentista')}
               >
                 <i className="fa-solid fa-user-doctor" />
                 <span>NUEVO DENTISTA</span>
@@ -363,7 +377,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView("catalogo-insumos")}
+                onClick={() => setAdminView('catalogo-insumos')}
               >
                 <i className="fa-solid fa-box" />
                 <span>INSUMOS</span>
@@ -372,7 +386,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView("kardex-movimientos")}
+                onClick={() => setAdminView('kardex-movimientos')}
               >
                 <i className="fa-solid fa-right-left" />
                 <span>KARDEX</span>
@@ -381,17 +395,28 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView("alertas-inventario")}
+                onClick={() => setAdminView('alertas-inventario')}
               >
                 <i className="fa-solid fa-triangle-exclamation" />
                 <span>ALERTAS STOCK</span>
+              </button>
+
+              <button
+                className="dm2-quickbtn"
+                type="button"
+                onClick={() => setAdminView('reportes-consumo')}
+              >
+                <i className="fa-solid fa-chart-column" />
+                <span>REPORTES</span>
               </button>
             </div>
           </CardSection>
         </div>
 
         <div className="dm2-colRight">
-          <AlertasInventarioWidget onViewAll={() => setAdminView("alertas-inventario")} />
+          <AlertasInventarioWidget
+            onViewAll={() => setAdminView('alertas-inventario')}
+          />
 
           <CardSection
             title="Stock crítico"
@@ -399,7 +424,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 type="button"
                 className="dm2-linkBtn"
-                onClick={() => setAdminView("catalogo-insumos")}
+                onClick={() => setAdminView('catalogo-insumos')}
               >
                 Ver inventario →
               </button>
@@ -414,10 +439,16 @@ export default function DashboardScreen({ userData, onLogout }) {
               </div>
 
               {stockItems.length === 0 ? (
-                <div className="dm2-empty">No hay productos en stock crítico</div>
+                <div className="dm2-empty">
+                  No hay productos en stock crítico
+                </div>
               ) : (
                 stockItems.map((it) => {
-                  const lvl = inventoryLevel(it.stock_actual, it.stock_minimo, it.nivel);
+                  const lvl = inventoryLevel(
+                    it.stock_actual,
+                    it.stock_minimo,
+                    it.nivel
+                  );
                   return (
                     <div key={it.id} className="dm2-trow">
                       <div className="dm2-tprod">{it.producto}</div>
@@ -439,7 +470,7 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 type="button"
                 className="dm2-linkBtn"
-                onClick={() => setAdminView("alertas-seguridad")}
+                onClick={() => setAdminView('alertas-seguridad')}
               >
                 Ver centro →
               </button>
@@ -455,19 +486,23 @@ export default function DashboardScreen({ userData, onLogout }) {
                     <div
                       key={n.id}
                       className="dm2-notifRow"
-                      role={n.accion ? "button" : undefined}
+                      role={n.accion ? 'button' : undefined}
                       tabIndex={n.accion ? 0 : undefined}
-                      onClick={() => n.accion && (window.location.href = n.accion)}
-                      onKeyDown={(e) =>
-                        n.accion && e.key === "Enter" && (window.location.href = n.accion)
+                      onClick={() =>
+                        n.accion && (window.location.href = n.accion)
                       }
-                      style={n.accion ? { cursor: "pointer" } : undefined}
+                      onKeyDown={(e) =>
+                        n.accion &&
+                        e.key === 'Enter' &&
+                        (window.location.href = n.accion)
+                      }
+                      style={n.accion ? { cursor: 'pointer' } : undefined}
                     >
                       <Dot variant={lvl} />
                       <div className="dm2-notifText">
                         <span className="dm2-notifKind">
-                          {String(n.tipo || "INFO").toUpperCase()}:
-                        </span>{" "}
+                          {String(n.tipo || 'INFO').toUpperCase()}:
+                        </span>{' '}
                         {n.mensaje}
                       </div>
                     </div>
@@ -486,7 +521,11 @@ export default function DashboardScreen({ userData, onLogout }) {
       <div className="dm2-card">
         <div className="dm2-card-head">
           <div className="dm2-card-title">{title}</div>
-          <button className="dm2-linkBtn" type="button" onClick={() => setAdminView("dashboard")}>
+          <button
+            className="dm2-linkBtn"
+            type="button"
+            onClick={() => setAdminView('dashboard')}
+          >
             ← Volver al panel de control
           </button>
         </div>
@@ -498,44 +537,57 @@ export default function DashboardScreen({ userData, onLogout }) {
   );
 
   const renderMainContent = () => {
-    if (isAdmin && adminView === "gestionar-cuentas") return <GestionarCuentasScreen />;
-    if (isAdmin && adminView === "crear-cuenta") return <CrearCuentaPlaceholder />;
-    if (isAdmin && adminView === "horarios") {
+    if (isAdmin && adminView === 'gestionar-cuentas')
+      return <GestionarCuentasScreen />;
+    if (isAdmin && adminView === 'crear-cuenta')
+      return <CrearCuentaPlaceholder />;
+    if (isAdmin && adminView === 'horarios') {
       return <HorariosAtencionScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "parametros") {
+    if (isAdmin && adminView === 'parametros') {
       return <ParametrosSistemaScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "monitoreo") return <MonitoringScreen />;
-    if (isAdmin && adminView === "auditoria") return <AuditScreen />;
-    if (isAdmin && adminView === "restauracion") {
+    if (isAdmin && adminView === 'monitoreo') return <MonitoringScreen />;
+    if (isAdmin && adminView === 'auditoria') return <AuditScreen />;
+    if (isAdmin && adminView === 'restauracion') {
       return <RestauracionScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "catalogo-insumos") {
+    if (isAdmin && adminView === 'catalogo-insumos') {
       return <CatalogoInsumosScreen />;
     }
-    if (isAdmin && adminView === "kardex-movimientos") {
+    if (isAdmin && adminView === 'kardex-movimientos') {
       return <KardexMovimientosScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "alertas-seguridad") {
+    if (isAdmin && adminView === 'alertas-seguridad') {
       return <AlertasSeguridadScreen userData={userData} />;
     }
-    if (isAdmin && adminView === "alertas-inventario") {
+    if (isAdmin && adminView === 'alertas-inventario') {
       return <AlertasInventarioScreen userData={userData} />;
     }
+    if (isAdmin && adminView === 'reportes-consumo') {
+      return <ReportesConsumoScreen userData={userData} />;
+    }
 
-    if (isAdmin && adminView !== "dashboard") {
+    if (isAdmin && adminView !== 'dashboard') {
       return (
         <div className="dm2-page">
           <div className="dm2-card">
             <div className="dm2-card-head">
-              <div className="dm2-card-title">Vista: {adminView.toUpperCase()}</div>
-              <button className="dm2-linkBtn" type="button" onClick={() => setAdminView("dashboard")}>
+              <div className="dm2-card-title">
+                Vista: {adminView.toUpperCase()}
+              </div>
+              <button
+                className="dm2-linkBtn"
+                type="button"
+                onClick={() => setAdminView('dashboard')}
+              >
                 ← Volver al panel de control
               </button>
             </div>
             <div className="dm2-card-body">
-              <div className="dm2-empty">Cargando configuración de {adminView}...</div>
+              <div className="dm2-empty">
+                Cargando configuración de {adminView}...
+              </div>
             </div>
           </div>
         </div>
@@ -547,7 +599,7 @@ export default function DashboardScreen({ userData, onLogout }) {
 
   return (
     <div className="dm2-app">
-      <div className={`dm2-layout ${isAdmin ? "dm2-layout--withSidebar" : ""}`}>
+      <div className={`dm2-layout ${isAdmin ? 'dm2-layout--withSidebar' : ''}`}>
         {isAdmin ? (
           <AdminSidebar
             activeView={adminView}
