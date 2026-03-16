@@ -22,6 +22,7 @@ const restauracionRoutes = require("./routes/restauracion.routes");
 const alertasInventarioRoutes = require("./routes/alertasInventario.routes");
 const kardexRoutes = require("./routes/kardex.routes");
 const reportesConsumoRoutes = require("./routes/reportesConsumo.routes");
+const alertasSeguridadRoutes = require("./routes/alertasSeguridad.routes");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -33,6 +34,7 @@ app.use("/api/admin/horarios", horariosRoutes);
 app.use("/api/admin/parametros", parametrosRoutes);
 app.use("/api/admin/monitoring", monitoringRoutes);
 app.use("/api/admin/alertas", alertasInventarioRoutes);
+app.use("/api/admin/seguridad", alertasSeguridadRoutes);
 app.use("/api/admin/kardex", kardexRoutes);
 app.use("/api/admin/reportes", reportesConsumoRoutes);
 
@@ -47,6 +49,7 @@ app.get("/", (req, res) => {
       "/api/dentistas",
       "/api/restauracion",
       "/api/admin/alertas",
+      "/api/admin/seguridad",
       "/api/admin/kardex",
       "/api/admin/reportes",
     ],

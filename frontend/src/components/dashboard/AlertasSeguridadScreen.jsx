@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiCall } from "../../services/api";
+// import io from 'socket.io-client'; // Preparado para WebSocket
 
 const MOCK_ALERTAS = [
   {
@@ -58,7 +60,8 @@ const MOCK_ALERTAS = [
 ];
 
 export default function AlertasSeguridadScreen() {
-  const [alertas, setAlertas] = useState(MOCK_ALERTAS);
+  const [alertas, setAlertas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filtros, setFiltros] = useState({
     mostrar: "TODAS",
     prioridad: "TODAS",
@@ -75,6 +78,39 @@ export default function AlertasSeguridadScreen() {
     justificacion: "",
     duracion: "24"
   });
+
+  useEffect(() => {
+    cargarAlertas();
+
+    // Configurar WebSocket para actualizaciones en tiempo real
+    // const socket = io('http://localhost:3000'); // Preparado para WebSocket
+    // socket.on('nueva-alerta-seguridad', (nuevaAlerta) => {
+    //   setAlertas(prev => [nuevaAlerta, ...prev]);
+    // });
+    // return () => socket.disconnect();
+  }, []);
+
+  const cargarAlertas = async () => {
+    try {
+      const response = await apiCall('/admin/seguridad/alertas');
+      const alertasMapeadas = (response.alertas || []).map(alerta => ({
+        id: alerta.id,
+        hora: new Date(alerta.fecha_alerta).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        prioridad: alerta.prioridad,
+        tipo: alerta.tipo_alerta,
+        detalle: alerta.descripcion,
+        estado: alerta.estado,
+        fecha: new Date(alerta.fecha_alerta).toISOString().split('T')[0]
+      }));
+      setAlertas(alertasMapeadas);
+    } catch (error) {
+      console.error('Error cargando alertas:', error);
+      // Fallback a MOCK si API falla
+      setAlertas(MOCK_ALERTAS);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const resumen = useMemo(() => {
     const activas = alertas.filter(a => a.estado === "activa");
@@ -147,28 +183,43 @@ export default function AlertasSeguridadScreen() {
     setShowSilenciarModal(true);
   };
 
-  const handleConfirmarSilenciar = () => {
+  const handleConfirmarSilenciar = async () => {
     if (!silenciarForm.justificacion.trim()) {
       alert("La justificación es obligatoria");
       return;
     }
 
-    setAlertas(prev => prev.map(a =>
-      a.id === alertaSeleccionada.id
-        ? { ...a, estado: "silenciada" }
-        : a
-    ));
+    try {
+      const duracionMap = {
+        "1": "1hora",
+        "24": "24horas",
+        "168": "7dias",
+        "permanente": null
+      };
 
-    setShowSilenciarModal(false);
-    setAlertaSeleccionada(null);
+      await apiCall(`/admin/seguridad/alertas/${alertaSeleccionada.id}/silenciar`, 'PATCH', {
+        justificacion: silenciarForm.justificacion,
+        duracion: duracionMap[silenciarForm.duracion]
+      });
+
+      // Recargar alertas
+      await cargarAlertas();
+      setShowSilenciarModal(false);
+      setAlertaSeleccionada(null);
+    } catch (error) {
+      console.error('Error silenciando alerta:', error);
+      alert('Error al silenciar la alerta');
+    }
   };
 
-  const handleRevisar = (alertaId) => {
-    setAlertas(prev => prev.map(a =>
-      a.id === alertaId
-        ? { ...a, estado: "resuelta" }
-        : a
-    ));
+  const handleRevisar = async (alertaId) => {
+    try {
+      await apiCall(`/admin/seguridad/alertas/${alertaId}/revisar`, 'PATCH');
+      await cargarAlertas();
+    } catch (error) {
+      console.error('Error revisando alerta:', error);
+      alert('Error al marcar como revisada');
+    }
   };
 
   const getPrioridadIcon = (prioridad) => {
@@ -285,7 +336,9 @@ export default function AlertasSeguridadScreen() {
           {/* Listado de Alertas */}
           <div className="dm2-alerts-list">
             <h3>Alertas de Seguridad</h3>
-            {alertasPaginadas.length === 0 ? (
+            {loading ? (
+              <div className="dm2-loading">Cargando alertas...</div>
+            ) : alertasPaginadas.length === 0 ? (
               <div className="dm2-empty">No hay alertas que coincidan con los filtros</div>
             ) : (
               <>

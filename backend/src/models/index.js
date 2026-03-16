@@ -16,6 +16,8 @@ const Cita = require("./Cita");
 const AlertaInventario = require("./AlertaInventario");
 const ConfiguracionAlerta = require("./ConfiguracionAlerta");
 const HistorialNotificacion = require("./HistorialNotificacion");
+const AlertaSeguridad = require("./AlertaSeguridad");
+const IntentosFallidos = require("./IntentosFallidos");
 
 // Kardex
 const MovimientoInventario = require("./MovimientoInventario");
@@ -81,6 +83,42 @@ AlertaInventario.belongsTo(Usuario, {
   foreignKey: "tratada_por",
   targetKey: "id",
   as: "usuarioTratante",
+});
+
+// ===============================
+// ALERTAS DE SEGURIDAD
+// ===============================
+Usuario.hasMany(AlertaSeguridad, {
+  foreignKey: "usuario_id",
+  sourceKey: "id",
+  as: "alertasSeguridad",
+});
+AlertaSeguridad.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  targetKey: "id",
+  as: "usuario",
+});
+
+Usuario.hasMany(AlertaSeguridad, {
+  foreignKey: "silenciada_por",
+  sourceKey: "id",
+  as: "alertasSilenciadas",
+});
+AlertaSeguridad.belongsTo(Usuario, {
+  foreignKey: "silenciada_por",
+  targetKey: "id",
+  as: "silenciador",
+});
+
+Usuario.hasMany(AlertaSeguridad, {
+  foreignKey: "revisada_por",
+  sourceKey: "id",
+  as: "alertasRevisadas",
+});
+AlertaSeguridad.belongsTo(Usuario, {
+  foreignKey: "revisada_por",
+  targetKey: "id",
+  as: "revisor",
 });
 
 // ===============================
@@ -173,4 +211,6 @@ module.exports = {
   HistorialNotificacion,
   MovimientoInventario,
   MovimientoEliminado,
+  AlertaSeguridad,
+  IntentosFallidos,
 };
