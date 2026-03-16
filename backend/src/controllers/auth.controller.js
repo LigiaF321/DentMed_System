@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 
 const Usuario = require("../models/Usuario");
 const TokenRecuperacion = require("../models/TokenRecuperacion");
+const { AlertaSeguridad, IntentosFallidos } = require("../models");
+const alertasSeguridadService = require("../services/alertasSeguridad.service");
 const emailService = require("../services/email.service");
 const { Dentista, Auditoria } = require("../models"); 
 const { Op } = require("sequelize");
@@ -232,7 +234,44 @@ exports.login = async (req, res) => {
         });
         
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+            // Registrar intento fallido
+            const ip = req.ip || req.connection.remoteAddress || 'unknown';
+            const usuarioIntentado = ident;
+            
+            await IntentosFallidos.create({
+                ip: ip,
+                usuario_intentado: usuarioIntentado
+            });
+            
+            // Verificar si supera umbral para alerta
+            const diezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000);
+            const intentosRecientes = await IntentosFallidos.findAll({
+                where: {
+                    ip: ip,
+                    fecha_intento: { [Op.gte]: diezMinutosAtras }
+                }
+            });
+            
+            if (intentosRecientes.length >= 5) {
+                // Generar alerta crítica
+                await alertasSeguridadService.generarAlertaIntentosFallidos(ip, intentosRecientes);
+            }
+            
             return res.status(401).json({ message: "Credenciales incorrectas" });
+        }
+        
+        // Login exitoso - verificar acceso fuera de horario
+        const ahora = new Date();
+        const hora = ahora.getHours();
+        const diaSemana = ahora.getDay(); // 0=dom, 1=lun, ..., 6=sab
+        
+        // Horario laboral por defecto: 8:00-20:00 Lun-Vie
+        const horaInicio = 8;
+        const horaFin = 20;
+        const diasLaborables = [1, 2, 3, 4, 5]; // Lun-Vie
+        
+        if (diasLaborables.includes(diaSemana) && (hora < horaInicio || hora >= horaFin)) {
+            await alertasSeguridadService.generarAlertaAccesoFueraHorario(user, hora);
         }
         
         const token = jwt.sign({ id: user.id, rol: user.rol }, "SECRETO_DENTMED", { expiresIn: '8h' });

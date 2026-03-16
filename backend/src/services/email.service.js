@@ -60,7 +60,68 @@ async function sendPasswordResetCodeEmail({ to, code }) {
   return { simulated: false, messageId: info.messageId };
 }
 
-// Mantenemos sendDentistCredentialsEmail por si otro archivo lo usa
+// ✅ Función: Alerta de Seguridad Crítica
+async function sendSecurityAlertEmail({ to, alerta }) {
+  const { host, port, user, pass } = getSMTPConfig();
+  if (!host || !port || !user || !pass) {
+    console.warn("⚠️ SMTP no configurado. Simulando envío de alerta crítica.");
+    return { simulated: true };
+  }
+  const transporter = createTransporter({ host, port, user, pass });
+  const subject = `🚨 ALERTA DE SEGURIDAD CRÍTICA - ${alerta.tipo_alerta.replace('_', ' ').toUpperCase()}`;
+  const text = `ALERTA DE SEGURIDAD CRÍTICA
+
+Tipo: ${alerta.tipo_alerta.replace('_', ' ').toUpperCase()}
+Descripción: ${alerta.descripcion}
+Fecha: ${new Date(alerta.fecha_alerta).toLocaleString('es-ES')}
+${alerta.ip_origen ? `IP Origen: ${alerta.ip_origen}` : ''}
+${alerta.usuario_nombre ? `Usuario: ${alerta.usuario_nombre}` : ''}
+
+Esta es una notificación automática del sistema de monitoreo de seguridad.
+Por favor, revise el panel de administración inmediatamente.`;
+
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM || user,
+    to,
+    subject,
+    text,
+  });
+  return { simulated: false, messageId: info.messageId };
+}
+
+// ✅ Función: Reporte Semanal de Seguridad
+async function sendWeeklySecurityReportEmail({ to, reporte }) {
+  const { host, port, user, pass } = getSMTPConfig();
+  if (!host || !port || !user || !pass) {
+    console.warn("⚠️ SMTP no configurado. Simulando envío de reporte semanal.");
+    return { simulated: true };
+  }
+  const transporter = createTransporter({ host, port, user, pass });
+  const subject = `📊 Reporte Semanal de Seguridad - DentMed System`;
+  const text = `REPORTE SEMANAL DE SEGURIDAD
+Semana del ${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES')} al ${new Date().toLocaleDateString('es-ES')}
+
+RESUMEN:
+• Total de alertas: ${reporte.resumen.critica + reporte.resumen.advertencia + reporte.resumen.informativa}
+• Críticas: ${reporte.resumen.critica}
+• Advertencias: ${reporte.resumen.advertencia}
+• Informativas: ${reporte.resumen.informativa}
+
+PRINCIPALES EVENTOS:
+${reporte.principalesEventos.map(evento => `• ${evento.descripcion}`).join('\n')}
+
+Este es un reporte automático generado por el sistema de monitoreo de seguridad.`;
+
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM || user,
+    to,
+    subject,
+    text,
+  });
+  return { simulated: false, messageId: info.messageId };
+}
+
+// ✅ Función: Credenciales de Dentista (mantenida por compatibilidad)
 async function sendDentistCredentialsEmail({ to, tempPassword, nombre }) {
   const { host, port, user, pass } = getSMTPConfig();
   if (!host || !port || !user || !pass) return { simulated: true };
@@ -77,5 +138,7 @@ async function sendDentistCredentialsEmail({ to, tempPassword, nombre }) {
 module.exports = {
   sendWelcomeDentistEmail,
   sendPasswordResetCodeEmail,
-  sendDentistCredentialsEmail
+  sendDentistCredentialsEmail,
+  sendSecurityAlertEmail,
+  sendWeeklySecurityReportEmail
 };

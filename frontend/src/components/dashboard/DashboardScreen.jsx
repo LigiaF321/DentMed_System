@@ -125,6 +125,12 @@ export default function DashboardScreen({ userData, onLogout }) {
   const [weekly, setWeekly] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [notifs, setNotifs] = useState([]);
+  const [alertasSeguridad, setAlertasSeguridad] = useState({
+    criticas: 0,
+    advertencias: 0,
+    informativas: 0,
+    ultimas: []
+  });
 
   const loadPanel = useCallback(async () => {
     try {
@@ -197,16 +203,16 @@ export default function DashboardScreen({ userData, onLogout }) {
       );
     } catch (e) {
       console.error('Error cargando panel principal:', e);
-      setNotifs([
-        {
-          id: 1,
-          tipo: 'urgente',
-          mensaje: 'Error cargando panel',
-          accion: '',
-        },
-      ]);
-      setAlertCount(1);
-      setLastUpdated('—');
+      const alertasRes = await fetch('/api/admin/seguridad/alertas/resumen');
+      if (alertasRes.ok) {
+        const alertasData = await alertasRes.json();
+        setAlertasSeguridad({
+          criticas: alertasData.total_criticas || 0,
+          advertencias: alertasData.total_advertencias || 0,
+          informativas: alertasData.total_informativas || 0,
+          ultimas: alertasData.ultimas_alertas || []
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -330,7 +336,43 @@ export default function DashboardScreen({ userData, onLogout }) {
           </CardSection>
 
           <CardSection title="Actualización">
-            <div className="dm2-updateRow">
+          <CardSection
+            title="Alertas de Seguridad"
+            rightAction={
+              <button
+                className="dm2-linkBtn"
+                onClick={() => setAdminView('alertas-seguridad')}
+              >
+                Ver todas
+              </button>
+            }
+          >
+            <div className="dm2-alertsWidget">
+              <div className="dm2-alertsWidget-badges">
+                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--critica">
+                  🔴 Críticas: {alertasSeguridad.criticas}
+                </span>
+                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--advertencia">
+                  🟡 Advertencias: {alertasSeguridad.advertencias}
+                </span>
+                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--informativa">
+                  ℹ️ Informativas: {alertasSeguridad.informativas}
+                </span>
+              </div>
+              <div className="dm2-alertsWidget-list">
+                {alertasSeguridad.ultimas.length > 0 ? (
+                  alertasSeguridad.ultimas.slice(0, 3).map((alerta) => (
+                    <div key={alerta.id} className="dm2-alertsWidget-item">
+                      <span className={`dm2-alertsWidget-dot dm2-alertsWidget-dot--${alerta.prioridad}`} />
+                      <span className="dm2-alertsWidget-text">{alerta.descripcion}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="dm2-alertsWidget-empty">No hay alertas activas</div>
+                )}
+              </div>
+            </div>
+          </CardSection>            <div className="dm2-updateRow">
               <div className="dm2-updateLeft">
                 <span className="dm2-muted">Última actualización:</span>{' '}
                 <span className="dm2-strong">{lastUpdated}</span>
