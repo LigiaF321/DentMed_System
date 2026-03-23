@@ -17,14 +17,19 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const title = this.props.title || "Error en el módulo";
+      const message =
+        this.props.message ||
+        "Ocurrió un error inesperado en esta pantalla. Recarga la página o revisa la consola del navegador.";
+
       return (
         <div className="dm2-page">
           <div className="dm2-card">
             <div className="dm2-card-head">
-              <div className="dm2-card-title">Error en Auditoría</div>
+              <div className="dm2-card-title">{title}</div>
             </div>
             <div className="dm2-card-body">
-              <div className="dm2-empty">Ocurrió un error inesperado en la pantalla de auditoría.<br/>Por favor, recarga la página o contacta soporte.</div>
+              <div className="dm2-empty">{message}</div>
             </div>
           </div>
         </div>

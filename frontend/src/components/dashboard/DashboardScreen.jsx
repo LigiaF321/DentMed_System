@@ -5,6 +5,7 @@ import GestionarCuentasScreen from './GestionarCuentasScreen';
 import CrearCuentaPlaceholder from './CrearCuentaPlaceholder';
 import WeeklyAppointmentsChart from './WeeklyAppointmentsChart';
 import HorariosAtencionScreen from './HorariosAtencionScreen';
+import ErrorBoundary from './ErrorBoundary';
 import ParametrosSistemaScreen from './ParametrosSistemaScreen';
 import MonitoringScreen from './MonitoringScreen';
 import RestauracionScreen from './RestauracionScreen';
@@ -590,7 +591,16 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (isAdmin && adminView === 'parametros') {
       return <ParametrosSistemaScreen userData={userData} />;
     }
-    if (isAdmin && adminView === 'monitoreo') return <MonitoringScreen />;
+    if (isAdmin && adminView === 'monitoreo') {
+      return (
+        <ErrorBoundary
+          title="Error en Monitoreo"
+          message="La pantalla de monitoreo encontró un error inesperado. Recarga la página y verifica que frontend y backend estén actualizados."
+        >
+          <MonitoringScreen />
+        </ErrorBoundary>
+      );
+    }
     if (isAdmin && adminView === 'auditoria') return <AuditScreen />;
     if (isAdmin && adminView === 'restauracion') {
       return <RestauracionScreen userData={userData} />;
