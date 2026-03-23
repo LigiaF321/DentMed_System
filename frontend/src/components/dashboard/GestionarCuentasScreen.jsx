@@ -113,7 +113,16 @@ export default function GestionarCuentasScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activo: nuevoEstado }),
       });
-      if (!res.ok) throw new Error("Error al cambiar estado");
+      if (!res.ok) {
+        let detalle = "Error al cambiar estado";
+        try {
+          const data = await res.json();
+          detalle = data?.mensaje || data?.error || detalle;
+        } catch {
+          // Ignorar parseo fallido y mantener mensaje genérico.
+        }
+        throw new Error(detalle);
+      }
       setModalToggle(null);
       cargarDentistas(paginacion.pagina, paginacion.por_pagina);
     } catch (err) {
