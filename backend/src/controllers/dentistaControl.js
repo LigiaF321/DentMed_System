@@ -15,24 +15,25 @@ const transporter = nodemailer.createTransport({
 
 const dentistaController = {
 
-    // TAREA: Registro (POST) - CORREGIDA
+    // TAREA: Registro (POST) - SINCRONIZADA CON FRONTEND
     registrar: async (req, res) => {
         try {
+            // Extraemos la contraseña que viene directamente del formulario del frontend
             const { nombre, especialidad, telefono, email, password } = req.body;
 
-            // Validación rápida para evitar errores de base de datos
+            // Validación de seguridad
             if (!email || !password) {
                 return res.status(400).json({ error: "Email y contraseña son obligatorios" });
             }
 
-            // 1. Generar Hash de la contraseña
+            // 1. Generar Hash usando la contraseña EXACTA del frontend
             const salt = await bcrypt.genSalt(10);
             const hashedPass = await bcrypt.hash(password, salt);
 
-            // 2. Generar nombre de usuario automático
+            // 2. Generar nombre de usuario automático basado en el email
             const nombreUsuario = email.split('@')[0];
 
-            // 3. Crear el Usuario
+            // 3. Crear el Usuario en la base de datos
             const nuevoUsuario = await Usuario.create({
                 username: nombreUsuario,
                 email: email,
@@ -42,7 +43,7 @@ const dentistaController = {
                 primer_acceso: true
             });
 
-            // 4. Crear el Dentista
+            // 4. Crear el perfil del Dentista vinculado al usuario
             const nuevoDentista = await Dentista.create({
                 nombre: nombre,
                 especialidad: especialidad,
@@ -51,17 +52,16 @@ const dentistaController = {
                 id_usuario: nuevoUsuario.id 
             });
 
-            // 5. Enviar correo (AHORA INCLUYE LA CONTRASEÑA)
+            // 5. Enviar correo usando la contraseña que el usuario vio en el frontend
             const mailOptions = {
                 from: '"Sistema DentMed" <alejandramonc23@gmail.com>',
                 to: email, 
                 subject: "¡Bienvenido al Sistema DentMed!",
-                // Usamos template strings (comillas invertidas) para mostrar los datos
                 text: `Hola ${nombre},\n\n` +
                       `Tu cuenta ha sido creada exitosamente en el sistema.\n\n` +
                       `Tus credenciales de acceso son:\n` +
                       `Usuario: ${nombreUsuario}\n` +
-                      `Contraseña Temporal: ${password}\n\n` + // <--- Aquí aparece la clave
+                      `Contraseña Temporal: ${password}\n\n` + 
                       `Por seguridad, cámbiala al iniciar sesión por primera vez.`
             };
 
@@ -70,7 +70,10 @@ const dentistaController = {
             res.status(201).json({ 
                 mensaje: "Registro exitoso y correo enviado", 
                 dentista: nuevoDentista,
-                usuario: nombreUsuario
+                usuario: {
+                    username: nombreUsuario,
+                    password_visualizada: password // Confirmación para depuración
+                }
             });
 
         } catch (error) {
@@ -82,7 +85,7 @@ const dentistaController = {
         }
     },
 
-    // --- SECCIÓN DE COMPAÑEROS (SIN CAMBIOS) ---
+    // --- SECCIÓN DE COMPAÑEROS (MANTENIDA SIN CAMBIOS) ---
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({
