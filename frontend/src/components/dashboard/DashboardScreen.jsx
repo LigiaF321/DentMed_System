@@ -132,6 +132,12 @@ export default function DashboardScreen({ userData, onLogout }) {
     ultimas: []
   });
 
+  const [alertasVisorAbierto, setAlertasVisorAbierto] = useState(false);
+  const [alertasCategoria, setAlertasCategoria] = useState('TODAS');
+  const [alertasBusqueda, setAlertasBusqueda] = useState('');
+  const [alertasFechaDesde, setAlertasFechaDesde] = useState('');
+  const [alertasFechaHasta, setAlertasFechaHasta] = useState('');
+
   const loadPanel = useCallback(async () => {
     try {
       setLoading(true);
@@ -227,6 +233,38 @@ export default function DashboardScreen({ userData, onLogout }) {
     const id = setInterval(() => loadPanel(), 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [isAdmin, loadPanel]);
+
+  const inventarioAlertCount = useMemo(() => {
+    return stockItems.filter((item) =>
+      item.nivel === 'crit' || item.nivel === 'warn'
+    ).length;
+  }, [stockItems]);
+
+  const totalAlertasSeguridad = useMemo(() => {
+    return (
+      Number(alertasSeguridad.criticas || 0) +
+      Number(alertasSeguridad.advertencias || 0) +
+      Number(alertasSeguridad.informativas || 0)
+    );
+  }, [alertasSeguridad]);
+
+  const abrirPanelAlertas = () => {
+    setAdminView('alertas-seguridad');
+    setAlertasVisorAbierto(false);
+  };
+
+  const irPanelInventario = () => {
+    setAdminView('alertas-inventario');
+    setAlertasVisorAbierto(false);
+  };
+
+  const buscarAlertasUnificadas = () => {
+    if (alertasCategoria === 'INVENTARIO') {
+      irPanelInventario();
+    } else {
+      abrirPanelAlertas();
+    }
+  };
 
   const topDate = useMemo(() => {
     if (fechaLabel) return fechaLabel;
@@ -396,60 +434,23 @@ export default function DashboardScreen({ userData, onLogout }) {
             </div>
           </CardSection>
 
-          <CardSection title="Accesos rápidos">
+          <CardSection title="Accesos rápidos" rightAction={<span style={{fontSize:'12px'}}>Ahora disponible en barra superior</span>}>
             <div className="dm2-quickbar">
               <button
                 className="dm2-quickbtn"
                 type="button"
-                onClick={() => setAdminView('nueva-cita')}
+                onClick={() => setAdminView('alertas-seguridad')}
               >
-                <i className="fa-solid fa-plus" />
-                <span>NUEVA CITA</span>
+                <i className="fa-solid fa-shield-alt" />
+                <span>ALERTAS DE SEGURIDAD</span>
               </button>
-
-              <button
-                className="dm2-quickbtn"
-                type="button"
-                onClick={() => setAdminView('nuevo-dentista')}
-              >
-                <i className="fa-solid fa-user-doctor" />
-                <span>NUEVO DENTISTA</span>
-              </button>
-
-              <button
-                className="dm2-quickbtn"
-                type="button"
-                onClick={() => setAdminView('catalogo-insumos')}
-              >
-                <i className="fa-solid fa-box" />
-                <span>INSUMOS</span>
-              </button>
-
-              <button
-                className="dm2-quickbtn"
-                type="button"
-                onClick={() => setAdminView('kardex-movimientos')}
-              >
-                <i className="fa-solid fa-right-left" />
-                <span>KARDEX</span>
-              </button>
-
               <button
                 className="dm2-quickbtn"
                 type="button"
                 onClick={() => setAdminView('alertas-inventario')}
               >
-                <i className="fa-solid fa-triangle-exclamation" />
-                <span>ALERTAS STOCK</span>
-              </button>
-
-              <button
-                className="dm2-quickbtn"
-                type="button"
-                onClick={() => setAdminView('reportes-consumo')}
-              >
-                <i className="fa-solid fa-chart-column" />
-                <span>REPORTES</span>
+                <i className="fa-solid fa-boxes-stacked" />
+                <span>ALERTAS DE INVENTARIO</span>
               </button>
             </div>
           </CardSection>
@@ -660,15 +661,45 @@ export default function DashboardScreen({ userData, onLogout }) {
             </div>
 
             <div className="dm2-topbar-right">
-              <div className="dm2-search">
-                <i className="fa-solid fa-magnifying-glass dm2-search-ico" />
-                <input
-                  className="dm2-search-input"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Buscar…"
-                  aria-label="Buscar"
-                />
+              <div className="dm2-alertas-dropdown-wrap">
+                <button
+                  className="dm2-alertas-secondary"
+                  onClick={() => setAlertasVisorAbierto((prev) => !prev)}
+                >
+                  <i className="fa-solid fa-bell" />
+                  Alertas
+                  {(totalAlertasSeguridad + inventarioAlertCount) > 0 && (
+                    <span className="dm2-alertas-badge">
+                      {totalAlertasSeguridad + inventarioAlertCount}
+                    </span>
+                  )}
+                  <i className="fa-solid fa-chevron-down dm2-alertas-chevron" />
+                </button>
+
+                {alertasVisorAbierto && (
+                  <div className="dm2-alertas-dropdown">
+                    <button
+                      className="dm2-alertas-dropdown-item"
+                      onClick={() => { abrirPanelAlertas(); setAlertasVisorAbierto(false); }}
+                    >
+                      <i className="fa-solid fa-shield-alt" />
+                      <span>Seguridad</span>
+                      {totalAlertasSeguridad > 0 && (
+                        <span className="dm2-alertas-badge dm2-alertas-badge--crit">{totalAlertasSeguridad}</span>
+                      )}
+                    </button>
+                    <button
+                      className="dm2-alertas-dropdown-item"
+                      onClick={() => { irPanelInventario(); setAlertasVisorAbierto(false); }}
+                    >
+                      <i className="fa-solid fa-boxes-stacked" />
+                      <span>Inventario</span>
+                      {inventarioAlertCount > 0 && (
+                        <span className="dm2-alertas-badge dm2-alertas-badge--warn">{inventarioAlertCount}</span>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="dm2-datePill" title="Fecha">
