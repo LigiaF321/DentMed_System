@@ -4,8 +4,9 @@ export async function checkDentistEmailExists() {
   return { exists: false };
 }
 
+// CAMBIO REALIZADO: Se actualizó de "/admin/dentistas" a "/dentistas"
 export async function createDentistAccount(payload) {
-  const { data } = await api.post("/admin/dentistas", payload);
+  const { data } = await api.post("/dentistas", payload);
   return data;
 }
 
