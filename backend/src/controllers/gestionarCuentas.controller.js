@@ -10,6 +10,28 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 /**
+ * Registra auditoria sin bloquear la operacion principal.
+ */
+async function registrarAuditoriaNoBloqueante(req, accion, modulo, detalle, ip, usuarioId = null) {
+  try {
+    await Auditoria.create({
+      fecha_hora: new Date(),
+      usuario_id: usuarioId,
+      usuario_nombre: req.user?.nombre_completo || "Sistema",
+      usuario_rol: req.user?.rol || "admin",
+      accion,
+      modulo,
+      resultado: "exito",
+      ip,
+      user_agent: req.headers["user-agent"] || null,
+      detalle: typeof detalle === "string" ? detalle : JSON.stringify(detalle || {}),
+    });
+  } catch (err) {
+    console.error("No se pudo registrar auditoria:", err.message);
+  }
+}
+
+/**
  * Formatea un dentista para la respuesta (incluye nombre completo, estado, fecha)
  */
 function formatDentistaForList(d) {
@@ -196,14 +218,15 @@ async function cambiarEstado(req, res, next) {
     const nuevoEstado = activo === true || activo === "true" || activo === 1;
     await dentista.Usuario.update({ activo: nuevoEstado });
 
-    // Registrar en auditoría
-    await Auditoria.create({
-      id_usuario: adminId,
-      accion: nuevoEstado ? "HABILITAR_DENTISTA" : "INHABILITAR_DENTISTA",
-      modulo: "GESTION_USUARIOS",
-      detalles: JSON.stringify({ dentistaId: dentista.id, estado: nuevoEstado ? "activo" : "inactivo" }),
+    // Registrar en auditoria sin bloquear la respuesta al cliente.
+    await registrarAuditoriaNoBloqueante(
+      req,
+      nuevoEstado ? "HABILITAR_DENTISTA" : "INHABILITAR_DENTISTA",
+      "GESTION_USUARIOS",
+      { dentistaId: dentista.id, estado: nuevoEstado ? "activo" : "inactivo" },
       ip,
-    });
+      adminId
+    );
 
     const actualizado = await Dentista.findByPk(id, {
       include: [{ model: Usuario, attributes: ["id", "email", "activo"] }],

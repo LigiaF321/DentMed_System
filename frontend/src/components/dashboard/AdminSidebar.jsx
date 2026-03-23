@@ -10,14 +10,12 @@ const MENU_ITEMS = [
   { id: "parametros", label: "Parámetros del Sistema", icon: "fa-sliders" },
 
   { id: "monitoreo", label: "Monitoreo del Sistema", icon: "fa-chart-area" },
-  { id: "alertas-seguridad", label: "Alertas de Seguridad", icon: "fa-bell" },
   { id: "auditoria", label: "Auditoría y Actividad", icon: "fa-clipboard-list", adminOnly: true },
   { id: "restauracion", label: "Restauración del Sistema", icon: "fa-database" },
 
   { id: "catalogo-insumos", label: "Catálogo de Insumos", icon: "fa-boxes-stacked" },
   { id: "kardex-movimientos", label: "Kardex / Movimientos", icon: "fa-right-left" },
   { id: "reportes-consumo", label: "Reportes de Consumo", icon: "fa-chart-column", adminOnly: true },
-  { id: "alertas-inventario", label: "Alertas de Inventario", icon: "fa-triangle-exclamation" },
 ];
 
 export default function AdminSidebar({
