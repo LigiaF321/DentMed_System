@@ -114,22 +114,25 @@ export default function CrearCuentaPlaceholder() {
 
     setSubmitting(true);
     try {
-      //  EMPAREJADO al backend (NO enviamos tempPassword)
+      /** * SINCRONIZACIÓN CON EL BACKEND:
+       * Ajustamos el payload para que coincida con lo que funcionó en Postman.
+       */
       const payload = {
-        nombre: form.nombres.trim(),
-        apellidos: form.apellidos.trim(),
+        nombre: `${form.nombres.trim()} ${form.apellidos.trim()}`,
         email: form.email.trim().toLowerCase(),
         telefono: form.telefono.trim(),
         especialidad: form.especialidad.trim(),
-        licencia: form.colegiado.trim(),
+        password: tempPassword, 
       };
 
       const res = await createDentistAccount(payload);
 
+      // Leemos 'mensaje' de la respuesta tal como lo vimos en tu prueba de Postman
       setSuccessMsg(
-        res?.message || "✅ Dentista creado exitosamente."
+        res?.mensaje || "✅ Registro exitoso y correo enviado"
       );
 
+      // Resetear campos
       setForm({
         nombres: "",
         apellidos: "",
@@ -144,7 +147,7 @@ export default function CrearCuentaPlaceholder() {
     } catch (err) {
       setServerError(
         err?.response?.data?.error ||
-          err?.response?.data?.message ||
+          err?.response?.data?.detalle ||
           "Ocurrió un error al crear la cuenta. Revisa los datos e intenta de nuevo."
       );
     } finally {
@@ -272,7 +275,6 @@ export default function CrearCuentaPlaceholder() {
           />
         </div>
 
-        {/* Sección visual (NO se envía al backend) */}
         <div className="dm-cc-field">
           <label className="dm-cc-label">Contraseña temporal</label>
 
@@ -288,7 +290,7 @@ export default function CrearCuentaPlaceholder() {
           </div>
 
           <div className="dm-cc-hint">
-            (Recomendado: que el backend la genere y la envíe por correo).
+            Se enviará esta contraseña por correo al finalizar.
           </div>
         </div>
 

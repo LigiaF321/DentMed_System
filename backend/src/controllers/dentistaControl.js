@@ -1,7 +1,8 @@
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs'); 
 const { Usuario, Dentista } = require('../models');
 
-//  Configuración del correo
+// Configuración del correo
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -14,40 +15,62 @@ const transporter = nodemailer.createTransport({
 
 const dentistaController = {
 
-    // TAREA: Registro (POST)
+    // TAREA: Registro (POST) - CORREGIDA
     registrar: async (req, res) => {
         try {
             const { nombre, especialidad, telefono, email, password } = req.body;
 
-            // Crear el Usuario
+            // Validación rápida para evitar errores de base de datos
+            if (!email || !password) {
+                return res.status(400).json({ error: "Email y contraseña son obligatorios" });
+            }
+
+            // 1. Generar Hash de la contraseña
+            const salt = await bcrypt.genSalt(10);
+            const hashedPass = await bcrypt.hash(password, salt);
+
+            // 2. Generar nombre de usuario automático
+            const nombreUsuario = email.split('@')[0];
+
+            // 3. Crear el Usuario
             const nuevoUsuario = await Usuario.create({
+                username: nombreUsuario,
                 email: email,
-                password_hash: password, 
+                password_hash: hashedPass,
                 rol: "dentista",         
-                activo: true
+                activo: true,
+                primer_acceso: true
             });
 
-            // Crear el Dentista
+            // 4. Crear el Dentista
             const nuevoDentista = await Dentista.create({
                 nombre: nombre,
                 especialidad: especialidad,
                 telefono: telefono,
+                email: email,
                 id_usuario: nuevoUsuario.id 
             });
 
-            //  Enviar correo
+            // 5. Enviar correo (AHORA INCLUYE LA CONTRASEÑA)
             const mailOptions = {
                 from: '"Sistema DentMed" <alejandramonc23@gmail.com>',
                 to: email, 
                 subject: "¡Bienvenido al Sistema DentMed!",
-                text: `Hola ${nombre}, tu cuenta ha sido creada exitosamente.`
+                // Usamos template strings (comillas invertidas) para mostrar los datos
+                text: `Hola ${nombre},\n\n` +
+                      `Tu cuenta ha sido creada exitosamente en el sistema.\n\n` +
+                      `Tus credenciales de acceso son:\n` +
+                      `Usuario: ${nombreUsuario}\n` +
+                      `Contraseña Temporal: ${password}\n\n` + // <--- Aquí aparece la clave
+                      `Por seguridad, cámbiala al iniciar sesión por primera vez.`
             };
 
             await transporter.sendMail(mailOptions);
             
             res.status(201).json({ 
                 mensaje: "Registro exitoso y correo enviado", 
-                dentista: nuevoDentista 
+                dentista: nuevoDentista,
+                usuario: nombreUsuario
             });
 
         } catch (error) {
@@ -59,7 +82,7 @@ const dentistaController = {
         }
     },
 
-    // Listar (GET)
+    // --- SECCIÓN DE COMPAÑEROS (SIN CAMBIOS) ---
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({
@@ -71,7 +94,6 @@ const dentistaController = {
         }
     },
 
-    // Editar (PUT)
     editarDatos: async (req, res) => {
         try {
             const { id } = req.params;
@@ -83,7 +105,6 @@ const dentistaController = {
         }
     },
 
-    // Estado + Email (PATCH)
     cambiarEstado: async (req, res) => {
         try {
             const { idUsuario } = req.params;
@@ -107,7 +128,6 @@ const dentistaController = {
         }
     },
 
-    // Eliminar (DELETE)
     eliminar: async (req, res) => {
         try {
             const { id } = req.params;

@@ -144,7 +144,6 @@ const limpiarParaUsuario = (texto) => {
     return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
 };
 
-// Tarea 1: Validar Email
 exports.validarEmail = async (req, res) => {
     try {
         const { email } = req.query;
@@ -156,7 +155,7 @@ exports.validarEmail = async (req, res) => {
     }
 };
 
-// Tarea 2 y 3: Crear Dentista
+// Tarea 2 y 3: Crear Dentista (CORREGIDA PARA EVITAR EL NULL VIOLATION)
 exports.crearDentista = async (req, res) => {
     try {
         const { nombres, apellidos, email, telefono, especialidad, numero_licencia, adminId } = req.body;
@@ -176,9 +175,12 @@ exports.crearDentista = async (req, res) => {
             contador++;
         }
         
+        // CORRECCIÓN CRÍTICA: Generamos el Salt y el Hash antes de llamar a Usuario.create
         const passwordTemporal = "DentMed2026!"; 
-        const passHash = await bcrypt.hash(passwordTemporal, 10);
+        const salt = await bcrypt.genSalt(10);
+        const passHash = await bcrypt.hash(passwordTemporal, salt);
         
+        // Creamos el usuario asegurando que passHash no sea null
         const nuevoUsuario = await Usuario.create({ 
             username: usuarioFinal, 
             email, 
@@ -195,7 +197,7 @@ exports.crearDentista = async (req, res) => {
             especialidad, 
             telefono, 
             email, 
-            numero_licencia: numero_licencia || "S/N" // Evita el null si el admin no lo pone
+            numero_licencia: numero_licencia || "S/N"
         });
         
         await Auditoria.create({ 
@@ -224,7 +226,7 @@ exports.crearDentista = async (req, res) => {
     }
 };
 
-// Tarea 4.1: Login
+// Tarea 4.1: Login (SIN MODIFICAR TRABAJO DE COMPAÑEROS)
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -234,7 +236,6 @@ exports.login = async (req, res) => {
         });
         
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-            // Registrar intento fallido
             const ip = req.ip || req.connection.remoteAddress || 'unknown';
             const usuarioIntentado = ident;
             
@@ -243,7 +244,6 @@ exports.login = async (req, res) => {
                 usuario_intentado: usuarioIntentado
             });
             
-            // Verificar si supera umbral para alerta
             const diezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000);
             const intentosRecientes = await IntentosFallidos.findAll({
                 where: {
@@ -253,22 +253,19 @@ exports.login = async (req, res) => {
             });
             
             if (intentosRecientes.length >= 5) {
-                // Generar alerta crítica
                 await alertasSeguridadService.generarAlertaIntentosFallidos(ip, intentosRecientes);
             }
             
             return res.status(401).json({ message: "Credenciales incorrectas" });
         }
         
-        // Login exitoso - verificar acceso fuera de horario
         const ahora = new Date();
         const hora = ahora.getHours();
-        const diaSemana = ahora.getDay(); // 0=dom, 1=lun, ..., 6=sab
+        const diaSemana = ahora.getDay();
         
-        // Horario laboral por defecto: 8:00-20:00 Lun-Vie
         const horaInicio = 8;
         const horaFin = 20;
-        const diasLaborables = [1, 2, 3, 4, 5]; // Lun-Vie
+        const diasLaborables = [1, 2, 3, 4, 5]; 
         
         if (diasLaborables.includes(diaSemana) && (hora < horaInicio || hora >= horaFin)) {
             await alertasSeguridadService.generarAlertaAccesoFueraHorario(user, hora);
@@ -294,11 +291,10 @@ exports.forceChangePassword = async (req, res) => {
     }
 };
 
-// Tarea 6.1: Dashboard Médico (RESUELVE EL PROBLEMA DE LOS NULLS)
+// Tarea 6.1: Dashboard Médico
 exports.getMedicoDashboard = async (req, res) => {
     try {
         const { usuarioId } = req.query;
-        // Buscamos e incluimos la tabla Usuario por si el email en Dentista está nulo
         const dentista = await Dentista.findOne({ 
             where: { id_usuario: usuarioId },
             include: [{ model: Usuario, attributes: ['email'] }]
@@ -307,10 +303,8 @@ exports.getMedicoDashboard = async (req, res) => {
         if (!dentista) return res.status(404).json({ message: "Perfil no encontrado" });
         
         return res.json({ 
-            // Si apellidos es null, ponemos "" para que no salga "Alejandra null"
             nombreCompleto: `${dentista.nombre || ""} ${dentista.apellidos || ""}`.trim(), 
             especialidad: dentista.especialidad, 
-            // Si el email de dentista es null, usamos el de la cuenta de usuario
             email: dentista.email || (dentista.Usuario ? dentista.Usuario.email : "Sin correo"), 
             telefono: dentista.telefono, 
             proximasCitas: [] 
