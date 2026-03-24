@@ -740,9 +740,17 @@ export default function DashboardScreen({ userData, onLogout }) {
                 </div>
               ) : null}
 
+{isAdmin ? (
               <div className="dm2-datePill" title="Fecha">
                 {topDate}
               </div>
+            ) : null}
+            {!isAdmin ? (
+              <button className="dm2-logout-topbar" onClick={onLogout} title="Cerrar sesión">
+                <i className="fa-solid fa-right-from-bracket me-1"></i>
+                Salir
+              </button>
+            ) : null}
             </div>
           </div>
 
