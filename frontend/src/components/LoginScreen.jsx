@@ -78,13 +78,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     }
   };
 
-  const handleLogoClick = () => {
-    console.log('Logo clicked, onBack:', onBack); // Para debug
-    if (onBack && typeof onBack === 'function') {
-      onBack();
-    }
-  };
-
   const handleUserTypeSelect = (type) => {
     if (userType === type) {
       setUserType('');
@@ -97,11 +90,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     setUsername('');
     setPassword('');
     setError('');
-    if (type === 'admin') setShowAdminModal(true);
-    else setShowAdminModal(false);
   };
 
-  // Limpiar error cuando el usuario empieza a escribir (tu lógica)
+  // Limpiar error cuando el usuario empieza a escribir
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
     if (error && error.includes('incorrect')) {
@@ -126,28 +117,12 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
   return (
     <div className="login-screen">
-      <header className="login-header">
-        <div className="header-left">
-          <div
-            className="logo clickable-logo"
-            onClick={handleLogoClick}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="dent-text">Dent</span>
-            <span className="med-text">Med</span>
-          </div>
-        </div>
-        <div className="header-right">
-          <h1>Sistema de Gestión Dental DentMed</h1>
-          <p className="slogan">WORKSPACE BY MILLA&apos;S</p>
-        </div>
-      </header>
+      {/* DentMed logo removed per user request */}
 
       <div className="login-main">
-        {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
-            <div className={`visual-fade${userType === 'doctor' || userType === 'admin' ? ' hide' : ''}`}> 
+            <div className={`visual-fade${userType === 'doctor' ? ' hide' : ''}`}> 
               <h2>Bienvenido al Sistema de Gestión DentMed</h2>
               <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
               <div className="dental-icon">
@@ -170,74 +145,12 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 </>
               )}
             </div>
-            <div className={`admin-instructions-visual${userType === 'admin' ? ' show' : ''}`}> 
-              {userType === 'admin' && (
-                <>
-                  <h2><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h2>
-                  <div className="credentials-box">
-                    <div className="credential-item">
-                      <span className="credential-label">Usuario:</span>
-                      <span className="credential-value">Admin</span>
-                    </div>
-                    <div className="credential-item">
-                      <span className="credential-label">Contraseña:</span>
-                      <span className="credential-value">Admin123</span>
-                    </div>
-                  </div>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
-                  </p>
-                </>
-              )}
-            </div>
-
-            {/* INFORMACIÓN DINÁMICA */}
-            {userType === "admin" && (
-              <div className="user-type-info admin-info">
-                <h3>
-                  <i className="fas fa-user-shield"></i> Modo Administrador
-                </h3>
-                <p>Acceso completo al sistema</p>
-                <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales maestras iniciales
-                </p>
-              </div>
-            )}
-
-            {userType === "doctor" && (
-              <div className="user-type-info doctor-info">
-                <h3>
-                  <i className="fas fa-user-md"></i> Modo Doctor
-                </h3>
-                <p>Acceso a historiales y pacientes</p>
-                <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales temporales asignadas
-                </p>
-              </div>
-            )}
-
-            {!userType && (
-              <div className="user-type-info default-info">
-                <h3>
-                  <i className="fas fa-hand-pointer"></i> Seleccione tipo de usuario
-                </h3>
-                <p>Elija si es Administrador o Doctor</p>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* LADO DERECHO - FORMULARIO */}
         <div className="login-form-container">
           <div className="form-header">
-            <button 
-              className="back-button-desktop" 
-              onClick={handleLogoClick}
-              type="button"
-            >
-              <i className="fas fa-arrow-left"></i> Volver
-            </button>
+            {/* Back button removed - Global logo handles navigation */}
           </div>
           
           <form className="login-form" onSubmit={handleSubmit}>
@@ -251,7 +164,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             )}
 
-            {/* SELECTOR DE TIPO DE USUARIO */}
             <div className="form-group user-type-group">
               <label className="form-label">
                 <i className="fas fa-user-tag"></i> Tipo de Usuario *
@@ -277,7 +189,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             </div>
 
-            {/* CAMPO USUARIO */}
             <div className="form-group">
               <label htmlFor="username" className="form-label">
                 <i className="fas fa-user"></i> Usuario *
@@ -286,26 +197,19 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 type="text"
                 id="username"
                 value={username}
-                onChange={handleUsernameChange} // Usa la función que limpia errores
+                onChange={handleUsernameChange}
                 placeholder={
                   userType === 'admin' 
-                    ? 'Ingrese: Admin' 
+                    ? 'Ingrese: Usuario' 
                     : 'Ej: dra.garcia'
                 }
                 required
                 disabled={!userType}
                 className="form-input"
               />
-              <div className="input-hint">
-                <i className="fas fa-info-circle"></i>
-                {userType === 'admin' 
-                  ? 'Credenciales maestras: Admin / Admin123'
-                  : 'Use usuario asignado (ej: dra.garcia)'
-                }
-              </div>
+              
             </div>
 
-            {/* CAMPO CONTRASEÑA */}
             <div className="form-group">
               <label htmlFor="password" className="form-label">
                 <i className="fas fa-lock"></i> Contraseña *
@@ -316,21 +220,16 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder={
-                  userType === "admin" ? "Ingrese: Admin123" : "Contraseña temporal asignada"
+                  userType === "admin" ? "Ingrese: Contraseña" : "Contraseña temporal asignada"
                 }
                 required
                 disabled={!userType}
                 className="form-input"
               />
-              {userType === "doctor" && (
-                <div className="input-hint">
-                  <i className="fas fa-exclamation-circle"></i>
-                  Si no tiene credenciales, contacte al administrador
-                </div>
-              )}
+              
             </div>
+            
 
-            {/* OPCIONES */}
             <div className="form-options">
               <div className="remember-me">
                 <input
@@ -346,7 +245,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 </label>
               </div>
 
-              {/* ✅ CAMBIADO: ahora abre la pantalla forgot */}
               <a
                 href="#"
                 className="forgot-password"
@@ -359,7 +257,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </a>
             </div>
 
-            {/* BOTÓN INGRESAR */}
             <button
               type="submit"
               className={`submit-btn ${userType ? "active" : "disabled"}`}
@@ -376,9 +273,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               )}
             </button>
 
-            {/* INSTRUCCIONES DINÁMICAS */}
-            
-
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>
               <span>Sistema seguro - Acceso restringido al personal autorizado</span>
@@ -386,19 +280,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
           </form>
         </div>
       </div>
-
-      <footer className="login-footer">
-        <div className="footer-content">
-          <p>© 2024 DentMed - Sistema de Gestión Dental</p>
-          <p>Versión 1.0</p>
-          <p className="access-warning">
-            <i className="fas fa-exclamation-triangle"></i>
-            Acceso restringido al personal autorizado
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
 
 export default LoginScreen;
+

@@ -83,7 +83,7 @@ export default function AdminSidebar({
 
         <button className="dm2-side-logout" type="button" onClick={onLogout}>
           <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
-          <span>Cerrar sesión</span>
+          <span>Salir</span>
         </button>
       </div>
     </aside>
