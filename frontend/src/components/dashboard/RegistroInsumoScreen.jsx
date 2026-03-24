@@ -121,18 +121,26 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
     setGuardando(true);
 
     try {
-      // Simulación de guardado - aquí iría la llamada al backend
-      console.log("Guardando insumo:", formData);
+      const data = {
+        codigo: formData.codigo,
+        nombre: formData.nombre,
+        categoria: formData.categoria,
+        stockMinimo: formData.stockMinimo,
+        unidadMedida: formData.unidadMedida,
+        proveedor: formData.proveedor,
+        precio: formData.precio,
+        descripcion: formData.descripcion,
+        estado: formData.estado
+      };
       
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await materialService.crear(data);
       
       if (onGuardar) {
-        onGuardar(formData);
+        onGuardar(response.data);
       }
     } catch (error) {
       console.error("Error al guardar:", error);
-      setErrores({ general: "Error al guardar el insumo" });
+      setErrores({ general: error.message || "Error al guardar el insumo" });
     } finally {
       setGuardando(false);
     }

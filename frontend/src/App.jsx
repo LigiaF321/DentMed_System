@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
@@ -7,10 +7,9 @@ import ResetPasswordScreen from "./components/ResetPasswordScreen";
 import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
-
 function App() {
-  // Inicializar desde localStorage si existe
-  const [screen, setScreen] = useState(() => localStorage.getItem("screen") || "welcome");
+  // Restore session on mount if exists, clear only on logout
+  const [screen, setScreen] = useState(() => localStorage.getItem("screen") || "login");
   const [currentUser, setCurrentUser] = useState(() => {
     const stored = localStorage.getItem("currentUser");
     return stored ? JSON.parse(stored) : null;
@@ -42,20 +41,12 @@ function App() {
     }
 
     setCurrentUser(userData);
-
-    const mustChange =
-      userData.mustChangePassword === true ||
-      userData.forcePasswordChange === true ||
-      userData.firstLogin === true ||
-      userData.requiresPasswordChange === true; 
-
-    if (mustChange) goTo("forceChange");
-    else goTo("dashboard");
+    goTo("loading");
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    goTo("welcome");
+    goTo("login");
     localStorage.removeItem("screen");
     localStorage.removeItem("currentUser");
   };
@@ -78,19 +69,28 @@ function App() {
     goTo("login");
   };
 
+  const handleLoadingComplete = () => {
+    const mustChange = currentUser.mustChangePassword === true ||
+      currentUser.forcePasswordChange === true ||
+      currentUser.firstLogin === true ||
+      currentUser.requiresPasswordChange === true; 
+
+    if (mustChange) goTo("forceChange");
+    else goTo("dashboard");
+  };
+
   return (
     <div className="App">
-      {screen === "welcome" && <WelcomeScreen onEnter={() => goTo("login")} />}
+      {screen === "loading" && <WelcomeScreen onEnter={handleLoadingComplete} />}
 
       {screen === "login" && (
         <LoginScreen
-          onBack={() => goTo("welcome")}
+          onBack={() => goTo("login")}
           onLoginSuccess={handleLoginSuccess}
           onForgotPassword={() => goTo("forgot")}
         />
       )}
 
-      {/* Pantalla 1-2: Email + Código */}
       {screen === "forgot" && (
         <ForgotPasswordScreen
           onBack={() => goTo("login")}
@@ -98,7 +98,6 @@ function App() {
         />
       )}
 
-      {/* Pantalla 3: Nueva contraseña */}
       {screen === "resetPassword" && (
         <ResetPasswordScreen
           token={resetToken}
@@ -123,3 +122,4 @@ function App() {
   );
 }
 export default App;
+

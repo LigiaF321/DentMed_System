@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './WelcomeScreen.css';
 
 const WelcomeScreen = ({ onEnter }) => {
+  const [loadingPhase, setLoadingPhase] = useState(0); // 0: initial, 1: loading...
+
   useEffect(() => {
-    // Crear partículas dinámicas
+    // Create particles
     const createParticles = () => {
       const particlesContainer = document.getElementById('particles');
       if (!particlesContainer) return;
@@ -31,21 +33,20 @@ const WelcomeScreen = ({ onEnter }) => {
     };
 
     createParticles();
-  }, []);
 
-  const handleEnter = () => {
-    if (onEnter) {
-      onEnter();
-    }
-  };
+    // 2 second auto-redirect
+    const timer = setTimeout(() => {
+      if (onEnter) onEnter();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [onEnter]);
 
   return (
     <div className="welcome-screen">
-      {/* Partículas de fondo */}
       <div className="particles" id="particles"></div>
 
       <div className="welcome-container">
-        {/* Logo DentMed con colores específicos */}
         <h1 className="logo-title">
           <span className="dent-text">Dent</span>
           <span className="med-text">Med</span>
@@ -53,10 +54,10 @@ const WelcomeScreen = ({ onEnter }) => {
         <p className="tagline">Sistema de Gestión Dental</p>
         <p className="slogan">WORK SPACE BY MILLA'S</p>
 
-        <button className="enter-button" onClick={handleEnter}>
-          <i className="fas fa-tooth"></i> 
-          INGRESAR AL SISTEMA
-        </button>
+        <div className="loading-area">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Cargando sistema...</p>
+        </div>
 
         <p className="footer-note">
           © 2026 DentMed - Acceso exclusivo para personal autorizado
@@ -67,3 +68,4 @@ const WelcomeScreen = ({ onEnter }) => {
 };
 
 export default WelcomeScreen;
+

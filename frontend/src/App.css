@@ -1,4 +1,4 @@
-/* App.css */
+/* App.css - Simple and Clean */
 * {
   margin: 0;
   padding: 0;
@@ -63,6 +63,44 @@ body {
   display: none;
 }
 
+/* Global DentMed Logo - Fixed Top Left */
+.dentmed-logo-global {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10000;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: all;
+}
+
+.dentmed-logo-global:hover {
+  transform: scale(1.05);
+}
+
+.dentmed-logo-global .dent-text {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 
+    0 2px 4px rgba(30, 58, 138, 0.4),
+    0 4px 8px rgba(30, 58, 138, 0.2);
+}
+
+.dentmed-logo-global .med-text {
+  background: linear-gradient(135deg, #be185d, #db2777);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 
+    0 2px 4px rgba(190, 24, 93, 0.4),
+    0 4px 8px rgba(190, 24, 93, 0.2);
+}
+
 /* Responsive base */
 @media (max-width: 768px) {
   .mobile-hidden {
@@ -72,4 +110,12 @@ body {
   .mobile-full-width {
     width: 100% !important;
   }
+  
+  .dentmed-logo-global {
+    font-size: 1.6rem;
+    top: 15px;
+    left: 15px;
+  }
 }
+
+
