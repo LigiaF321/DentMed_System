@@ -95,7 +95,10 @@ export default function AlertasSeguridadScreen() {
       const response = await apiCall('/admin/seguridad/alertas');
       const alertasMapeadas = (response.alertas || []).map(alerta => ({
         id: alerta.id,
-        hora: new Date(alerta.fecha_alerta).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        hora: new Date(alerta.fecha_alerta).toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
         prioridad: alerta.prioridad,
         tipo: alerta.tipo_alerta,
         detalle: alerta.descripcion,
@@ -105,7 +108,6 @@ export default function AlertasSeguridadScreen() {
       setAlertas(alertasMapeadas);
     } catch (error) {
       console.error('Error cargando alertas:', error);
-      // Fallback a MOCK si API falla
       setAlertas(MOCK_ALERTAS);
     } finally {
       setLoading(false);
@@ -124,7 +126,6 @@ export default function AlertasSeguridadScreen() {
   const alertasFiltradas = useMemo(() => {
     let filtradas = alertas;
 
-    // Filtro por mostrar
     if (filtros.mostrar === "ACTIVAS") {
       filtradas = filtradas.filter(a => a.estado === "activa");
     } else if (filtros.mostrar === "SILENCIADAS") {
@@ -133,13 +134,15 @@ export default function AlertasSeguridadScreen() {
       filtradas = filtradas.filter(a => a.estado === "resuelta");
     }
 
-    // Filtro por prioridad
     if (filtros.prioridad !== "TODAS") {
-      const prioMap = { CRÍTICAS: "critica", ADVERTENCIAS: "advertencia", INFORMATIVAS: "informativa" };
+      const prioMap = {
+        CRÍTICAS: "critica",
+        ADVERTENCIAS: "advertencia",
+        INFORMATIVAS: "informativa"
+      };
       filtradas = filtradas.filter(a => a.prioridad === prioMap[filtros.prioridad]);
     }
 
-    // Filtro por fecha
     if (filtros.fechaDesde) {
       filtradas = filtradas.filter(a => a.fecha >= filtros.fechaDesde);
     }
@@ -202,7 +205,6 @@ export default function AlertasSeguridadScreen() {
         duracion: duracionMap[silenciarForm.duracion]
       });
 
-      // Recargar alertas
       await cargarAlertas();
       setShowSilenciarModal(false);
       setAlertaSeleccionada(null);
@@ -222,21 +224,29 @@ export default function AlertasSeguridadScreen() {
     }
   };
 
-  const getPrioridadIcon = (prioridad) => {
+  const getPrioridadIconClass = (prioridad) => {
     switch (prioridad) {
-      case "critica": return "🔴";
-      case "advertencia": return "🟡";
-      case "informativa": return "ℹ️";
-      default: return "ℹ️";
+      case "critica":
+        return "fa-solid fa-circle-exclamation";
+      case "advertencia":
+        return "fa-solid fa-triangle-exclamation";
+      case "informativa":
+        return "fa-solid fa-circle-info";
+      default:
+        return "fa-solid fa-circle-info";
     }
   };
 
   const getPrioridadLabel = (prioridad) => {
     switch (prioridad) {
-      case "critica": return "CRÍTICA";
-      case "advertencia": return "ADVERTENCIA";
-      case "informativa": return "INFORMATIVA";
-      default: return "INFO";
+      case "critica":
+        return "CRÍTICA";
+      case "advertencia":
+        return "ADVERTENCIA";
+      case "informativa":
+        return "INFORMATIVA";
+      default:
+        return "INFO";
     }
   };
 
@@ -247,32 +257,36 @@ export default function AlertasSeguridadScreen() {
           <div className="dm2-card-title">Alertas de Seguridad y Accesos</div>
           <div className="dm2-card-subtitle">Monitoreo en tiempo real de eventos sospechosos</div>
         </div>
+
         <div className="dm2-card-body">
-          {/* Panel de Resumen */}
           <div className="dm2-alerts-summary">
             <div className="dm2-alerts-badges">
               <button
                 className="dm2-alerts-badge dm2-alerts-badge--critica"
                 onClick={() => handleBadgeClick("CRÍTICAS")}
               >
-                🔴 CRÍTICAS: {resumen.criticas}
+                <i className="fa-solid fa-circle-exclamation" aria-hidden="true" />
+                <span>CRÍTICAS: {resumen.criticas}</span>
               </button>
+
               <button
                 className="dm2-alerts-badge dm2-alerts-badge--advertencia"
                 onClick={() => handleBadgeClick("ADVERTENCIAS")}
               >
-                🟡 ADVERTENCIAS: {resumen.advertencias}
+                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+                <span>ADVERTENCIAS: {resumen.advertencias}</span>
               </button>
+
               <button
                 className="dm2-alerts-badge dm2-alerts-badge--informativa"
                 onClick={() => handleBadgeClick("INFORMATIVAS")}
               >
-                ℹ️ INFORMATIVAS: {resumen.informativas}
+                <i className="fa-solid fa-circle-info" aria-hidden="true" />
+                <span>INFORMATIVAS: {resumen.informativas}</span>
               </button>
             </div>
           </div>
 
-          {/* Filtros */}
           <div className="dm2-alerts-filters">
             <div className="dm2-filters-row">
               <div className="dm2-filter-group">
@@ -322,20 +336,25 @@ export default function AlertasSeguridadScreen() {
 
             <div className="dm2-filters-actions">
               <button className="dm2-btn dm2-btn--primary" onClick={handleBuscar}>
-                🔍 BUSCAR
+                <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
+                <span>BUSCAR</span>
               </button>
+
               <button className="dm2-btn dm2-btn--secondary" onClick={handleLimpiar}>
-                ✖️ LIMPIAR
+                <i className="fa-solid fa-xmark" aria-hidden="true" />
+                <span>LIMPIAR</span>
               </button>
+
               <button className="dm2-btn dm2-btn--outline" onClick={() => setShowConfigModal(true)}>
-                🔔 CONFIGURAR ALERTAS
+                <i className="fa-solid fa-bell" aria-hidden="true" />
+                <span>CONFIGURAR ALERTAS</span>
               </button>
             </div>
           </div>
 
-          {/* Listado de Alertas */}
           <div className="dm2-alerts-list">
             <h3>Alertas de Seguridad</h3>
+
             {loading ? (
               <div className="dm2-loading">Cargando alertas...</div>
             ) : alertasPaginadas.length === 0 ? (
@@ -347,28 +366,40 @@ export default function AlertasSeguridadScreen() {
                     <div key={alerta.id} className={`dm2-alert-item dm2-alert-item--${alerta.prioridad}`}>
                       <div className="dm2-alert-header">
                         <span className="dm2-alert-time">{alerta.hora}</span>
+
                         <span className="dm2-alert-priority">
-                          {getPrioridadIcon(alerta.prioridad)} {getPrioridadLabel(alerta.prioridad)}
+                          <i className={getPrioridadIconClass(alerta.prioridad)} aria-hidden="true" />
+                          <span>{getPrioridadLabel(alerta.prioridad)}</span>
                         </span>
                       </div>
+
                       <div className="dm2-alert-content">
                         <div className="dm2-alert-type">{alerta.tipo.replace("_", " ").toUpperCase()}</div>
                         <div className="dm2-alert-detail">{alerta.detalle}</div>
                       </div>
+
                       <div className="dm2-alert-actions">
                         {alerta.estado === "activa" && (
                           <>
                             <button className="dm2-btn dm2-btn--small" onClick={() => handleSilenciar(alerta)}>
-                              🔇 SILENCIAR
+                              <i className="fa-solid fa-volume-xmark" aria-hidden="true" />
+                              <span>SILENCIAR</span>
                             </button>
-                            <button className="dm2-btn dm2-btn--small dm2-btn--success" onClick={() => handleRevisar(alerta.id)}>
-                              ✅ MARCAR COMO REVISADA
+
+                            <button
+                              className="dm2-btn dm2-btn--small dm2-btn--success"
+                              onClick={() => handleRevisar(alerta.id)}
+                            >
+                              <i className="fa-solid fa-check" aria-hidden="true" />
+                              <span>MARCAR COMO REVISADA</span>
                             </button>
                           </>
                         )}
+
                         {alerta.estado === "silenciada" && (
                           <span className="dm2-alert-status">SILENCIADA</span>
                         )}
+
                         {alerta.estado === "resuelta" && (
                           <span className="dm2-alert-status">REVISADA</span>
                         )}
@@ -377,7 +408,6 @@ export default function AlertasSeguridadScreen() {
                   ))}
                 </div>
 
-                {/* Paginación */}
                 {totalPaginas > 1 && (
                   <div className="dm2-pagination">
                     <button
@@ -385,15 +415,17 @@ export default function AlertasSeguridadScreen() {
                       disabled={paginaActual === 1}
                       onClick={() => setPaginaActual(prev => prev - 1)}
                     >
-                      ‹
+                      <i className="fa-solid fa-chevron-left" aria-hidden="true" />
                     </button>
+
                     <span>Página {paginaActual} de {totalPaginas}</span>
+
                     <button
                       className="dm2-btn dm2-btn--small"
                       disabled={paginaActual === totalPaginas}
                       onClick={() => setPaginaActual(prev => prev + 1)}
                     >
-                      ›
+                      <i className="fa-solid fa-chevron-right" aria-hidden="true" />
                     </button>
                   </div>
                 )}
@@ -403,14 +435,18 @@ export default function AlertasSeguridadScreen() {
         </div>
       </div>
 
-      {/* Modal de Configuración (vacío) */}
       {showConfigModal && (
         <div className="dm2-modal-overlay" onClick={() => setShowConfigModal(false)}>
           <div className="dm2-modal" onClick={(e) => e.stopPropagation()}>
             <div className="dm2-modal-header">
-              <h3>Configuración de Alertas</h3>
-              <button onClick={() => setShowConfigModal(false)}>✖️</button>
+              <h3>
+                <i className="fa-solid fa-bell" aria-hidden="true" /> Configuración de Alertas
+              </h3>
+              <button onClick={() => setShowConfigModal(false)}>
+                <i className="fa-solid fa-xmark" aria-hidden="true" />
+              </button>
             </div>
+
             <div className="dm2-modal-body">
               <div className="dm2-empty">Modal en desarrollo...</div>
             </div>
@@ -418,19 +454,29 @@ export default function AlertasSeguridadScreen() {
         </div>
       )}
 
-      {/* Modal de Silenciar */}
       {showSilenciarModal && alertaSeleccionada && (
         <div className="dm2-modal-overlay" onClick={() => setShowSilenciarModal(false)}>
           <div className="dm2-modal" onClick={(e) => e.stopPropagation()}>
             <div className="dm2-modal-header">
-              <h3>🔇 Silenciar Alerta de Seguridad</h3>
-              <button onClick={() => setShowSilenciarModal(false)}>✖️</button>
+              <h3>
+                <i className="fa-solid fa-volume-xmark" aria-hidden="true" /> Silenciar Alerta de Seguridad
+              </h3>
+              <button onClick={() => setShowSilenciarModal(false)}>
+                <i className="fa-solid fa-xmark" aria-hidden="true" />
+              </button>
             </div>
+
             <div className="dm2-modal-body">
               <div className="dm2-silenciar-info">
                 <p><strong>Alerta seleccionada:</strong></p>
                 <p>Tipo: {alertaSeleccionada.tipo.replace("_", " ").toUpperCase()}</p>
-                <p>Prioridad: {getPrioridadIcon(alertaSeleccionada.prioridad)} {getPrioridadLabel(alertaSeleccionada.prioridad)}</p>
+                <p>
+                  Prioridad:
+                  {" "}
+                  <i className={getPrioridadIconClass(alertaSeleccionada.prioridad)} aria-hidden="true" />
+                  {" "}
+                  {getPrioridadLabel(alertaSeleccionada.prioridad)}
+                </p>
                 <p>Detalle: {alertaSeleccionada.detalle}</p>
               </div>
 
@@ -458,6 +504,7 @@ export default function AlertasSeguridadScreen() {
                     />
                     1 hora
                   </label>
+
                   <label>
                     <input
                       type="radio"
@@ -467,6 +514,7 @@ export default function AlertasSeguridadScreen() {
                     />
                     24 horas
                   </label>
+
                   <label>
                     <input
                       type="radio"
@@ -476,11 +524,12 @@ export default function AlertasSeguridadScreen() {
                     />
                     7 días
                   </label>
+
                   <label>
                     <input
                       type="radio"
-                      value="0"
-                      checked={silenciarForm.duracion === "0"}
+                      value="permanente"
+                      checked={silenciarForm.duracion === "permanente"}
                       onChange={(e) => setSilenciarForm(prev => ({ ...prev, duracion: e.target.value }))}
                     />
                     Permanentemente (hasta que se reactive manualmente)
@@ -494,10 +543,13 @@ export default function AlertasSeguridadScreen() {
                   onClick={handleConfirmarSilenciar}
                   disabled={!silenciarForm.justificacion.trim()}
                 >
-                  🔇 CONFIRMAR SILENCIO
+                  <i className="fa-solid fa-volume-xmark" aria-hidden="true" />
+                  <span>CONFIRMAR SILENCIO</span>
                 </button>
+
                 <button className="dm2-btn dm2-btn--secondary" onClick={() => setShowSilenciarModal(false)}>
-                  ✖️ CANCELAR
+                  <i className="fa-solid fa-xmark" aria-hidden="true" />
+                  <span>CANCELAR</span>
                 </button>
               </div>
             </div>
