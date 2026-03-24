@@ -9,12 +9,10 @@ import "./App.css";
 
 
 function App() {
-  // Inicializar desde localStorage si existe
-  const [screen, setScreen] = useState(() => localStorage.getItem("screen") || "welcome");
-  const [currentUser, setCurrentUser] = useState(() => {
-    const stored = localStorage.getItem("currentUser");
-    return stored ? JSON.parse(stored) : null;
-  });
+  // Estado simple, sin persistencia en localStorage
+  const [screen, setScreen] = useState("welcome");
+  const [currentUser, setCurrentUser] = useState(null);
+
 
   // token temporal para reset
   const [resetToken, setResetToken] = useState(null);
@@ -22,17 +20,7 @@ function App() {
 
   const goTo = (next) => setScreen(next);
 
-  // Guardar screen y currentUser en localStorage cuando cambien
-  React.useEffect(() => {
-    localStorage.setItem("screen", screen);
-  }, [screen]);
-  React.useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem("currentUser");
-    }
-  }, [currentUser]);
+
 
   const handleLoginSuccess = (userData) => {
     if (!userData) {
@@ -56,8 +44,6 @@ function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     goTo("welcome");
-    localStorage.removeItem("screen");
-    localStorage.removeItem("currentUser");
   };
 
   // Forgot verifica el código
