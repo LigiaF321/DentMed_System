@@ -172,16 +172,17 @@ async function actualizarDentista(req, res, next) {
       await dentista.Usuario.update({ email: nuevoEmail });
     }
 
-    // Registrar en auditoría
+    // Registrar en auditoria sin bloquear la actualizacion.
     const adminId = req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : null;
     const ip = getClientIp(req);
-    await Auditoria.create({
-      id_usuario: adminId,
-      accion: "ACTUALIZAR_DENTISTA",
-      modulo: "GESTION_USUARIOS",
-      detalles: JSON.stringify({ dentistaId: dentista.id, email: nuevoEmail }),
+    await registrarAuditoriaNoBloqueante(
+      req,
+      "ACTUALIZAR_DENTISTA",
+      "GESTION_USUARIOS",
+      { dentistaId: dentista.id, email: nuevoEmail },
       ip,
-    });
+      adminId
+    );
 
     const actualizado = await Dentista.findByPk(id, {
       include: [{ model: Usuario, attributes: ["id", "email", "activo"] }],
@@ -314,14 +315,15 @@ async function eliminarDentista(req, res, next) {
     await Dentista.destroy({ where: { id } });
     await Usuario.destroy({ where: { id: idUsuario } });
 
-    // Registrar en auditoría
-    await Auditoria.create({
-      id_usuario: adminId,
-      accion: "ELIMINAR_DENTISTA",
-      modulo: "GESTION_USUARIOS",
-      detalles: JSON.stringify({ dentistaId: id, email: dentista.Usuario?.email }),
+    // Registrar en auditoria sin bloquear la eliminacion.
+    await registrarAuditoriaNoBloqueante(
+      req,
+      "ELIMINAR_DENTISTA",
+      "GESTION_USUARIOS",
+      { dentistaId: id, email: dentista.Usuario?.email },
       ip,
-    });
+      adminId
+    );
 
     return res.json({ mensaje: "Dentista eliminado correctamente" });
   } catch (err) {
