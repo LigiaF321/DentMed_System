@@ -19,8 +19,6 @@ export default function CatalogoInsumosScreen() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [insumoEditando, setInsumoEditando] = useState(null);
-  const [modoDuplicacion, setModoDuplicacion] = useState(false);
-  const [insumoDuplicando, setInsumoDuplicando] = useState(null);
   const [mostrarModalEstado, setMostrarModalEstado] = useState(false);
   const [insumoCambioEstado, setInsumoCambioEstado] = useState(null);
 
@@ -203,34 +201,6 @@ export default function CatalogoInsumosScreen() {
     setInsumoEditando(null);
   };
 
-  const generarCodigoDuplicado = (codigoOriginal) => {
-    const match = codigoOriginal.match(/^(.*?)(\d+)$/);
-    if (match) {
-      const prefix = match[1];
-      const num = parseInt(match[2], 10) + 1;
-      return `${prefix}${num.toString().padStart(match[2].length, '0')}`;
-    }
-    return `${codigoOriginal}-COPY`;
-  };
-
-  const handleDuplicarInsumo = (insumo) => {
-    const datosDuplicados = {
-      ...insumo,
-      nombre: `${insumo.nombre} - copia`,
-      codigo: generarCodigoDuplicado(insumo.codigo)
-    };
-    setInsumoDuplicando(datosDuplicados);
-    setModoDuplicacion(true);
-  };
-
-  const handleDuplicarSeleccionado = () => {
-    if (!selectedInsumo) return;
-    const insumo = listaInsumos.find(i => i.id === selectedInsumo);
-    if (insumo) {
-      handleDuplicarInsumo(insumo);
-    }
-  };
-
   const handleGuardarDuplicado = (datosDuplicado) => {
     const insumoNuevo = {
       id: Date.now(),
@@ -259,16 +229,6 @@ export default function CatalogoInsumosScreen() {
         insumo={insumoEditando}
         onGuardar={handleGuardarEdicion}
         onCancelar={handleCancelarEdicion}
-      />
-    );
-  }
-
-  if (modoDuplicacion && insumoDuplicando) {
-    return (
-      <RegistroInsumoScreen 
-        onGuardar={handleGuardarDuplicado} 
-        onCancelar={handleCancelarDuplicado}
-        datosPrecargados={insumoDuplicando}
       />
     );
   }
@@ -350,9 +310,6 @@ export default function CatalogoInsumosScreen() {
               <div className="acciones-principales">
                 <button className="btn btn-primary" onClick={handleNuevoInsumo}>
                   <i className="fa-solid fa-plus"></i> NUEVO INSUMO
-                </button>
-                <button className="btn btn-secondary" onClick={handleDuplicarSeleccionado} disabled={!selectedInsumo}>
-                  <i className="fa-solid fa-copy"></i> DUPLICAR
                 </button>
               </div>
               <div className="acciones-secundarias">
@@ -463,7 +420,7 @@ export default function CatalogoInsumosScreen() {
                             <button className="btn-accion" title="Editar" onClick={(e) => { e.stopPropagation(); handleEditarInsumo(insumo); }}><i className="fa-solid fa-pen"></i></button>
                             <button className="btn-accion" title="Duplicar" onClick={(e) => { e.stopPropagation(); handleDuplicarInsumo(insumo); }}><i className="fa-solid fa-copy"></i></button>
                             <button className="btn-accion" title={insumo.estado === "activo" ? "Inactivar" : "Activar"} onClick={(e) => { e.stopPropagation(); handleToggleEstado(insumo); }}>
-                              {insumo.estado === "activo" ? "🚫" : "✅"}
+<i className={`fa-solid fa-${insumo.estado === "activo" ? "xmark" : "check"}`}></i>
                             </button>
                             <button className="btn-accion btn-accion-delete" title="Eliminar" onClick={(e) => { e.stopPropagation(); }}><i className="fa-solid fa-trash"></i></button>
                           </td>
