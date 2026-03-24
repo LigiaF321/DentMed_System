@@ -103,8 +103,14 @@ function notifLevel(tipo) {
 }
 
 export default function DashboardScreen({ userData, onLogout }) {
-  const isAdmin = (userData?.role || userData?.rol) === 'admin';
-  const [adminView, setAdminView] = useState('dashboard');
+  const isAdmin = (userData?.role || userData?.rol) === "admin";
+  // Inicializar adminView desde localStorage si existe
+  const [adminView, setAdminView] = useState(() => {
+    return localStorage.getItem('adminView') || 'dashboard';
+  });
+  useEffect(() => {
+    localStorage.setItem('adminView', adminView);
+  }, [adminView]);
   const [alertCount, setAlertCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
