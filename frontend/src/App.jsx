@@ -3,64 +3,76 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
-import ResetPasswordScreen from "./components/ResetPasswordScreen"; 
+import ResetPasswordScreen from "./components/ResetPasswordScreen";
 import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
 function App() {
   // Restore session on mount if exists, clear only on logout
-  const [screen, setScreen] = useState(() => localStorage.getItem("screen") || "login");
+  const [screen, setScreen] = useState(() => {
+    try {
+      return localStorage.getItem("screen") || "login";
+    } catch {
+      return "login";
+    }
+  });
+  
   const [currentUser, setCurrentUser] = useState(() => {
-    const stored = localStorage.getItem("currentUser");
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem("currentUser");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   });
 
-  // token temporal para reset
+  // Tokens reset (no persist)
   const [resetToken, setResetToken] = useState(null);
   const [resetEmail, setResetEmail] = useState(null);
 
-  const goTo = (next) => setScreen(next);
-
-  // Guardar screen y currentUser en localStorage cuando cambien
-  React.useEffect(() => {
-    localStorage.setItem("screen", screen);
-  }, [screen]);
-  React.useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem("currentUser");
+  // Sincronizar estado con localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("screen", screen);
+      if (currentUser) {
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+    } catch (e) {
+      console.warn("localStorage no disponible:", e);
     }
-  }, [currentUser]);
+  }, [screen, currentUser]);
+
+  const goTo = (next) => setScreen(next);
 
   const handleLoginSuccess = (userData) => {
     if (!userData) {
-      setCurrentUser(null);
-      goTo("login");
+      limpiarSesion();
       return;
     }
 
     setCurrentUser(userData);
-    goTo("loading");
+    setScreen("loading"); // Sync inmediato
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    goTo("login");
-    localStorage.removeItem("screen");
-    localStorage.removeItem("currentUser");
+    limpiarSesion();
   };
 
-  // Forgot verifica el código
+  const limpiarSesion = () => {
+    setCurrentUser(null);
+    setResetToken(null);
+    setResetEmail(null);
+    setScreen("login");
+    try {
+      localStorage.removeItem("screen");
+      localStorage.removeItem("currentUser");
+    } catch {}
+  };
+
   const handleVerifiedCode = ({ token, email }) => {
     setResetToken(token);
     setResetEmail(email);
     goTo("resetPassword");
-  };
-
-  const handleBackToLogin = () => {
-    setCurrentUser(null);
-    goTo("login");
   };
 
   const handleResetDone = () => {
@@ -70,13 +82,16 @@ function App() {
   };
 
   const handleLoadingComplete = () => {
-    const mustChange = currentUser.mustChangePassword === true ||
-      currentUser.forcePasswordChange === true ||
-      currentUser.firstLogin === true ||
-      currentUser.requiresPasswordChange === true; 
+    const mustChange = currentUser?.mustChangePassword === true ||
+      currentUser?.forcePasswordChange === true ||
+      currentUser?.firstLogin === true ||
+      currentUser?.requiresPasswordChange === true;
 
-    if (mustChange) goTo("forceChange");
-    else goTo("dashboard");
+    goTo(mustChange ? "forceChange" : "dashboard");
+  };
+
+  const handleBackToLogin = () => {
+    limpiarSesion();
   };
 
   return (
@@ -85,7 +100,6 @@ function App() {
 
       {screen === "login" && (
         <LoginScreen
-          onBack={() => goTo("login")}
           onLoginSuccess={handleLoginSuccess}
           onForgotPassword={() => goTo("forgot")}
         />
@@ -121,5 +135,6 @@ function App() {
     </div>
   );
 }
+
 export default App;
 
