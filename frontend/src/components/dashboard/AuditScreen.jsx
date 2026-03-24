@@ -332,12 +332,12 @@ export default function AuditScreen() {
             </div>
             <div className="audit-filters-actions">
               <button className="audit-btn-primary" type="button" onClick={handleBuscar}>BUSCAR</button>
-              <button className="audit-btn-secondary" type="button" onClick={handleLimpiarFiltros}>LIMPIAR FILTROS</button>
+              <button className="audit-btn-primary" type="button" onClick={handleLimpiarFiltros}>LIMPIAR FILTROS</button>
               <div className="audit-btn-export">
-                <button type="button">EXPORTAR ▼</button>
+                <button className="audit-btn-primary" type="button">EXPORTAR ▼</button>
                 <div className="audit-export-dropdown">
-                  <button type="button" onClick={exportarCSV}>Exportar a CSV</button>
-                  <button type="button" onClick={exportarPDF}>Exportar a PDF</button>
+                  <button className="audit-btn-primary" type="button" onClick={exportarCSV}>Exportar a CSV</button>
+                  <button className="audit-btn-primary" type="button" onClick={exportarPDF}>Exportar a PDF</button>
                 </div>
               </div>
             </div>
@@ -388,8 +388,8 @@ export default function AuditScreen() {
                       <td>{ev.detalle}</td>
                       <td>{ev.ip}</td>
                       <td>
-                        <button className="audit-action-btn" onClick={() => { setModalData(ev); setModalOpen(true); }}>Ver</button>
-                        <button className="audit-action-btn">Copiar</button>
+                        <button className="audit-btn-primary" onClick={() => { setModalData(ev); setModalOpen(true); }}>Ver</button>
+                        <button className="audit-btn-primary">Copiar</button>
                       </td>
                     </tr>
                   ))}
@@ -456,7 +456,7 @@ export default function AuditScreen() {
           )}
           {/* Botón VER LÍNEA DE TIEMPO principal */}
           <div style={{ marginTop: 16 }}>
-            <button className="audit-btn-timeline" type="button" onClick={() => setTimelineOpen(true)}>VER LÍNEA DE TIEMPO</button>
+            <button className="audit-btn-primary" type="button" onClick={() => setTimelineOpen(true)}>VER LÍNEA DE TIEMPO</button>
           </div>
           {/* Vista de línea de tiempo */}
           {timelineOpen && (
