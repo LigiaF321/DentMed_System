@@ -382,25 +382,12 @@
 .audit-modal-section details {
   margin-top: 8px;
 }
-.audit-table-section {
-  margin-top: 32px;
-}
-.audit-table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.audit-table-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #1a5f3f;
-}
+
 .audit-table-info {
   font-size: 0.95rem;
   color: #888;
-}
 .audit-table-page-controls {
+ .audit-table-page-controls {
   display: flex;
   align-items: center;
   gap: 6px;
