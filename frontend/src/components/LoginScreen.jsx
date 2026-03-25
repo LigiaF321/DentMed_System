@@ -9,13 +9,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Simulación de base de datos de doctores (en realidad vendría del backend)
-  const TEMPORARY_DOCTOR_CREDENTIALS = {
-    "dra.garcia": "TempPass123",
-    "dr.martinez": "TempPass456",
-    "dra.lopez": "TempPass789",
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -25,13 +18,15 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       // VALIDACIÓN 1: Debe seleccionar tipo de usuario
       if (!userType) {
         setError("Por favor seleccione un tipo de usuario");
+        setIsLoading(false);
         return;
       }
 
-      // VALIDACIÓN 2: Credenciales para admin
+      // VALIDACIÓN ADMIN: Credenciales maestras (NO consulta BD)
       if (userType === "admin") {
         if (username !== "Admin" || password !== "Admin123") {
           setError("Credenciales de administrador incorrectas");
+          setIsLoading(false);
           return;
         }
 
@@ -41,45 +36,52 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
           requiresPasswordChange: true,
           username: username,
         });
+        setIsLoading(false);
         return;
       }
 
-      // VALIDACIÓN 3: Para doctores
+      // VALIDACIÓN DOCTOR: Consulta al backend real
       if (userType === "doctor") {
         if (!username.trim() || !password.trim()) {
           setError("Por favor ingrese sus credenciales asignadas");
+          setIsLoading(false);
           return;
         }
 
-        const storedPassword = TEMPORARY_DOCTOR_CREDENTIALS[username.toLowerCase()];
-
-        if (!storedPassword) {
-          setError("Usuario no encontrado. Contacte al administrador.");
-          return;
-        }
-
-        if (password !== storedPassword) {
-          setError("Contraseña incorrecta. Contacte al administrador si la olvidó.");
-          return;
-        }
-
-        // Login exitoso para doctor
-        onLoginSuccess?.({
-          role: "doctor",
-          requiresPasswordChange: true,
-          username: username,
+        // Llamada real al backend
+        const response = await fetch('http://localhost:3000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: username,
+            password: password,
+          }),
         });
-        return;
+
+        const data = await response.json();
+
+        if (response.ok) {
+          onLoginSuccess?.({
+            role: "doctor",
+            requiresPasswordChange: data.requiresPasswordChange || true,
+            username: username,
+            token: data.token
+          });
+        } else {
+          setError(data.message || "Credenciales incorrectas. Contacte al administrador.");
+        }
       }
     } catch (err) {
-      setError("Error de conexión. Intente nuevamente.");
+      setError("Error de conexión con el servidor. Verifique que el backend esté corriendo.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLogoClick = () => {
-    console.log('Logo clicked, onBack:', onBack); // Para debug
+    console.log('Logo clicked, onBack:', onBack);
     if (onBack && typeof onBack === 'function') {
       onBack();
     }
@@ -97,11 +99,8 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     setUsername('');
     setPassword('');
     setError('');
-    if (type === 'admin') setShowAdminModal(true);
-    else setShowAdminModal(false);
   };
 
-  // Limpiar error cuando el usuario empieza a escribir (tu lógica)
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
     if (error && error.includes('incorrect')) {
@@ -286,7 +285,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 type="text"
                 id="username"
                 value={username}
-                onChange={handleUsernameChange} // Usa la función que limpia errores
+                onChange={handleUsernameChange}
                 placeholder={
                   userType === 'admin' 
                     ? 'Ingrese: Admin' 
@@ -346,7 +345,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 </label>
               </div>
 
-              {/* ✅ CAMBIADO: ahora abre la pantalla forgot */}
               <a
                 href="#"
                 className="forgot-password"
@@ -375,9 +373,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 </>
               )}
             </button>
-
-            {/* INSTRUCCIONES DINÁMICAS */}
-            
 
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>

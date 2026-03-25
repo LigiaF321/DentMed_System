@@ -9,6 +9,11 @@ const Usuario = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    username: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      unique: true,
+    },
     email: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -26,6 +31,11 @@ const Usuario = sequelize.define(
       comment: "admin | dentista",
     },
     activo: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    primer_acceso: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,

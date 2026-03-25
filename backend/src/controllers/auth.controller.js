@@ -176,7 +176,7 @@ exports.crearDentista = async (req, res) => {
         }
         
         // CORRECCIÓN CRÍTICA: Generamos el Salt y el Hash antes de llamar a Usuario.create
-        const passwordTemporal = "DentMed2026!"; 
+        const passwordTemporal = crypto.randomBytes(6).toString('base64').slice(0, 10); 
         const salt = await bcrypt.genSalt(10);
         const passHash = await bcrypt.hash(passwordTemporal, salt);
         
@@ -203,7 +203,7 @@ exports.crearDentista = async (req, res) => {
         await Auditoria.create({ 
             id_usuario: adminId || 1, 
             accion: "CREAR_DENTISTA", 
-            detalles: `Cuenta creada para: ${nombres} ${apellidos}`, 
+            detalle: `Cuenta creada para: ${nombres} ${apellidos}`, 
             ip: req.ip || "127.0.0.1"
         });
         
