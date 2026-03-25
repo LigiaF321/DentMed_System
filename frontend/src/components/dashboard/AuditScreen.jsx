@@ -3,8 +3,171 @@ import "./AuditScreen.css";
 import TimelineScreen from "./TimelineScreen";
 
 export default function AuditScreen() {
+  // Exportar a CSV
+  const exportarCSV = () => {
+    const encabezados = ["Fecha y Hora","Usuario","Rol","Acción","Módulo","Detalle","IP"];
+    const filas = resultadosFiltrados.map(ev => [ev.fecha, ev.usuario, ev.rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
+    let csv = encabezados.join(",") + "\n";
+    filas.forEach(fila => {
+      csv += fila.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'auditoria.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Exportar a PDF (jsPDF)
+  const exportarPDF = async () => {
+    const encabezados = ["Fecha y Hora","Usuario","Rol","Acción","Módulo","Detalle","IP"];
+    const filas = resultadosFiltrados.map(ev => [ev.fecha, ev.usuario, ev.rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
+    // Cargar jsPDF dinámicamente si no está en window
+    let jsPDF = window.jspdf && window.jspdf.jsPDF;
+    if (!jsPDF) {
+      jsPDF = (await import('jspdf')).jsPDF;
+    }
+    const doc = new jsPDF();
+    let y = 15;
+    doc.setFontSize(12);
+    doc.text('Resultados de Auditoría', 10, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text(encabezados, 10, y);
+    y += 7;
+    filas.forEach(fila => {
+      doc.text(fila.map(val => String(val || "")).slice(0,7), 10, y);
+      y += 7;
+      if (y > 270) { doc.addPage(); y = 15; }
+    });
+    doc.save('auditoria.pdf');
+  };
+
+  // Datos simulados de resultados (debe ir antes de los hooks que lo usan)
+  const auditResults = [
+    {
+      fecha: "21/02/2026 10:35:22",
+      usuario: "jperez",
+      rol: "Dentista",
+      accion: "Crear cita",
+      modulo: "Citas",
+      detalle: "Paciente: María González",
+      ip: "10.0.0.12"
+    },
+    {
+      fecha: "20/02/2026 09:15:10",
+      usuario: "admin",
+      rol: "Admin",
+      accion: "Configurar",
+      modulo: "Horarios",
+      detalle: "Cambio horario sábado",
+      ip: "10.0.0.5"
+    }
+  ];
+
+  // Estados para filtros
+  const [filtros, setFiltros] = React.useState({
+    usuario: '', // select
+    usuarioBusqueda: '', // input
+    rol: '',
+    fechaDesde: '',
+    fechaHasta: '',
+    accion: '',
+    modulo: '',
+    resultado: '',
+    ip: '',
+    termino: ''
+  });
+  const [resultadosFiltrados, setResultadosFiltrados] = React.useState(auditResults);
+
+    // Manejar cambios en los filtros
+  const handleFiltroChange = (e) => {
+    const { name, value } = e.target;
+    setFiltros((prev) => ({ ...prev, [name]: value }));
+  };
+
+    // Buscar (filtrar resultados)
+  const handleBuscar = () => {
+    let filtrados = auditResults.filter(ev => {
+      return (
+        (!filtros.usuario || ev.usuario === filtros.usuario) &&
+        (!filtros.usuarioBusqueda || ev.usuario.toLowerCase().includes(filtros.usuarioBusqueda.toLowerCase())) &&
+        (!filtros.rol || ev.rol === filtros.rol || filtros.rol === 'TODOS') &&
+        (!filtros.accion || ev.accion === filtros.accion) &&
+        (!filtros.modulo || ev.modulo === filtros.modulo || filtros.modulo === 'TODOS') &&
+        (!filtros.resultado || filtros.resultado === 'TODOS') &&
+        (!filtros.ip || ev.ip.includes(filtros.ip)) &&
+        (!filtros.termino || ev.detalle.toLowerCase().includes(filtros.termino.toLowerCase()))
+      );
+    });
+    setResultadosFiltrados(filtrados);
+  };
+
+    // Limpiar filtros
+  const handleLimpiarFiltros = () => {
+    setFiltros({
+      usuario: '',
+      usuarioBusqueda: '',
+      rol: '',
+      fechaDesde: '',
+      fechaHasta: '',
+      accion: '',
+      modulo: '',
+      resultado: '',
+      ip: '',
+      termino: ''
+    });
+    setResultadosFiltrados(auditResults);
+  };
   const [modalOpen, setModalOpen] = React.useState(false);
   const [modalData, setModalData] = React.useState(null);
+
+  // Funciones para los botones del modal
+  const handleVerEventosSimilares = () => {
+    if (!modalData) return;
+    setFiltros((prev) => ({
+      ...prev,
+      usuario: modalData.usuario,
+      accion: modalData.accion,
+      usuarioBusqueda: '',
+      ip: '',
+      termino: ''
+    }));
+    setResultadosFiltrados(auditResults.filter(ev => ev.usuario === modalData.usuario && ev.accion === modalData.accion));
+    setModalOpen(false);
+  };
+
+  const handleBuscarPorIP = () => {
+    if (!modalData) return;
+    setFiltros((prev) => ({
+      ...prev,
+      ip: modalData.ip,
+      usuario: '',
+      usuarioBusqueda: '',
+      accion: '',
+      termino: ''
+    }));
+    setResultadosFiltrados(auditResults.filter(ev => ev.ip === modalData.ip));
+    setModalOpen(false);
+  };
+
+  const handleVerActividadUsuario = () => {
+    if (!modalData) return;
+    setFiltros((prev) => ({
+      ...prev,
+      usuario: modalData.usuario,
+      usuarioBusqueda: '',
+      ip: '',
+      accion: '',
+      termino: ''
+    }));
+    setResultadosFiltrados(auditResults.filter(ev => ev.usuario === modalData.usuario));
+    setModalOpen(false);
+  };
   const [timelineOpen, setTimelineOpen] = React.useState(false);
   const [timelineUser, setTimelineUser] = React.useState({ usuario: '', nombre: '' });
 
@@ -29,27 +192,6 @@ export default function AuditScreen() {
     metadatos: { browser: "Chrome", sistema: "Windows", version: "1.0.0" }
   };
 
-  // Datos simulados de resultados
-  const auditResults = [
-    {
-      fecha: "21/02/2026 10:35:22",
-      usuario: "jperez",
-      rol: "Dentista",
-      accion: "Crear cita",
-      modulo: "Citas",
-      detalle: "Paciente: María González",
-      ip: "10.0.0.12"
-    },
-    {
-      fecha: "20/02/2026 09:15:10",
-      usuario: "admin",
-      rol: "Admin",
-      accion: "Configurar",
-      modulo: "Horarios",
-      detalle: "Cambio horario sábado",
-      ip: "10.0.0.5"
-    }
-  ];
 
   // Datos simulados para la tabla de eventos de la línea de tiempo
   const timelineEvents = [
@@ -115,22 +257,28 @@ export default function AuditScreen() {
             <div className="audit-filters-row">
               <div className="audit-filter">
                 <label>Usuario</label>
-                <select style={inputStyle}>{usuarios.map((u) => (<option key={u.id} value={u.id}>{u.username}</option>))}</select>
-                <input type="text" placeholder="Buscar usuario..." style={inputStyle} />
+                <select style={inputStyle} name="usuario" value={filtros.usuario} onChange={handleFiltroChange}>
+                  <option value="">TODOS LOS USUARIOS</option>
+                  {usuarios.map((u) => (<option key={u.id} value={u.username}>{u.username}</option>))}
+                </select>
+                <input type="text" name="usuarioBusqueda" placeholder="Buscar usuario..." style={inputStyle} value={filtros.usuarioBusqueda} onChange={handleFiltroChange} />
               </div>
               <div className="audit-filter">
                 <label>Rol</label>
-                <select style={inputStyle}>{roles.map((r) => (<option key={r} value={r}>{r}</option>))}</select>
+                <select style={inputStyle} name="rol" value={filtros.rol} onChange={handleFiltroChange}>
+                  <option value="">TODOS</option>
+                  {roles.map((r) => (<option key={r} value={r}>{r}</option>))}
+                </select>
               </div>
             </div>
             <div className="audit-filters-row">
               <div className="audit-filter">
                 <label>Fecha desde</label>
-                <input type="date" placeholder="dd/mm/aaaa" style={inputStyle} />
+                <input type="date" name="fechaDesde" placeholder="dd/mm/aaaa" style={inputStyle} value={filtros.fechaDesde} onChange={handleFiltroChange} />
               </div>
               <div className="audit-filter">
                 <label>Fecha hasta</label>
-                <input type="date" placeholder="dd/mm/aaaa" style={inputStyle} />
+                <input type="date" name="fechaHasta" placeholder="dd/mm/aaaa" style={inputStyle} value={filtros.fechaHasta} onChange={handleFiltroChange} />
               </div>
               <div className="audit-filter audit-filter-period">
                 <label>Período rápido</label>
@@ -146,40 +294,52 @@ export default function AuditScreen() {
             <div className="audit-filters-row">
               <div className="audit-filter">
                 <label>Acción</label>
-                <select style={inputStyle}><option value="all">TODAS</option>{acciones.map((group) => (<optgroup key={group.group} label={group.group}>{group.items.map((item) => (<option key={item} value={item}>{item}</option>))}</optgroup>))}</select>
+                <select style={inputStyle} name="accion" value={filtros.accion} onChange={handleFiltroChange}>
+                  <option value="">TODAS</option>
+                  {acciones.map((group) => (
+                    <optgroup key={group.group} label={group.group}>
+                      {group.items.map((item) => (<option key={item} value={item}>{item}</option>))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
               <div className="audit-filter">
                 <label>Módulo</label>
-                <select style={inputStyle}>{modulos.map((m) => (<option key={m} value={m}>{m}</option>))}</select>
+                <select style={inputStyle} name="modulo" value={filtros.modulo} onChange={handleFiltroChange}>
+                  <option value="">TODOS</option>
+                  {modulos.map((m) => (<option key={m} value={m}>{m}</option>))}
+                </select>
               </div>
             </div>
             <div className="audit-filters-row">
               <div className="audit-filter">
                 <label>Resultado</label>
-                <select style={inputStyle}>{resultados.map((r) => (<option key={r} value={r}>{r}</option>))}</select>
+                <select style={inputStyle} name="resultado" value={filtros.resultado} onChange={handleFiltroChange}>
+                  <option value="">TODOS</option>
+                  {resultados.map((r) => (<option key={r} value={r}>{r}</option>))}
+                </select>
               </div>
               <div className="audit-filter">
                 <label>IP</label>
-                <input type="text" placeholder="Ej: 192.168.1.45" style={inputStyle} />
+                <input type="text" name="ip" placeholder="Ej: 192.168.1.45" style={inputStyle} value={filtros.ip} onChange={handleFiltroChange} />
               </div>
             </div>
             <div className="audit-filters-row">
               <div className="audit-filter audit-filter-wide">
                 <label>Búsqueda por término</label>
-                <input type="text" placeholder="Buscar en detalles... (ej: nombre paciente, ID tratamiento, factura, etc.)" style={inputStyle} />
+                <input type="text" name="termino" placeholder="Buscar en detalles... (ej: nombre paciente, ID tratamiento, factura, etc.)" style={inputStyle} value={filtros.termino} onChange={handleFiltroChange} />
               </div>
             </div>
             <div className="audit-filters-actions">
-              <button className="audit-btn-primary" type="button">🔍 BUSCAR</button>
-              <button className="audit-btn-secondary" type="button">✖️ LIMPIAR FILTROS</button>
+              <button className="audit-btn-primary" type="button" onClick={handleBuscar}>BUSCAR</button>
+              <button className="audit-btn-primary" type="button" onClick={handleLimpiarFiltros}>LIMPIAR FILTROS</button>
               <div className="audit-btn-export">
-                <button type="button">📥 EXPORTAR ▼</button>
+                <button className="audit-btn-primary" type="button">EXPORTAR ▼</button>
                 <div className="audit-export-dropdown">
-                  <button type="button">Exportar a CSV</button>
-                  <button type="button">Exportar a PDF</button>
+                  <button className="audit-btn-primary" type="button" onClick={exportarCSV}>Exportar a CSV</button>
+                  <button className="audit-btn-primary" type="button" onClick={exportarPDF}>Exportar a PDF</button>
                 </div>
               </div>
-              <button className="audit-btn-timeline" type="button">📊 VER LÍNEA DE TIEMPO</button>
             </div>
           </div>
           {/* Tabla de resultados de auditoría (estructura vacía) */}
@@ -218,7 +378,7 @@ export default function AuditScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {auditResults.map((ev, idx) => (
+                  {resultadosFiltrados.map((ev, idx) => (
                     <tr key={idx}>
                       <td>{ev.fecha}</td>
                       <td>{ev.usuario}</td>
@@ -228,8 +388,8 @@ export default function AuditScreen() {
                       <td>{ev.detalle}</td>
                       <td>{ev.ip}</td>
                       <td>
-                        <button className="audit-action-btn" onClick={() => setModalOpen(true)}>👁️</button>
-                        <button className="audit-action-btn">📋</button>
+                        <button className="audit-btn-primary" onClick={() => { setModalData(ev); setModalOpen(true); }}>Ver</button>
+                        <button className="audit-btn-primary">Copiar</button>
                       </td>
                     </tr>
                   ))}
@@ -239,9 +399,9 @@ export default function AuditScreen() {
           </div>
           {/* Leyenda de roles */}
           <div className="audit-legend">
-            <span>🛡️ Admin</span>
-            <span>👨‍⚕️ Dentista</span>
-            <span>🤖 Sistema</span>
+            <span>Admin</span>
+            <span>Dentista</span>
+            <span>Sistema</span>
           </div>
           {/* Modal de detalle de auditoría */}
           {modalOpen && (
@@ -255,17 +415,17 @@ export default function AuditScreen() {
                   <div className="audit-modal-section">
                     <strong>Información general:</strong>
                     <ul>
-                      <li>Fecha y hora: &nbsp;</li>
-                      <li>Usuario: &nbsp;</li>
-                      <li>IP: &nbsp;</li>
-                      <li>Módulo: &nbsp;</li>
-                      <li>Acción: &nbsp;</li>
+                      <li>Fecha y hora: &nbsp;{modalData?.fecha || ''}</li>
+                      <li>Usuario: &nbsp;{modalData?.usuario || ''}</li>
+                      <li>IP: &nbsp;{modalData?.ip || ''}</li>
+                      <li>Módulo: &nbsp;{modalData?.modulo || ''}</li>
+                      <li>Acción: &nbsp;{modalData?.accion || ''}</li>
                       <li>Resultado: &nbsp;</li>
                     </ul>
                   </div>
                   <div className="audit-modal-section">
                     <strong>Detalle específico:</strong>
-                    <div>&nbsp;</div>
+                    <div>{modalData?.detalle || ''}</div>
                   </div>
                   <div className="audit-modal-section">
                     <strong>Información adicional:</strong>
@@ -281,22 +441,22 @@ export default function AuditScreen() {
                     <strong>Datos técnicos:</strong>
                     <details>
                       <summary>Ver metadatos completos (JSON)</summary>
-                      <pre style={{ background: '#f7f7f7', padding: 10, borderRadius: 6 }}>&nbsp;</pre>
+                      <pre style={{ background: '#f7f7f7', padding: 10, borderRadius: 6 }}>{JSON.stringify(modalData, null, 2)}</pre>
                     </details>
                   </div>
                 </div>
                 <div className="audit-modal-actions">
-                  <button className="audit-modal-btn">📋 VER EVENTOS SIMILARES</button>
-                  <button className="audit-modal-btn">🔍 BUSCAR POR ESTA IP</button>
-                  <button className="audit-modal-btn">👤 VER ACTIVIDAD DEL USUARIO</button>
-                  <button className="audit-modal-btn audit-modal-btn-close" onClick={() => setModalOpen(false)}>✖️ CERRAR</button>
+                  <button className="audit-modal-btn" onClick={handleVerEventosSimilares}>VER EVENTOS SIMILARES</button>
+                  <button className="audit-modal-btn" onClick={handleBuscarPorIP}>BUSCAR POR ESTA IP</button>
+                  <button className="audit-modal-btn" onClick={handleVerActividadUsuario}>VER ACTIVIDAD DEL USUARIO</button>
+                  <button className="audit-modal-btn audit-modal-btn-close" onClick={() => setModalOpen(false)}>CERRAR</button>
                 </div>
               </div>
             </div>
           )}
           {/* Botón VER LÍNEA DE TIEMPO principal */}
           <div style={{ marginTop: 16 }}>
-            <button className="audit-btn-timeline" type="button" onClick={() => setTimelineOpen(true)}>📊 VER LÍNEA DE TIEMPO</button>
+            <button className="audit-btn-primary" type="button" onClick={() => setTimelineOpen(true)}>VER LÍNEA DE TIEMPO</button>
           </div>
           {/* Vista de línea de tiempo */}
           {timelineOpen && (

@@ -103,8 +103,21 @@ function notifLevel(tipo) {
 }
 
 export default function DashboardScreen({ userData, onLogout }) {
-  const isAdmin = (userData?.role || userData?.rol) === 'admin';
-  const [adminView, setAdminView] = useState('dashboard');
+  const isAdmin = (userData?.role || userData?.rol) === "admin";
+  // Inicializar adminView desde localStorage si existe
+  const [adminView, setAdminView] = useState(() => {
+    if (!isAdmin) return 'dashboard';
+    return localStorage.getItem('adminView') || 'dashboard';
+  });
+  useEffect(() => {
+    if (!isAdmin) {
+      if (adminView !== 'dashboard') {
+        setAdminView('dashboard');
+      }
+      return;
+    }
+    localStorage.setItem('adminView', adminView);
+  }, [adminView, isAdmin]);
   const [alertCount, setAlertCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
@@ -250,11 +263,13 @@ export default function DashboardScreen({ userData, onLogout }) {
   }, [alertasSeguridad]);
 
   const abrirPanelAlertas = () => {
+    if (!isAdmin) return;
     setAdminView('alertas-seguridad');
     setAlertasVisorAbierto(false);
   };
 
   const irPanelInventario = () => {
+    if (!isAdmin) return;
     setAdminView('alertas-inventario');
     setAlertasVisorAbierto(false);
   };
@@ -278,6 +293,7 @@ export default function DashboardScreen({ userData, onLogout }) {
   }, [fechaLabel]);
 
   const topbarTitle = useMemo(() => {
+    if (!isAdmin) return 'PANEL DE CONTROL';
     switch (adminView) {
       case 'alertas-inventario':
         return 'ALERTAS DE INVENTARIO';
@@ -374,44 +390,48 @@ export default function DashboardScreen({ userData, onLogout }) {
             </div>
           </CardSection>
 
+          {isAdmin ? (
+            <CardSection
+              title="Alertas de Seguridad"
+              rightAction={
+                <button
+                  className="dm2-linkBtn"
+                  onClick={() => setAdminView('alertas-seguridad')}
+                >
+                  Ver todas
+                </button>
+              }
+            >
+              <div className="dm2-alertsWidget">
+                <div className="dm2-alertsWidget-badges">
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--critica">
+                    🔴 Críticas: {alertasSeguridad.criticas}
+                  </span>
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--advertencia">
+                    🟡 Advertencias: {alertasSeguridad.advertencias}
+                  </span>
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--informativa">
+                    ℹ️ Informativas: {alertasSeguridad.informativas}
+                  </span>
+                </div>
+                <div className="dm2-alertsWidget-list">
+                  {alertasSeguridad.ultimas.length > 0 ? (
+                    alertasSeguridad.ultimas.slice(0, 3).map((alerta) => (
+                      <div key={alerta.id} className="dm2-alertsWidget-item">
+                        <span className={`dm2-alertsWidget-dot dm2-alertsWidget-dot--${alerta.prioridad}`} />
+                        <span className="dm2-alertsWidget-text">{alerta.descripcion}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="dm2-alertsWidget-empty">No hay alertas activas</div>
+                  )}
+                </div>
+              </div>
+            </CardSection>
+          ) : null}
+
           <CardSection title="Actualización">
-          <CardSection
-            title="Alertas de Seguridad"
-            rightAction={
-              <button
-                className="dm2-linkBtn"
-                onClick={() => setAdminView('alertas-seguridad')}
-              >
-                Ver todas
-              </button>
-            }
-          >
-            <div className="dm2-alertsWidget">
-              <div className="dm2-alertsWidget-badges">
-                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--critica">
-                  🔴 Críticas: {alertasSeguridad.criticas}
-                </span>
-                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--advertencia">
-                  🟡 Advertencias: {alertasSeguridad.advertencias}
-                </span>
-                <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--informativa">
-                  ℹ️ Informativas: {alertasSeguridad.informativas}
-                </span>
-              </div>
-              <div className="dm2-alertsWidget-list">
-                {alertasSeguridad.ultimas.length > 0 ? (
-                  alertasSeguridad.ultimas.slice(0, 3).map((alerta) => (
-                    <div key={alerta.id} className="dm2-alertsWidget-item">
-                      <span className={`dm2-alertsWidget-dot dm2-alertsWidget-dot--${alerta.prioridad}`} />
-                      <span className="dm2-alertsWidget-text">{alerta.descripcion}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="dm2-alertsWidget-empty">No hay alertas activas</div>
-                )}
-              </div>
-            </div>
-          </CardSection>            <div className="dm2-updateRow">
+            <div className="dm2-updateRow">
               <div className="dm2-updateLeft">
                 <span className="dm2-muted">Última actualización:</span>{' '}
                 <span className="dm2-strong">{lastUpdated}</span>
@@ -437,14 +457,16 @@ export default function DashboardScreen({ userData, onLogout }) {
 
           <CardSection title="Accesos rápidos" rightAction={<span style={{fontSize:'12px'}}>Ahora disponible en barra superior</span>}>
             <div className="dm2-quickbar">
-              <button
-                className="dm2-quickbtn"
-                type="button"
-                onClick={() => setAdminView('alertas-seguridad')}
-              >
-                <i className="fa-solid fa-shield-alt" />
-                <span>ALERTAS DE SEGURIDAD</span>
-              </button>
+              {isAdmin ? (
+                <button
+                  className="dm2-quickbtn"
+                  type="button"
+                  onClick={() => setAdminView('alertas-seguridad')}
+                >
+                  <i className="fa-solid fa-shield-alt" />
+                  <span>ALERTAS DE SEGURIDAD</span>
+                </button>
+              ) : null}
               <button
                 className="dm2-quickbtn"
                 type="button"
@@ -514,7 +536,11 @@ export default function DashboardScreen({ userData, onLogout }) {
               <button
                 type="button"
                 className="dm2-linkBtn"
-                onClick={() => setAdminView('alertas-seguridad')}
+                onClick={() =>
+                  isAdmin
+                    ? setAdminView('alertas-seguridad')
+                    : setAdminView('dashboard')
+                }
               >
                 Ver centro →
               </button>
@@ -671,50 +697,60 @@ export default function DashboardScreen({ userData, onLogout }) {
             </div>
 
             <div className="dm2-topbar-right">
-              <div className="dm2-alertas-dropdown-wrap">
-                <button
-                  className="dm2-alertas-secondary"
-                  onClick={() => setAlertasVisorAbierto((prev) => !prev)}
-                >
-                  <i className="fa-solid fa-bell" />
-                  Alertas
-                  {(totalAlertasSeguridad + inventarioAlertCount) > 0 && (
-                    <span className="dm2-alertas-badge">
-                      {totalAlertasSeguridad + inventarioAlertCount}
-                    </span>
+              {isAdmin ? (
+                <div className="dm2-alertas-dropdown-wrap">
+                  <button
+                    className="dm2-alertas-secondary"
+                    onClick={() => setAlertasVisorAbierto((prev) => !prev)}
+                  >
+                    <i className="fa-solid fa-bell" />
+                    Alertas
+                    {(totalAlertasSeguridad + inventarioAlertCount) > 0 && (
+                      <span className="dm2-alertas-badge">
+                        {totalAlertasSeguridad + inventarioAlertCount}
+                      </span>
+                    )}
+                    <i className="fa-solid fa-chevron-down dm2-alertas-chevron" />
+                  </button>
+
+                  {alertasVisorAbierto && (
+                    <div className="dm2-alertas-dropdown">
+                      <button
+                        className="dm2-alertas-dropdown-item"
+                        onClick={() => { abrirPanelAlertas(); setAlertasVisorAbierto(false); }}
+                      >
+                        <i className="fa-solid fa-shield-alt" />
+                        <span>Seguridad</span>
+                        {totalAlertasSeguridad > 0 && (
+                          <span className="dm2-alertas-badge dm2-alertas-badge--crit">{totalAlertasSeguridad}</span>
+                        )}
+                      </button>
+                      <button
+                        className="dm2-alertas-dropdown-item"
+                        onClick={() => { irPanelInventario(); setAlertasVisorAbierto(false); }}
+                      >
+                        <i className="fa-solid fa-boxes-stacked" />
+                        <span>Inventario</span>
+                        {inventarioAlertCount > 0 && (
+                          <span className="dm2-alertas-badge dm2-alertas-badge--warn">{inventarioAlertCount}</span>
+                        )}
+                      </button>
+                    </div>
                   )}
-                  <i className="fa-solid fa-chevron-down dm2-alertas-chevron" />
-                </button>
+                </div>
+              ) : null}
 
-                {alertasVisorAbierto && (
-                  <div className="dm2-alertas-dropdown">
-                    <button
-                      className="dm2-alertas-dropdown-item"
-                      onClick={() => { abrirPanelAlertas(); setAlertasVisorAbierto(false); }}
-                    >
-                      <i className="fa-solid fa-shield-alt" />
-                      <span>Seguridad</span>
-                      {totalAlertasSeguridad > 0 && (
-                        <span className="dm2-alertas-badge dm2-alertas-badge--crit">{totalAlertasSeguridad}</span>
-                      )}
-                    </button>
-                    <button
-                      className="dm2-alertas-dropdown-item"
-                      onClick={() => { irPanelInventario(); setAlertasVisorAbierto(false); }}
-                    >
-                      <i className="fa-solid fa-boxes-stacked" />
-                      <span>Inventario</span>
-                      {inventarioAlertCount > 0 && (
-                        <span className="dm2-alertas-badge dm2-alertas-badge--warn">{inventarioAlertCount}</span>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-
+{isAdmin ? (
               <div className="dm2-datePill" title="Fecha">
                 {topDate}
               </div>
+            ) : null}
+            {!isAdmin ? (
+              <button className="dm2-logout-topbar" onClick={onLogout} title="Cerrar sesión">
+                <i className="fa-solid fa-right-from-bracket me-1"></i>
+                Salir
+              </button>
+            ) : null}
             </div>
           </div>
 

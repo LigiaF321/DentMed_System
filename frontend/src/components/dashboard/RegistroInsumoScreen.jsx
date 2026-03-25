@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./RegistroInsumoScreen.css";
 
-export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPrecargados = null }) {
+export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPrecargados = null, titulo }) {
   // Estado inicial: usar datos precargados si existen, sino vacío
   const getInitialData = () => {
     if (datosPrecargados) {
@@ -35,8 +35,10 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
   const [guardando, setGuardando] = useState(false);
 
   // Determinar si es modo duplicación
-  const esDuplicacion = !!datosPrecargados;
-  const titulo = esDuplicacion ? "Duplicar Insumo" : "Registrar Nuevo Insumo";
+  const esDuplicacion = !!datosPrecargados && !titulo;
+  const displayTitulo = titulo || (esDuplicacion ? "Duplicar Insumo" : "Registrar Nuevo Insumo");
+  const esModoEditar = !!titulo && titulo.includes("Editando");
+  const esSoloNuevo = !datosPrecargados && !titulo;
 
   const categorias = [
     "Insumos quirúrgicos",
@@ -119,18 +121,26 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
     setGuardando(true);
 
     try {
-      // Simulación de guardado - aquí iría la llamada al backend
-      console.log("Guardando insumo:", formData);
+      const data = {
+        codigo: formData.codigo,
+        nombre: formData.nombre,
+        categoria: formData.categoria,
+        stockMinimo: formData.stockMinimo,
+        unidadMedida: formData.unidadMedida,
+        proveedor: formData.proveedor,
+        precio: formData.precio,
+        descripcion: formData.descripcion,
+        estado: formData.estado
+      };
       
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await materialService.crear(data);
       
       if (onGuardar) {
-        onGuardar(formData);
+        onGuardar(response.data);
       }
     } catch (error) {
       console.error("Error al guardar:", error);
-      setErrores({ general: "Error al guardar el insumo" });
+      setErrores({ general: error.message || "Error al guardar el insumo" });
     } finally {
       setGuardando(false);
     }
@@ -150,7 +160,7 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
           <button className="btn-volver" onClick={handleCancelar}>
             <i className="fa-solid fa-arrow-left" /> Volver
           </button>
-          <h1 className="registro-titulo">{titulo}</h1>
+          <h1 className="registro-titulo">{displayTitulo}</h1>
         </div>
 
         {/* Formulario */}
@@ -283,7 +293,7 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
             </div>
 
             {/* Descripción */}
-            <div className="form-group form-group-full">
+            <div className="form-group">
               <label htmlFor="descripcion">
                 Descripción
               </label>
@@ -293,7 +303,7 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
                 value={formData.descripcion}
                 onChange={handleChange}
                 placeholder="Descripción adicional del insumo..."
-                rows={3}
+                rows={1}
               />
             </div>
 
@@ -314,19 +324,22 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
                   </span>
                   <span className="radio-label">Activo</span>
                 </label>
-                <label className="switch-label">
-                  <input
-                    type="radio"
-                    name="estado"
-                    value="inactivo"
-                    checked={formData.estado === "inactivo"}
-                    onChange={handleChange}
-                  />
-                  <span className="switch-radio">
-                    <span className="radio-dot"></span>
-                  </span>
-                  <span className="radio-label">Inactivo</span>
-                </label>
+                {!esSoloNuevo && (
+                  <label className="switch-label">
+                    <input
+                      type="radio"
+                      name="estado"
+                      value="inactivo"
+                      checked={formData.estado === "inactivo"}
+                      onChange={handleChange}
+                    />
+                    <span className="switch-radio">
+                      <span className="radio-dot"></span>
+                    </span>
+                    <span className="radio-label">Inactivo</span>
+                  </label>
+                )}
+                {esSoloNuevo && <small className="help-text">Nuevo insumo siempre activo</small>}
               </div>
             </div>
           </div>

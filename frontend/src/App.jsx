@@ -1,56 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
-import ResetPasswordScreen from "./components/ResetPasswordScreen"; 
+import ResetPasswordScreen from "./components/ResetPasswordScreen";
 import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
 function App() {
-  const [screen, setScreen] = useState("welcome");
-  const [currentUser, setCurrentUser] = useState(null);
+  // Restore session on mount if exists, clear only on logout
+  const [screen, setScreen] = useState(() => {
+    try {
+      return localStorage.getItem("screen") || "login";
+    } catch {
+      return "login";
+    }
+  });
+  
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("currentUser");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // token temporal para reset
+  // Tokens reset (no persist)
   const [resetToken, setResetToken] = useState(null);
   const [resetEmail, setResetEmail] = useState(null);
+
+  // Sincronizar estado con localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("screen", screen);
+      if (currentUser) {
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+    } catch (e) {
+      console.warn("localStorage no disponible:", e);
+    }
+  }, [screen, currentUser]);
 
   const goTo = (next) => setScreen(next);
 
   const handleLoginSuccess = (userData) => {
     if (!userData) {
-      setCurrentUser(null);
-      goTo("login");
+      limpiarSesion();
       return;
     }
 
     setCurrentUser(userData);
-
-    const mustChange =
-      userData.mustChangePassword === true ||
-      userData.forcePasswordChange === true ||
-      userData.firstLogin === true ||
-      userData.requiresPasswordChange === true; 
-
-    if (mustChange) goTo("forceChange");
-    else goTo("dashboard");
+    setScreen("loading"); // Sync inmediato
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    goTo("welcome");
+    limpiarSesion();
   };
 
-  // Forgot verifica el código
+  const limpiarSesion = () => {
+    setCurrentUser(null);
+    setResetToken(null);
+    setResetEmail(null);
+    setScreen("login");
+    try {
+      localStorage.removeItem("screen");
+      localStorage.removeItem("currentUser");
+    } catch {}
+  };
+
   const handleVerifiedCode = ({ token, email }) => {
     setResetToken(token);
     setResetEmail(email);
     goTo("resetPassword");
-  };
-
-  const handleBackToLogin = () => {
-    setCurrentUser(null);
-    goTo("login");
   };
 
   const handleResetDone = () => {
@@ -59,19 +81,30 @@ function App() {
     goTo("login");
   };
 
+  const handleLoadingComplete = () => {
+    const mustChange = currentUser?.mustChangePassword === true ||
+      currentUser?.forcePasswordChange === true ||
+      currentUser?.firstLogin === true ||
+      currentUser?.requiresPasswordChange === true;
+
+    goTo(mustChange ? "forceChange" : "dashboard");
+  };
+
+  const handleBackToLogin = () => {
+    limpiarSesion();
+  };
+
   return (
     <div className="App">
-      {screen === "welcome" && <WelcomeScreen onEnter={() => goTo("login")} />}
+      {screen === "loading" && <WelcomeScreen onEnter={handleLoadingComplete} />}
 
       {screen === "login" && (
         <LoginScreen
-          onBack={() => goTo("welcome")}
           onLoginSuccess={handleLoginSuccess}
           onForgotPassword={() => goTo("forgot")}
         />
       )}
 
-      {/* Pantalla 1-2: Email + Código */}
       {screen === "forgot" && (
         <ForgotPasswordScreen
           onBack={() => goTo("login")}
@@ -79,7 +112,6 @@ function App() {
         />
       )}
 
-      {/* Pantalla 3: Nueva contraseña */}
       {screen === "resetPassword" && (
         <ResetPasswordScreen
           token={resetToken}
@@ -103,4 +135,6 @@ function App() {
     </div>
   );
 }
+
 export default App;
+

@@ -16,6 +16,29 @@ export default function GestionarCuentasScreen() {
   const [saving, setSaving] = useState(false);
   const [dependencias, setDependencias] = useState(null);
 
+  const readResponseBody = async (res) => {
+    const contentType = res.headers.get("content-type") || "";
+    const isJson = contentType.includes("application/json");
+
+    if (!isJson) {
+      return { isJson: false, data: await res.text() };
+    }
+
+    try {
+      return { isJson: true, data: await res.json() };
+    } catch {
+      return { isJson: false, data: null };
+    }
+  };
+
+  const parseErrorMessage = async (res, fallback) => {
+    const { isJson, data } = await readResponseBody(res);
+    if (isJson) {
+      return data?.mensaje || data?.error || fallback;
+    }
+    return `${fallback} (HTTP ${res.status})`;
+  };
+
   const cargarDentistas = (page = 1, limit = 10, filtrosOverride = null) => {
     setLoading(true);
     const f = filtrosOverride ?? filtros;
@@ -87,9 +110,20 @@ export default function GestionarCuentasScreen() {
         body: JSON.stringify(formEdit),
       });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error al actualizar");
+        const detalle = await parseErrorMessage(res, "Error al actualizar");
+        throw new Error(detalle);
       }
+
+      let actualizado = null;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        actualizado = await res.json();
+      }
+
+      if (actualizado?.id) {
+        setDentistas((prev) => prev.map((d) => (d.id === actualizado.id ? { ...d, ...actualizado } : d)));
+      }
+
       setModalEdit(null);
       cargarDentistas(paginacion.pagina, paginacion.por_pagina);
     } catch (err) {
@@ -137,7 +171,10 @@ export default function GestionarCuentasScreen() {
     setDependencias(null);
     try {
       const res = await fetch(`${API_BASE}/${d.id}/dependencias`);
-      const data = await res.json();
+      const { isJson, data } = await readResponseBody(res);
+      if (!res.ok || !isJson || !data) {
+        throw new Error("No se pudieron verificar dependencias");
+      }
       setDependencias(data);
     } catch {
       setDependencias({ puede_eliminar: true, mensaje: "" });
@@ -150,8 +187,8 @@ export default function GestionarCuentasScreen() {
     try {
       const res = await fetch(`${API_BASE}/${modalDelete.id}`, { method: "DELETE" });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.mensaje || err.error || "Error al eliminar");
+        const detalle = await parseErrorMessage(res, "Error al eliminar");
+        throw new Error(detalle);
       }
       setModalDelete(null);
       setDependencias(null);
