@@ -16,10 +16,24 @@ export default function GestionarCuentasScreen() {
   const [saving, setSaving] = useState(false);
   const [dependencias, setDependencias] = useState(null);
 
-  const parseErrorMessage = async (res, fallback) => {
+  const readResponseBody = async (res) => {
     const contentType = res.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-      const data = await res.json();
+    const isJson = contentType.includes("application/json");
+
+    if (!isJson) {
+      return { isJson: false, data: await res.text() };
+    }
+
+    try {
+      return { isJson: true, data: await res.json() };
+    } catch {
+      return { isJson: false, data: null };
+    }
+  };
+
+  const parseErrorMessage = async (res, fallback) => {
+    const { isJson, data } = await readResponseBody(res);
+    if (isJson) {
       return data?.mensaje || data?.error || fallback;
     }
     return `${fallback} (HTTP ${res.status})`;
@@ -157,7 +171,10 @@ export default function GestionarCuentasScreen() {
     setDependencias(null);
     try {
       const res = await fetch(`${API_BASE}/${d.id}/dependencias`);
-      const data = await res.json();
+      const { isJson, data } = await readResponseBody(res);
+      if (!res.ok || !isJson || !data) {
+        throw new Error("No se pudieron verificar dependencias");
+      }
       setDependencias(data);
     } catch {
       setDependencias({ puede_eliminar: true, mensaje: "" });
