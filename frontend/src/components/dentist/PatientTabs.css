@@ -1,0 +1,211 @@
+/* frontend/src/components/dentist/PatientTabs.css */
+
+.patient-tabs {
+  background: white;
+  border-radius: 20px;
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+}
+
+.patient-tabs-empty {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 20px;
+  margin-top: 20px;
+  text-align: center;
+  color: #6c757d;
+  border: 1px dashed #e9ecef;
+}
+
+.patient-tabs-empty i {
+  font-size: 48px;
+  color: #dee2e6;
+  margin-bottom: 16px;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c757d;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-btn i {
+  font-size: 14px;
+}
+
+.tab-btn:hover {
+  background: #e9ecef;
+  color: #1a2c3e;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #0088cc;
+  border-bottom: 2px solid #0088cc;
+}
+
+.tabs-content {
+  padding: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Historia */
+.historia-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.historia-item:last-child {
+  border-bottom: none;
+}
+
+.historia-fecha {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.historia-tratamiento {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a2c3e;
+  margin-bottom: 4px;
+}
+
+.historia-doctor {
+  font-size: 11px;
+  color: #ff69b4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Plan de Tratamientos */
+.plan-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.plan-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.plan-item:last-child {
+  border-bottom: none;
+}
+
+.plan-prioridad {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  width: fit-content;
+}
+
+.prioridad-alta {
+  background: #ffebee;
+  color: #dc3545;
+}
+
+.prioridad-media {
+  background: #fff3e0;
+  color: #ffc107;
+}
+
+.prioridad-baja {
+  background: #e8f5e9;
+  color: #28a745;
+}
+
+.plan-tratamiento {
+  color: #1a2c3e;
+}
+
+.plan-fecha {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+/* Notas */
+.nota-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.nota-item:last-child {
+  border-bottom: none;
+}
+
+.nota-fecha {
+  font-size: 11px;
+  color: #adb5bd;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nota-texto {
+  font-size: 13px;
+  color: #1a2c3e;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.nota-autor {
+  font-size: 11px;
+  color: #0088cc;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tab-btn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .plan-header, .plan-item {
+    grid-template-columns: 70px 1fr 80px;
+    gap: 8px;
+  }
+  
+  .tabs-content {
+    padding: 16px;
+  }
+}

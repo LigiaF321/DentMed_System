@@ -45,6 +45,10 @@
   box-shadow:0 8px 18px rgba(16,24,40,.05);
 }
 
+/* Ocultar completamente la barra superior cuando está vacía o es dentista */
+.dm2-topbar:empty {
+  display: none;
+}
 .dm2-topbar-title{
   font-size:18px;
   font-weight:800;
@@ -981,4 +985,13 @@
   gap: 12px;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+
+.dentist-dashboard-layout .dm2-content {
+  padding-top: 0 !important;
+}
+
+.dentist-dashboard-layout .dm2-main {
+  padding-top: 0 !important;
 }
