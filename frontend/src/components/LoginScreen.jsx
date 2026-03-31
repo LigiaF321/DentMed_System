@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./LoginScreen.css";
+import { setAuthToken, clearAuthToken } from "../utils/auth";
 
 const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [userType, setUserType] = useState("");
@@ -15,14 +16,12 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     setError("");
 
     try {
-      // VALIDACIÓN 1: Debe seleccionar tipo de usuario
       if (!userType) {
         setError("Por favor seleccione un tipo de usuario");
         setIsLoading(false);
         return;
       }
 
-      // VALIDACIÓN ADMIN: Credenciales maestras (NO consulta BD)
       if (userType === "admin") {
         if (username !== "Admin" || password !== "Admin123") {
           setError("Credenciales de administrador incorrectas");
@@ -30,17 +29,18 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
           return;
         }
 
-        // Login exitoso para admin
+        clearAuthToken();
+
         onLoginSuccess?.({
           role: "admin",
           requiresPasswordChange: true,
           username: username,
         });
+
         setIsLoading(false);
         return;
       }
 
-      // VALIDACIÓN DOCTOR: Consulta al backend real
       if (userType === "doctor") {
         if (!username.trim() || !password.trim()) {
           setError("Por favor ingrese sus credenciales asignadas");
@@ -48,14 +48,13 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
           return;
         }
 
-        // Llamada real al backend
-        const response = await fetch('http://localhost:3000/api/auth/login', {
-          method: 'POST',
+        const response = await fetch("http://localhost:3000/api/auth/login", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: username,
+            email: username.trim(),
             password: password,
           }),
         });
@@ -63,55 +62,77 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         const data = await response.json();
 
         if (response.ok) {
+          const token = data?.token || data?.data?.token || null;
+
+          if (!token || typeof token !== "string") {
+            setError("El servidor no devolvió un token válido.");
+            setIsLoading(false);
+            return;
+          }
+
+          clearAuthToken();
+          setAuthToken(token);
+
+          if (rememberMe) {
+            localStorage.setItem("rememberMe", "true");
+          } else {
+            localStorage.removeItem("rememberMe");
+          }
+
           onLoginSuccess?.({
             role: "doctor",
-            requiresPasswordChange: data.requiresPasswordChange || true,
+            requiresPasswordChange: data?.requiresPasswordChange ?? true,
             username: username,
-            token: data.token
+            token,
           });
         } else {
-          setError(data.message || "Credenciales incorrectas. Contacte al administrador.");
+          setError(
+            data.message || "Credenciales incorrectas. Contacte al administrador."
+          );
         }
       }
     } catch (err) {
-      setError("Error de conexión con el servidor. Verifique que el backend esté corriendo.");
+      console.error("Error en login:", err);
+      setError(
+        "Error de conexión con el servidor. Verifique que el backend esté corriendo."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLogoClick = () => {
-    console.log('Logo clicked, onBack:', onBack);
-    if (onBack && typeof onBack === 'function') {
+    if (onBack && typeof onBack === "function") {
       onBack();
     }
   };
 
   const handleUserTypeSelect = (type) => {
     if (userType === type) {
-      setUserType('');
-      setUsername('');
-      setPassword('');
-      setError('');
+      setUserType("");
+      setUsername("");
+      setPassword("");
+      setError("");
       return;
     }
+
     setUserType(type);
-    setUsername('');
-    setPassword('');
-    setError('');
+    setUsername("");
+    setPassword("");
+    setError("");
   };
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    if (error && error.includes('incorrect')) {
-      setError('');
+    if (error && error.includes("incorrect")) {
+      setError("");
     }
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    if (error && error.includes('incorrect')) {
-      setError('');
+    if (error && error.includes("incorrect")) {
+      setError("");
     }
   };
 
@@ -143,10 +164,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       </header>
 
       <div className="login-main">
-        {/* LADO IZQUIERDO - VISUAL */}
         <div className="login-visual">
           <div className="visual-content">
-            <div className={`visual-fade${userType === 'doctor' || userType === 'admin' ? ' hide' : ''}`}> 
+            <div className={`visual-fade${userType === "doctor" || userType === "admin" ? " hide" : ""}`}>
               <h2>Bienvenido al Sistema de Gestión DentMed</h2>
               <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
               <div className="dental-icon">
@@ -155,8 +175,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 <i className="fas fa-user-md"></i>
               </div>
             </div>
-            <div className={`doctor-instructions-visual${userType === 'doctor' ? ' show' : ''}`}> 
-              {userType === 'doctor' && (
+
+            <div className={`doctor-instructions-visual${userType === "doctor" ? " show" : ""}`}>
+              {userType === "doctor" && (
                 <>
                   <h2><i className="fas fa-user-md"></i> Instrucciones para Doctores</h2>
                   <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
@@ -169,8 +190,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 </>
               )}
             </div>
-            <div className={`admin-instructions-visual${userType === 'admin' ? ' show' : ''}`}> 
-              {userType === 'admin' && (
+
+            <div className={`admin-instructions-visual${userType === "admin" ? " show" : ""}`}>
+              {userType === "admin" && (
                 <>
                   <h2><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h2>
                   <div className="credentials-box">
@@ -191,12 +213,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               )}
             </div>
 
-            {/* INFORMACIÓN DINÁMICA */}
             {userType === "admin" && (
               <div className="user-type-info admin-info">
-                <h3>
-                  <i className="fas fa-user-shield"></i> Modo Administrador
-                </h3>
+                <h3><i className="fas fa-user-shield"></i> Modo Administrador</h3>
                 <p>Acceso completo al sistema</p>
                 <p className="security-note">
                   <i className="fas fa-key"></i> Use credenciales maestras iniciales
@@ -206,9 +225,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
             {userType === "doctor" && (
               <div className="user-type-info doctor-info">
-                <h3>
-                  <i className="fas fa-user-md"></i> Modo Doctor
-                </h3>
+                <h3><i className="fas fa-user-md"></i> Modo Doctor</h3>
                 <p>Acceso a historiales y pacientes</p>
                 <p className="security-note">
                   <i className="fas fa-key"></i> Use credenciales temporales asignadas
@@ -218,27 +235,24 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
             {!userType && (
               <div className="user-type-info default-info">
-                <h3>
-                  <i className="fas fa-hand-pointer"></i> Seleccione tipo de usuario
-                </h3>
+                <h3><i className="fas fa-hand-pointer"></i> Seleccione tipo de usuario</h3>
                 <p>Elija si es Administrador o Doctor</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* LADO DERECHO - FORMULARIO */}
         <div className="login-form-container">
           <div className="form-header">
-            <button 
-              className="back-button-desktop" 
+            <button
+              className="back-button-desktop"
               onClick={handleLogoClick}
               type="button"
             >
               <i className="fas fa-arrow-left"></i> Volver
             </button>
           </div>
-          
+
           <form className="login-form" onSubmit={handleSubmit}>
             <h2 className="form-title">
               <i className="fas fa-sign-in-alt"></i> Iniciar Sesión
@@ -250,7 +264,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             )}
 
-            {/* SELECTOR DE TIPO DE USUARIO */}
             <div className="form-group user-type-group">
               <label className="form-label">
                 <i className="fas fa-user-tag"></i> Tipo de Usuario *
@@ -276,7 +289,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             </div>
 
-            {/* CAMPO USUARIO */}
             <div className="form-group">
               <label htmlFor="username" className="form-label">
                 <i className="fas fa-user"></i> Usuario *
@@ -287,9 +299,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 value={username}
                 onChange={handleUsernameChange}
                 placeholder={
-                  userType === 'admin' 
-                    ? 'Ingrese: Admin' 
-                    : 'Ej: dra.garcia'
+                  userType === "admin"
+                    ? "Ingrese: Admin"
+                    : "Ej: dra.garcia"
                 }
                 required
                 disabled={!userType}
@@ -297,14 +309,12 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               />
               <div className="input-hint">
                 <i className="fas fa-info-circle"></i>
-                {userType === 'admin' 
-                  ? 'Credenciales maestras: Admin / Admin123'
-                  : 'Use usuario asignado (ej: dra.garcia)'
-                }
+                {userType === "admin"
+                  ? "Credenciales maestras: Admin / Admin123"
+                  : "Use usuario asignado (ej: dra.garcia)"}
               </div>
             </div>
 
-            {/* CAMPO CONTRASEÑA */}
             <div className="form-group">
               <label htmlFor="password" className="form-label">
                 <i className="fas fa-lock"></i> Contraseña *
@@ -315,7 +325,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder={
-                  userType === "admin" ? "Ingrese: Admin123" : "Contraseña temporal asignada"
+                  userType === "admin"
+                    ? "Ingrese: Admin123"
+                    : "Contraseña temporal asignada"
                 }
                 required
                 disabled={!userType}
@@ -329,7 +341,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               )}
             </div>
 
-            {/* OPCIONES */}
             <div className="form-options">
               <div className="remember-me">
                 <input
@@ -357,7 +368,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </a>
             </div>
 
-            {/* BOTÓN INGRESAR */}
             <button
               type="submit"
               className={`submit-btn ${userType ? "active" : "disabled"}`}
