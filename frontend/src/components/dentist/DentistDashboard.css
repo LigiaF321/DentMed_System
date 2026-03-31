@@ -39,6 +39,7 @@
   font-size: 16px;
   font-weight: 600;
   color: #1a2c3e;
+  flex-wrap: wrap;
 }
 
 .dentist-topbar-left .doctor-name-topbar i {
@@ -55,6 +56,30 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Botón nueva cita */
+.new-appointment-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.new-appointment-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.new-appointment-btn:active {
+  transform: translateY(0);
 }
 
 .topbar-icon-btn {
@@ -173,6 +198,32 @@
   background: #ffe6e6 !important;
 }
 
+/* Toast de éxito */
+.dentist-toast-success {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #16a34a;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: fadeInToast 0.25s ease;
+}
+
+@keyframes fadeInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ========== TARJETAS DE MÉTRICAS ========== */
 .metrics-grid {
   display: grid;
@@ -259,6 +310,7 @@
 .nav-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -289,6 +341,7 @@
 
 .today-btn:hover {
   background: #006699;
+  color: white;
 }
 
 .view-buttons {
@@ -297,6 +350,7 @@
   background: #f1f3f5;
   padding: 4px;
   border-radius: 12px;
+  flex-wrap: wrap;
 }
 
 .view-btn {
@@ -325,6 +379,7 @@
   gap: 8px;
   color: #4a5568;
   font-size: 13px;
+  flex-wrap: wrap;
 }
 
 .hour-selector select {
@@ -470,7 +525,9 @@
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
 }
 
 .status-confirmada {
@@ -486,6 +543,16 @@
 .status-completada {
   background: #e9ecef;
   color: #6c757d;
+}
+
+.status-cancelada {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.status-programada {
+  background: #e8f0ff;
+  color: #1d4ed8;
 }
 
 .no-appointments {
@@ -562,6 +629,7 @@
   display: flex;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .detail-label {
@@ -596,9 +664,12 @@
   gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid #e9ecef;
+  flex-wrap: wrap;
 }
 
-.btn-primary, .btn-secondary, .btn-danger {
+.btn-primary,
+.btn-secondary,
+.btn-danger {
   padding: 8px 20px;
   border-radius: 8px;
   border: none;
@@ -623,9 +694,17 @@
   color: #5a6e7c;
 }
 
+.btn-secondary:hover {
+  background: #dde2e6;
+}
+
 .btn-danger {
   background: #dc3545;
   color: white;
+}
+
+.btn-danger:hover {
+  background: #bb2d3b;
 }
 
 /* ========== LOADING ========== */
@@ -648,7 +727,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ========== PLACEHOLDER ========== */
@@ -670,13 +751,17 @@
   .dashboard-two-columns {
     flex-direction: column;
   }
-  
+
   .dashboard-right-column {
     min-width: auto;
   }
-  
+
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dentist-topbar {
+    gap: 14px;
   }
 }
 
@@ -684,27 +769,85 @@
   .dentist-main-content {
     padding: 16px;
   }
-  
+
   .dentist-topbar {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+    padding: 14px 16px;
   }
-  
+
   .dentist-topbar-right {
-    align-self: flex-end;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
   }
-  
+
+  .new-appointment-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .calendar-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  
-  .nav-buttons, .view-buttons {
+
+  .nav-buttons,
+  .view-buttons {
     justify-content: center;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .appointment-item {
+    padding: 14px 16px;
+  }
+
+  .modal-content {
+    width: 95%;
+    border-radius: 18px;
+  }
+
+  .modal-footer {
+    justify-content: stretch;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .dentist-toast-success {
+    right: 12px;
+    left: 12px;
+    top: 12px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .dentist-topbar-left .doctor-name-topbar {
+    font-size: 14px;
+  }
+
+  .appointments-header,
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .detail-label {
+    width: 100%;
+  }
+
+  .detail-value {
+    width: 100%;
   }
 }

@@ -1,0 +1,344 @@
+/* frontend/src/components/dentist/NuevaCitaModal.css */
+
+.dm17-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.dm17-modal {
+  width: 100%;
+  max-width: 760px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.dm17-modal-small {
+  max-width: 520px;
+}
+
+.dm17-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e9ecef;
+  background: #ffffff;
+}
+
+.dm17-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1a2c3e;
+  font-weight: 700;
+}
+
+.dm17-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #7f8c8d;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.dm17-close-btn:hover {
+  color: #1a2c3e;
+}
+
+.dm17-form {
+  padding: 24px;
+}
+
+.dm17-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dm17-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dm17-field-full {
+  grid-column: 1 / -1;
+}
+
+.dm17-field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #5a6e7c;
+}
+
+.dm17-field input,
+.dm17-field select,
+.dm17-field textarea {
+  width: 100%;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1a2c3e;
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.dm17-field textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.dm17-field input::placeholder,
+.dm17-field textarea::placeholder {
+  color: #94a3b8;
+}
+
+.dm17-field input:focus,
+.dm17-field select:focus,
+.dm17-field textarea:focus {
+  border-color: #0088cc;
+  box-shadow: 0 0 0 0.2rem rgba(0, 136, 204, 0.15);
+}
+
+/* Typeahead */
+.dm17-typeahead-wrap {
+  position: relative;
+}
+
+.dm17-typeahead-input-wrap {
+  position: relative;
+}
+
+.dm17-chip-clear {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: #e6f3f8;
+  color: #0088cc;
+  border-radius: 20px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.dm17-chip-clear:hover {
+  background: #d7edf7;
+}
+
+.dm17-typeahead-list {
+  margin-top: 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.dm17-typeahead-item {
+  width: 100%;
+  border: none;
+  background: #ffffff;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.2s ease;
+}
+
+.dm17-typeahead-item:hover {
+  background: #f8f9fa;
+}
+
+.dm17-typeahead-item strong {
+  color: #1a2c3e;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dm17-typeahead-item span {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.dm17-empty-search {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: #fff8e1;
+  border: 1px solid #ffe0b2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #8a5a00;
+  font-size: 14px;
+}
+
+.dm17-link-btn {
+  border: none;
+  background: transparent;
+  color: #0088cc;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.dm17-link-btn:hover {
+  color: #006699;
+  text-decoration: underline;
+}
+
+/* Estados */
+.dm17-help,
+.dm17-success,
+.dm17-error {
+  margin-top: 8px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dm17-help {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #d9f0fb;
+}
+
+.dm17-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.dm17-error {
+  background: #fdecea;
+  color: #c62828;
+  border: 1px solid #f5c2c7;
+}
+
+/* Acciones */
+.dm17-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+.dm17-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dm17-btn-primary {
+  background: #0088cc;
+  color: #ffffff;
+}
+
+.dm17-btn-primary:hover {
+  background: #006699;
+}
+
+.dm17-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.dm17-btn-secondary {
+  background: #e9ecef;
+  color: #5a6e7c;
+}
+
+.dm17-btn-secondary:hover {
+  background: #dde2e6;
+}
+
+/* Scroll interno bonito */
+.dm17-typeahead-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dm17-typeahead-list::-webkit-scrollbar-thumb {
+  background: #d0d7de;
+  border-radius: 10px;
+}
+
+.dm17-typeahead-list::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dm17-overlay {
+    padding: 12px;
+  }
+
+  .dm17-modal {
+    max-width: 100%;
+    border-radius: 18px;
+  }
+
+  .dm17-modal-header,
+  .dm17-form {
+    padding: 16px;
+  }
+
+  .dm17-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .dm17-actions {
+    flex-direction: column;
+  }
+
+  .dm17-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dm17-modal-header h3 {
+    font-size: 16px;
+  }
+
+  .dm17-empty-search {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
