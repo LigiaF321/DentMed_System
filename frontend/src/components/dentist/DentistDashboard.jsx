@@ -10,12 +10,16 @@ import AppointmentsList from './AppointmentsList';
 import Odontograma from './Odontograma';
 import PatientTabs from './PatientTabs';
 import NuevaCitaModal from './NuevaCitaModal';
+import BloqueoModal from './BloqueoModal'; 
+// CORRECCIÓN: Nombre de archivo correcto según tu captura
+import bloquesService from '../../services/bloques.service'; 
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
 import './DentistDashboard.css';
 
 const DentistDashboard = ({ userData, onLogout }) => {
   const [citas, setCitas] = useState([]);
+  const [bloques, setBloques] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [dentistaInfo, setDentistaInfo] = useState(null);
   const [consultorios, setConsultorios] = useState([]);
@@ -26,8 +30,8 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [selectedCita, setSelectedCita] = useState(null);
   const [agendaDate, setAgendaDate] = useState(new Date());
   const [activeView, setActiveView] = useState('agenda');
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNuevaCitaModal, setShowNuevaCitaModal] = useState(false);
+  const [showBloqueoModal, setShowBloqueoModal] = useState(false); 
   const [toastMessage, setToastMessage] = useState('');
   const [metrics, setMetrics] = useState({
     citasHoy: 0,
@@ -38,70 +42,66 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const calendarRef = useRef(null);
 
-  const horasDisponibles = ['06:00', '07:00', '08:00', '09:00', '10:00'];
-
   const estadoColores = {
-    confirmada: {
-      background: '#28a745',
-      border: '#1e7e34',
-      text: 'Confirmada',
-      icon: 'fa-check-circle',
-    },
-    completada: {
-      background: '#6c757d',
-      border: '#545b62',
-      text: 'Completada',
-      icon: 'fa-check-double',
-    },
-    cancelada: {
-      background: '#dc3545',
-      border: '#a71d2a',
-      text: 'Cancelada',
-      icon: 'fa-times-circle',
-    },
-    reprogramada: {
-      background: '#ffc107',
-      border: '#e0a800',
-      text: 'Reprogramada',
-      icon: 'fa-calendar-alt',
-    },
-    pendiente: {
-      background: '#17a2b8',
-      border: '#117a8b',
-      text: 'Pendiente',
-      icon: 'fa-clock',
-    },
-    bloqueado: {
-      background: '#9b59b6',
-      border: '#8e44ad',
-      text: 'Bloqueado',
-      icon: 'fa-lock',
-    },
-    programada: {
-      background: '#2563eb',
-      border: '#1d4ed8',
-      text: 'Programada',
-      icon: 'fa-calendar-check',
-    },
+    confirmada: { background: '#28a745', border: '#1e7e34', text: 'Confirmada', icon: 'fa-check-circle' },
+    completada: { background: '#6c757d', border: '#545b62', text: 'Completada', icon: 'fa-check-double' },
+    cancelada: { background: '#dc3545', border: '#a71d2a', text: 'Cancelada', icon: 'fa-times-circle' },
+    reprogramada: { background: '#ffc107', border: '#e0a800', text: 'Reprogramada', icon: 'fa-calendar-alt' },
+    pendiente: { background: '#17a2b8', border: '#117a8b', text: 'Pendiente', icon: 'fa-clock' },
+    bloqueado: { background: '#9b59b6', border: '#8e44ad', text: 'Bloqueado', icon: 'fa-lock' },
+    programada: { background: '#2563eb', border: '#1d4ed8', text: 'Programada', icon: 'fa-calendar-check' },
+  };
+
+  const fetchBloques = async () => {
+    if (!dentistaInfo?.id) return;
+    try {
+      const response = await bloquesService.obtenerBloques(dentistaInfo.id);
+      // CORRECCIÓN: Validación robusta para evitar "map is not a function"
+      const dataLimpia = Array.isArray(response) ? response : (response?.data || []);
+      setBloques(dataLimpia);
+    } catch (error) {
+      console.error('Error al obtener bloques:', error);
+      setBloques([]); 
+    }
+  };
+
+  const handleSaveBloqueo = async (datos) => {
+    try {
+      await bloquesService.crearBloqueo(datos);
+      mostrarToast('Horario bloqueado con éxito');
+      setShowBloqueoModal(false);
+      fetchBloques(); 
+    } catch (error) {
+      // CORRECCIÓN: Mostrar el error real del servidor si existe
+      const msg = error.response?.data?.message || error.message || 'Error al crear el bloqueo';
+      alert(msg);
+    }
+  };
+
+  const handleEliminarBloqueo = async (id) => {
+    if (window.confirm('¿Desea eliminar este bloqueo de horario?')) {
+      try {
+        await bloquesService.eliminarBloque(id);
+        mostrarToast('Bloqueo eliminado');
+        closeModal();
+        fetchBloques();
+      } catch (error) {
+        alert('Error al eliminar el bloqueo');
+      }
+    }
   };
 
   const normalizarEstado = (estado) => String(estado || '').trim().toLowerCase();
 
   const ordenarCitasPorFecha = (lista) => {
-    return [...lista].sort(
-      (a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora)
-    );
+    if (!Array.isArray(lista)) return [];
+    return [...lista].sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
   };
 
   const esMismoDia = (fechaA, fechaB) => {
     const a = new Date(fechaA);
     const b = new Date(fechaB);
-
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   };
 
   const sumarMinutos = (fecha, minutos) => {
@@ -116,140 +116,79 @@ const DentistDashboard = ({ userData, onLogout }) => {
   };
 
   const calcularMetricas = (listaCitas) => {
+    if (!Array.isArray(listaCitas)) return { citasHoy: 0, pacientesVistos: 0, siguienteCita: null, tratamientosPendientes: 0 };
     const hoy = new Date().toDateString();
-
-    const citasHoy = ordenarCitasPorFecha(
-      listaCitas.filter(
-        (cita) => new Date(cita.fecha_hora).toDateString() === hoy
-      )
-    );
-
-    const citasCompletadasHoy = citasHoy.filter(
-      (cita) => normalizarEstado(cita.estado) === 'completada'
-    );
-
-    const siguienteCitaData = citasHoy.find(
-      (cita) => !['completada', 'cancelada'].includes(normalizarEstado(cita.estado))
-    );
+    const citasHoy = ordenarCitasPorFecha(listaCitas.filter((cita) => new Date(cita.fecha_hora).toDateString() === hoy));
+    const citasCompletadasHoy = citasHoy.filter((cita) => normalizarEstado(cita.estado) === 'completada');
+    const siguienteCitaData = citasHoy.find((cita) => !['completada', 'cancelada'].includes(normalizarEstado(cita.estado)));
 
     return {
       citasHoy: citasHoy.length,
       pacientesVistos: citasCompletadasHoy.length,
-      siguienteCita: siguienteCitaData
-        ? new Date(siguienteCitaData.fecha_hora).toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : null,
-      tratamientosPendientes: listaCitas.filter((cita) =>
-        ['pendiente', 'confirmada', 'programada'].includes(
-          normalizarEstado(cita.estado)
-        )
-      ).length,
+      siguienteCita: siguienteCitaData ? new Date(siguienteCitaData.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : null,
+      tratamientosPendientes: listaCitas.filter((cita) => ['pendiente', 'confirmada', 'programada'].includes(normalizarEstado(cita.estado))).length,
     };
   };
 
   const mostrarToast = (mensaje) => {
     setToastMessage(mensaje);
-    setTimeout(() => {
-      setToastMessage('');
-    }, 3000);
+    setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const obtenerPacienteNombre = (cita) => {
-    return cita.paciente_nombre || cita.paciente?.nombre || 'Paciente';
-  };
+  const obtenerPacienteNombre = (cita) => cita.paciente_nombre || cita.paciente?.nombre || 'Paciente';
 
   const getAuthHeaders = () => {
     const token = getAuthToken();
-    const headers = {};
-
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    return headers;
+    return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
   };
 
   const handleNuevaCitaCreada = (response) => {
     const nuevaCita = response.data;
     const fechaNuevaCita = new Date(nuevaCita.fecha_hora);
-
     setCitas((prev) => {
       const actualizadas = ordenarCitasPorFecha([...prev, nuevaCita]);
       setMetrics(calcularMetricas(actualizadas));
       return actualizadas;
     });
-
     setAgendaDate(fechaNuevaCita);
-    setSelectedCita(response.selectedCita || nuevaCita);
-
+    setSelectedCita(nuevaCita);
     if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.gotoDate(fechaNuevaCita);
-      calendarApi.changeView('timeGridDay');
-      setCurrentView('timeGridDay');
+      calendarRef.current.getApi().gotoDate(fechaNuevaCita);
     }
-
     mostrarToast('Cita creada correctamente');
   };
 
   const handleSelectCita = (cita) => {
     setSelectedCita(cita);
     setAgendaDate(new Date(cita.fecha_hora));
-
     if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const event = calendarApi.getEventById(String(cita.id));
-
-      if (event) {
-        calendarApi.gotoDate(event.start);
-      }
+      calendarRef.current.getApi().gotoDate(new Date(cita.fecha_hora));
     }
   };
 
   const handleEventClick = (info) => {
-    const cita = citas.find((c) => c.id === parseInt(info.event.id, 10));
-
-    if (cita) {
-      setAgendaDate(new Date(cita.fecha_hora));
-      handleSelectCita(cita);
-    }
-
+    const isBloqueo = info.event.extendedProps.isBloqueo;
     setSelectedEvent(info.event);
     setShowModal(true);
+
+    if (!isBloqueo) {
+      const cita = citas.find((c) => String(c.id) === String(info.event.id));
+      if (cita) handleSelectCita(cita);
+    }
   };
 
-  const handleDateClick = (info) => {
-    setAgendaDate(new Date(info.date));
-  };
-
+  const handleDateClick = (info) => setAgendaDate(new Date(info.date));
+  
   const handleViewChange = (view) => {
     setCurrentView(view);
-
-    if (calendarRef.current) {
-      calendarRef.current.getApi().changeView(view);
-    }
+    if (calendarRef.current) calendarRef.current.getApi().changeView(view);
   };
 
-  const handlePrev = () => {
-    if (calendarRef.current) {
-      calendarRef.current.getApi().prev();
-    }
-  };
-
-  const handleNext = () => {
-    if (calendarRef.current) {
-      calendarRef.current.getApi().next();
-    }
-  };
-
+  const handlePrev = () => calendarRef.current?.getApi().prev();
+  const handleNext = () => calendarRef.current?.getApi().next();
   const handleToday = () => {
     setAgendaDate(new Date());
-
-    if (calendarRef.current) {
-      calendarRef.current.getApi().today();
-    }
+    calendarRef.current?.getApi().today();
   };
 
   const closeModal = () => {
@@ -258,38 +197,19 @@ const DentistDashboard = ({ userData, onLogout }) => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.profile-dropdown')) {
-        setShowProfileMenu(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
     const fetchDentistaInfo = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/dentistas/perfil', {
-          headers: getAuthHeaders(),
-        });
-
+        const response = await fetch('http://localhost:3000/api/dentistas/perfil', { headers: getAuthHeaders() });
         if (response.ok) {
           const data = await response.json();
           setDentistaInfo(data);
-          return;
+        } else {
+          setDentistaInfo({ nombre: 'Usuario', id: 1 });
         }
-      } catch (error) {
-        console.error('Error obteniendo perfil del dentista:', error);
+      } catch (error) { 
+        setDentistaInfo({ nombre: 'Usuario', id: 1 });
       }
-
-      setDentistaInfo({
-        nombre: 'Juan Pérez',
-        especialidad: 'Odontología General',
-      });
     };
-
     fetchDentistaInfo();
   }, []);
 
@@ -298,52 +218,62 @@ const DentistDashboard = ({ userData, onLogout }) => {
       try {
         const response = await obtenerConsultorios();
         setConsultorios(response.data || []);
-      } catch (error) {
-        console.error('Error obteniendo consultorios:', error);
-        setConsultorios([]);
-      }
+      } catch (error) { setConsultorios([]); }
     };
-
     fetchConsultorios();
   }, []);
 
   useEffect(() => {
     const fetchCitas = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/citas/dentista', {
-          headers: getAuthHeaders(),
-        });
-
+        const response = await fetch('http://localhost:3000/api/citas/dentista', { headers: getAuthHeaders() });
         if (response.ok) {
           const data = await response.json();
-
           const citasOrdenadas = ordenarCitasPorFecha(data);
           setCitas(citasOrdenadas);
           setMetrics(calcularMetricas(citasOrdenadas));
-
-          const hoy = new Date().toDateString();
-          const primeraCita = citasOrdenadas.find(
-            (cita) =>
-              new Date(cita.fecha_hora).toDateString() === hoy &&
-              !['completada', 'cancelada'].includes(normalizarEstado(cita.estado))
-          );
-
-          if (primeraCita) {
-            setSelectedCita(primeraCita);
-            setAgendaDate(new Date(primeraCita.fecha_hora));
-          }
-
-          return;
         }
-      } catch (error) {
-        console.error('Error obteniendo citas:', error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (error) { console.error('Error obteniendo citas:', error); }
+      finally { setLoading(false); }
     };
-
     fetchCitas();
   }, []);
+
+  useEffect(() => {
+    if (dentistaInfo?.id) fetchBloques();
+  }, [dentistaInfo]);
+
+  const eventsToDisplay = [
+    ...(Array.isArray(citas) ? citas : []).map((cita) => {
+      const estado = normalizarEstado(cita.estado);
+      return {
+        id: String(cita.id),
+        title: obtenerPacienteNombre(cita),
+        start: cita.fecha_hora,
+        end: obtenerFechaFin(cita),
+        extendedProps: { estado, motivo: cita.motivo, isBloqueo: false },
+        backgroundColor: estadoColores[estado]?.background || '#007bff',
+        borderColor: estadoColores[estado]?.border || '#0069d9',
+        textColor: '#ffffff',
+      };
+    }),
+    ...(Array.isArray(bloques) ? bloques : []).map((bloque) => ({
+      id: `bloque-${bloque.id}`,
+      title: `BLOQUEO: ${bloque.tipo.toUpperCase()}`,
+      start: bloque.fecha_inicio,
+      end: bloque.fecha_fin,
+      className: 'event-bloqueo',
+      extendedProps: { 
+        isBloqueo: true, 
+        idOriginal: bloque.id,
+        descripcion: bloque.descripcion,
+        tipo: bloque.tipo 
+      },
+      backgroundColor: '#9b59b6',
+      borderColor: '#8e44ad',
+      textColor: '#ffffff',
+    }))
+  ];
 
   if (loading) {
     return (
@@ -354,69 +284,26 @@ const DentistDashboard = ({ userData, onLogout }) => {
     );
   }
 
-  const citasAgendaSeleccionada = ordenarCitasPorFecha(
-    citas.filter((cita) => esMismoDia(cita.fecha_hora, agendaDate))
-  );
+  const citasAgendaSeleccionada = ordenarCitasPorFecha(citas.filter((cita) => esMismoDia(cita.fecha_hora, agendaDate)));
 
   const renderContent = () => {
     switch (activeView) {
       case 'agenda':
         return (
           <>
-            <MetricCards
-              citasHoy={metrics.citasHoy}
-              pacientesVistos={metrics.pacientesVistos}
-              siguienteCita={metrics.siguienteCita}
-              tratamientosPendientes={metrics.tratamientosPendientes}
-            />
-
+            <MetricCards {...metrics} />
             <div className="dashboard-two-columns">
               <div className="dashboard-left-column">
                 <div className="calendar-controls">
                   <div className="nav-buttons">
-                    <button className="nav-btn" onClick={handlePrev}>
-                      <i className="fas fa-chevron-left"></i> ANTERIOR
-                    </button>
-                    <button className="nav-btn today-btn" onClick={handleToday}>
-                      <i className="fas fa-calendar-day"></i> HOY
-                    </button>
-                    <button className="nav-btn" onClick={handleNext}>
-                      SIGUIENTE <i className="fas fa-chevron-right"></i>
-                    </button>
+                    <button className="nav-btn" onClick={handlePrev}><i className="fas fa-chevron-left"></i> ANTERIOR</button>
+                    <button className="nav-btn today-btn" onClick={handleToday}><i className="fas fa-calendar-day"></i> HOY</button>
+                    <button className="nav-btn" onClick={handleNext}>SIGUIENTE <i className="fas fa-chevron-right"></i></button>
                   </div>
-
                   <div className="view-buttons">
-                    <button
-                      className={`view-btn ${currentView === 'timeGridDay' ? 'active' : ''}`}
-                      onClick={() => handleViewChange('timeGridDay')}
-                    >
-                      <i className="fas fa-calendar-day"></i> DÍA
-                    </button>
-                    <button
-                      className={`view-btn ${currentView === 'timeGridWeek' ? 'active' : ''}`}
-                      onClick={() => handleViewChange('timeGridWeek')}
-                    >
-                      <i className="fas fa-calendar-week"></i> SEMANA
-                    </button>
-                    <button
-                      className={`view-btn ${currentView === 'dayGridMonth' ? 'active' : ''}`}
-                      onClick={() => handleViewChange('dayGridMonth')}
-                    >
-                      <i className="fas fa-calendar-alt"></i> MES
-                    </button>
-                  </div>
-
-                  <div className="hour-selector">
-                    <label>
-                      <i className="fas fa-clock"></i> Mostrar desde:
-                      <select value={startHour} onChange={(e) => setStartHour(e.target.value)}>
-                        {horasDisponibles.map((h) => (
-                          <option key={h} value={h}>
-                            {h}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <button className={`view-btn ${currentView === 'timeGridDay' ? 'active' : ''}`} onClick={() => handleViewChange('timeGridDay')}>DÍA</button>
+                    <button className={`view-btn ${currentView === 'timeGridWeek' ? 'active' : ''}`} onClick={() => handleViewChange('timeGridWeek')}>SEMANA</button>
+                    <button className={`view-btn ${currentView === 'dayGridMonth' ? 'active' : ''}`} onClick={() => handleViewChange('dayGridMonth')}>MES</button>
                   </div>
                 </div>
 
@@ -424,285 +311,83 @@ const DentistDashboard = ({ userData, onLogout }) => {
                   <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-                    headerToolbar={{
-                      left: 'prev,next today',
-                      center: 'title',
-                      right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                    }}
+                    headerToolbar={false}
                     initialView={currentView}
-                    events={citas.map((cita) => {
-                      const estado = normalizarEstado(cita.estado);
-
-                      return {
-                        id: String(cita.id),
-                        title: obtenerPacienteNombre(cita),
-                        start: cita.fecha_hora,
-                        end: obtenerFechaFin(cita),
-                        extendedProps: {
-                          estado,
-                          motivo: cita.motivo,
-                          paciente: cita.paciente
-                        },
-                        backgroundColor: estadoColores[estado]?.background || '#007bff',
-                        borderColor: estadoColores[estado]?.border || '#0069d9',
-                        textColor: '#ffffff'
-                      };
-                    })}
+                    events={eventsToDisplay}
                     eventClick={handleEventClick}
                     dateClick={handleDateClick}
                     slotMinTime={startHour}
                     slotMaxTime="20:00:00"
                     allDaySlot={false}
-                    slotDuration="00:30:00"
-                    height="auto"
-                    contentHeight={450}
                     locale="es"
-                    firstDay={1}
-                    buttonText={{
-                      today: 'Hoy',
-                      month: 'Mes',
-                      week: 'Semana',
-                      day: 'Día'
-                    }}
-                    titleFormat={{
-                      year: 'numeric',
-                      month: 'long'
-                    }}
-                    dayHeaderFormat={{
-                      weekday: 'short',
-                      day: 'numeric'
-                    }}
+                    height="auto"
                   />
                 </div>
               </div>
-
               <div className="dashboard-right-column">
-                <AppointmentsList
-                  citas={citasAgendaSeleccionada}
-                  onSelectCita={handleSelectCita}
-                  selectedCitaId={selectedCita?.id}
-                  selectedDate={agendaDate}
-                />
+                <AppointmentsList citas={citasAgendaSeleccionada} onSelectCita={handleSelectCita} selectedCitaId={selectedCita?.id} selectedDate={agendaDate} />
                 <Odontograma paciente={selectedCita} />
                 <PatientTabs paciente={selectedCita} />
               </div>
             </div>
           </>
         );
-
-      case 'pacientes':
-        return (
-          <div className="placeholder-content">
-            <h2>Mis Pacientes</h2>
-            <p>Próximamente...</p>
-          </div>
-        );
-
-      case 'tratamientos':
-        return (
-          <div className="placeholder-content">
-            <h2>Tratamientos</h2>
-            <p>Próximamente...</p>
-          </div>
-        );
-
-      case 'notas':
-        return (
-          <div className="placeholder-content">
-            <h2>Notas</h2>
-            <p>Próximamente...</p>
-          </div>
-        );
-
-      case 'perfil':
-        return (
-          <div className="placeholder-content">
-            <h2>Mi Perfil</h2>
-            <p>Próximamente...</p>
-          </div>
-        );
-
       default:
-        return null;
+        return <div className="placeholder-content"><h2>{activeView.toUpperCase()}</h2><p>Contenido en desarrollo...</p></div>;
     }
   };
 
   return (
     <div className="dentist-dashboard-layout">
-      <DentistSidebar
-        activeView={activeView}
-        onSelectView={setActiveView}
-        onLogout={onLogout}
-      />
-
+      <DentistSidebar activeView={activeView} onSelectView={setActiveView} onLogout={onLogout} />
       <main className="dentist-main-content">
         <div className="dentist-topbar">
           <div className="dentist-topbar-left">
             <div className="doctor-name-topbar">
               <i className="fas fa-user-md"></i>
               <span>Dr. {dentistaInfo?.nombre || 'Cargando...'}</span>
-              <span className="doctor-specialty-topbar">
-                {' '}
-                - {dentistaInfo?.especialidad || 'Odontología'}
-              </span>
             </div>
           </div>
-
           <div className="dentist-topbar-right">
-            <button
-              className="new-appointment-btn"
-              onClick={() => setShowNuevaCitaModal(true)}
-            >
-              + Nueva cita
+            <button className="btn-bloquear-horario" onClick={() => setShowBloqueoModal(true)}>
+              <i className="fas fa-lock"></i> Bloquear horario
             </button>
-
-            <button
-              className="topbar-icon-btn"
-              title="Configuración"
-              onClick={() => setActiveView('configuracion')}
-            >
-              <i className="fas fa-cog"></i>
-            </button>
-
-            <button className="topbar-icon-btn" title="Notificaciones">
-              <i className="fas fa-bell"></i>
-              <span className="notification-badge">3</span>
-            </button>
-
-            <div className="profile-dropdown">
-              <button
-                className="profile-btn"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-              >
-                <div className="profile-avatar">
-                  <i className="fas fa-user-circle"></i>
-                </div>
-                <i className="fas fa-chevron-down"></i>
-              </button>
-
-              {showProfileMenu && (
-                <div className="dropdown-menu">
-                  <button onClick={() => setActiveView('perfil')}>
-                    <i className="fas fa-user"></i> Mi Perfil
-                  </button>
-                  <button onClick={() => setActiveView('configuracion')}>
-                    <i className="fas fa-cog"></i> Configuración
-                  </button>
-                  <hr />
-                  <button onClick={onLogout} className="logout-option">
-                    <i className="fas fa-sign-out-alt"></i> Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
+            <button className="new-appointment-btn" onClick={() => setShowNuevaCitaModal(true)}>+ Nueva cita</button>
           </div>
         </div>
-
         {renderContent()}
       </main>
 
-      {toastMessage ? (
-        <div className="dentist-toast-success">{toastMessage}</div>
-      ) : null}
+      {toastMessage && <div className="dentist-toast-success">{toastMessage}</div>}
 
-      <NuevaCitaModal
-        open={showNuevaCitaModal}
-        onClose={() => setShowNuevaCitaModal(false)}
-        onCreated={handleNuevaCitaCreada}
-        consultorios={consultorios}
+      <NuevaCitaModal open={showNuevaCitaModal} onClose={() => setShowNuevaCitaModal(false)} onCreated={handleNuevaCitaCreada} consultorios={consultorios} />
+      
+      <BloqueoModal 
+        isOpen={showBloqueoModal} 
+        onClose={() => setShowBloqueoModal(false)} 
+        onSave={handleSaveBloqueo} 
+        idDentista={dentistaInfo?.id} 
       />
 
       {showModal && selectedEvent && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div
-              className="modal-header"
-              style={{
-                borderLeftColor: selectedEvent.backgroundColor,
-                borderLeftWidth: '4px',
-                borderLeftStyle: 'solid'
-              }}
-            >
-              <h3>
-                <i className="fas fa-tooth"></i> Detalles de la cita
-              </h3>
-              <button className="modal-close" onClick={closeModal}>
-                <i className="fas fa-times"></i>
-              </button>
+            <div className="modal-header" style={{ borderLeft: `4px solid ${selectedEvent.backgroundColor}` }}>
+              <h3>{selectedEvent.extendedProps.isBloqueo ? 'Detalles del Bloqueo' : 'Detalles de la Cita'}</h3>
+              <button className="modal-close" onClick={closeModal}>&times;</button>
             </div>
-
             <div className="modal-body">
-              <div className="detail-row">
-                <span className="detail-label">
-                  <i className="fas fa-user"></i> Paciente:
-                </span>
-                <span className="detail-value">{selectedEvent.title}</span>
-              </div>
-
-              <div className="detail-row">
-                <span className="detail-label">
-                  <i className="fas fa-calendar-day"></i> Fecha:
-                </span>
-                <span className="detail-value">
-                  {new Date(selectedEvent.start).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-
-              <div className="detail-row">
-                <span className="detail-label">
-                  <i className="fas fa-clock"></i> Hora:
-                </span>
-                <span className="detail-value">
-                  {new Date(selectedEvent.start).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}{' '}
-                  -{' '}
-                  {new Date(selectedEvent.end).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
-              </div>
-
-              <div className="detail-row">
-                <span className="detail-label">
-                  <i className="fas fa-stethoscope"></i> Motivo:
-                </span>
-                <span className="detail-value">
-                  {selectedEvent.extendedProps.motivo || 'Consulta general'}
-                </span>
-              </div>
-
-              <div className="detail-row">
-                <span className="detail-label">
-                  <i className="fas fa-tag"></i> Estado:
-                </span>
-                <span
-                  className="detail-badge"
-                  style={{ backgroundColor: selectedEvent.backgroundColor }}
-                >
-                  {estadoColores[selectedEvent.extendedProps.estado]?.text ||
-                    selectedEvent.extendedProps.estado}
-                </span>
-              </div>
+              <p><strong>Evento:</strong> {selectedEvent.title}</p>
+              <p><strong>Inicio:</strong> {new Date(selectedEvent.start).toLocaleString()}</p>
+              {selectedEvent.extendedProps.descripcion && <p><strong>Nota:</strong> {selectedEvent.extendedProps.descripcion}</p>}
             </div>
-
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={closeModal}>
-                Cerrar
-              </button>
-              <button className="btn-primary">
-                <i className="fas fa-edit"></i> Reprogramar
-              </button>
-              <button className="btn-danger">
-                <i className="fas fa-trash"></i> Cancelar
-              </button>
+              {selectedEvent.extendedProps.isBloqueo && (
+                <button className="btn-danger" onClick={() => handleEliminarBloqueo(selectedEvent.extendedProps.idOriginal)}>
+                  <i className="fas fa-unlock"></i> Eliminar Bloqueo
+                </button>
+              )}
+              <button className="btn-secondary" onClick={closeModal}>Cerrar</button>
             </div>
           </div>
         </div>

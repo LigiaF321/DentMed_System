@@ -1,4 +1,4 @@
-/* frontend/src/components/dentist/DentistDashboard.css */
+
 
 * {
   margin: 0;
@@ -78,8 +78,24 @@
   transform: translateY(-1px);
 }
 
-.new-appointment-btn:active {
-  transform: translateY(0);
+/* Estilo para el botón de Bloquear Horario (Nuevo) */
+.btn-bloquear-horario {
+  background-color: #9b59b6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-bloquear-horario:hover {
+  background-color: #8e44ad;
+  transform: translateY(-1px);
 }
 
 .topbar-icon-btn {
@@ -443,6 +459,25 @@
   filter: brightness(0.97);
 }
 
+/* ========== TAREA F3: PATRÓN RAYADO PARA BLOQUEOS ========== */
+.event-bloqueo {
+  background-color: #9b59b6 !important; /* Morado base */
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%,
+    transparent
+  ) !important;
+  background-size: 15px 15px !important;
+  border: 1px solid #8e44ad !important;
+  color: white !important;
+  font-weight: bold;
+}
+
 /* ========== LISTA DE CITAS ========== */
 .appointments-list {
   background: white;
@@ -783,7 +818,7 @@
     gap: 12px;
   }
 
-  .new-appointment-btn {
+  .new-appointment-btn, .btn-bloquear-horario {
     width: 100%;
     justify-content: center;
   }
