@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { saveAs } from "file-saver";
-// Placeholder para el visualizador de documentos
+// Cuando DM24 esté listo, descomentar la siguiente línea:
 // import VisualizadorDocumentos from "../documentos/VisualizadorDocumentos";
 
 const TreatmentHistory = ({ pacienteId }) => {
@@ -246,8 +246,10 @@ const TreatmentHistory = ({ pacienteId }) => {
           <div style={{ background: '#fff', padding: 24, borderRadius: 8, position: 'relative', maxWidth: 500 }}>
             <button style={{ position: 'absolute', top: 8, right: 8, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setModalRx(null)}>&times;</button>
             <h3 style={{ marginTop: 0 }}>{modalRx.nombre}</h3>
+            {/* Cuando DM24 esté listo, reemplazar el <img> por el componente VisualizadorDocumentos */}
+            {/* <VisualizadorDocumentos documento={modalRx} onClose={() => setModalRx(null)} /> */}
             <img src={modalRx.url} alt={modalRx.nombre} style={{ maxWidth: '100%', maxHeight: 350, display: 'block', margin: '0 auto' }} />
-            <p style={{ textAlign: 'center', marginTop: 12, color: '#888' }}>(Aquí se integrará el VisualizadorDocumentos)</p>
+            <p style={{ textAlign: 'center', marginTop: 12, color: '#888' }}>(Aquí se integrará el VisualizadorDocumentos de DM24)</p>
           </div>
         </div>
       )}
