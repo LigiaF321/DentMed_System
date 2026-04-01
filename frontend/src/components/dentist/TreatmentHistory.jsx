@@ -3,6 +3,48 @@ import { saveAs } from "file-saver";
 // Cuando DM24 esté listo, descomentar la siguiente línea:
 // import VisualizadorDocumentos from "../documentos/VisualizadorDocumentos";
 
+function MultiSesionViewer({ sesiones }) {
+  const [idx, setIdx] = useState(0);
+  const sesion = sesiones[idx];
+
+  return (
+    <div
+      className="multi-sesion-viewer"
+      style={{ marginTop: 16, padding: 12, background: "#f7f7f7", borderRadius: 8 }}
+    >
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+        <button
+          onClick={() => setIdx((i) => Math.max(0, i - 1))}
+          disabled={idx === 0}
+          style={{ marginRight: 8 }}
+        >
+          &lt;
+        </button>
+
+        <span style={{ fontWeight: "bold" }}>
+          Sesión {idx + 1} de {sesiones.length}
+        </span>
+
+        <button
+          onClick={() => setIdx((i) => Math.min(sesiones.length - 1, i + 1))}
+          disabled={idx === sesiones.length - 1}
+          style={{ marginLeft: 8 }}
+        >
+          &gt;
+        </button>
+      </div>
+
+      <div>
+        <strong>Fecha:</strong> {new Date(sesion.fecha).toLocaleDateString()}
+        <br />
+        <strong>Descripción:</strong> {sesion.descripcion}
+        <br />
+        <strong>Observaciones:</strong> {sesion.observaciones}
+      </div>
+    </div>
+  );
+}
+
 const TreatmentHistory = ({ pacienteId }) => {
   // Aquí se obtendrán los tratamientos del paciente
   // const [tratamientos, setTratamientos] = React.useState([]);
@@ -11,10 +53,10 @@ const TreatmentHistory = ({ pacienteId }) => {
   const tratamientos = [
     {
       id: 1,
-      fecha: '2026-03-28',
-      tratamiento: 'Endodoncia',
-      dientes: '16, 17',
-      doctor: 'Dr. Juan Pérez',
+      fecha: "2026-03-28",
+      tratamiento: "Endodoncia",
+      dientes: "16, 17",
+      doctor: "Dr. Juan Pérez",
       costo: 2500,
       diagnostico: "Necrosis pulpar. Dolor persistente.",
       observaciones: "Paciente refiere dolor nocturno. Se indicó antibiótico previo.",
@@ -26,24 +68,24 @@ const TreatmentHistory = ({ pacienteId }) => {
       sesiones: [
         {
           id: 1,
-          fecha: '2026-03-28',
-          descripcion: 'Apertura cameral, instrumentación, medicación temporal.',
-          observaciones: 'Paciente toleró bien el procedimiento.',
+          fecha: "2026-03-28",
+          descripcion: "Apertura cameral, instrumentación, medicación temporal.",
+          observaciones: "Paciente toleró bien el procedimiento.",
         },
         {
           id: 2,
-          fecha: '2026-04-04',
-          descripcion: 'Obturación de conductos, control radiográfico.',
-          observaciones: 'Tratamiento finalizado con éxito.',
+          fecha: "2026-04-04",
+          descripcion: "Obturación de conductos, control radiográfico.",
+          observaciones: "Tratamiento finalizado con éxito.",
         }
       ],
     },
     {
       id: 2,
-      fecha: '2026-03-20',
-      tratamiento: 'Obturación resina',
-      dientes: '14',
-      doctor: 'Dr. Juan Pérez',
+      fecha: "2026-03-20",
+      tratamiento: "Obturación resina",
+      dientes: "14",
+      doctor: "Dr. Juan Pérez",
       costo: 800,
       diagnostico: "Caries dental. Lesión en esmalte.",
       observaciones: "Se utilizó resina compuesta de alta estética.",
@@ -54,10 +96,10 @@ const TreatmentHistory = ({ pacienteId }) => {
     },
     {
       id: 3,
-      fecha: '2026-03-10',
-      tratamiento: 'Extracción',
-      dientes: '18',
-      doctor: 'Dra. Ligia',
+      fecha: "2026-03-10",
+      tratamiento: "Extracción",
+      dientes: "18",
+      doctor: "Dra. Ligia",
       costo: 1200,
       diagnostico: "Diente impactado.",
       observaciones: "Extracción sin complicaciones. Sutura absorbible.",
@@ -66,10 +108,10 @@ const TreatmentHistory = ({ pacienteId }) => {
     },
     {
       id: 4,
-      fecha: '2026-02-28',
-      tratamiento: 'Limpieza dental',
-      dientes: '-',
-      doctor: 'Dr. Juan Pérez',
+      fecha: "2026-02-28",
+      tratamiento: "Limpieza dental",
+      dientes: "-",
+      doctor: "Dr. Juan Pérez",
       costo: 600,
       diagnostico: "Profilaxis preventiva.",
       observaciones: "Sin hallazgos patológicos.",
@@ -78,38 +120,40 @@ const TreatmentHistory = ({ pacienteId }) => {
     },
   ];
 
-  // Ordenar de más reciente a más antiguo
   const [expandedId, setExpandedId] = useState(null);
   const [exportMsg, setExportMsg] = useState("");
-    // Simulación de exportación PDF
-    const handleExportPDF = async () => {
-      setExportMsg("Generando PDF...");
-      // Simula llamada a endpoint y descarga
-      setTimeout(() => {
-        // Simula descarga de archivo PDF
-        const blob = new Blob(["PDF simulado del historial de tratamientos"], { type: "application/pdf" });
-        saveAs(blob, "historial_tratamientos.pdf");
-        setExportMsg("¡PDF exportado correctamente!");
-        setTimeout(() => setExportMsg(""), 2500);
-      }, 1500);
-    };
-  const [modalRx, setModalRx] = useState(null); // {url, nombre}
-  const [filtroTipo, setFiltroTipo] = useState('');
-  const [filtroDoctor, setFiltroDoctor] = useState('');
-  const [filtroDesde, setFiltroDesde] = useState('');
-  const [filtroHasta, setFiltroHasta] = useState('');
+  const [modalRx, setModalRx] = useState(null);
+  const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroDoctor, setFiltroDoctor] = useState("");
+  const [filtroDesde, setFiltroDesde] = useState("");
+  const [filtroHasta, setFiltroHasta] = useState("");
 
-  const tiposUnicos = Array.from(new Set(tratamientos.map(t => t.tratamiento)));
-  const doctoresUnicos = Array.from(new Set(tratamientos.map(t => t.doctor)));
+  const handleExportPDF = async () => {
+    setExportMsg("Generando PDF...");
+    setTimeout(() => {
+      const blob = new Blob(["PDF simulado del historial de tratamientos"], {
+        type: "application/pdf",
+      });
+      saveAs(blob, "historial_tratamientos.pdf");
+      setExportMsg("¡PDF exportado correctamente!");
+      setTimeout(() => setExportMsg(""), 2500);
+    }, 1500);
+  };
 
-  const tratamientosFiltrados = tratamientos.filter(t => {
+  const tiposUnicos = Array.from(new Set(tratamientos.map((t) => t.tratamiento)));
+  const doctoresUnicos = Array.from(new Set(tratamientos.map((t) => t.doctor)));
+
+  const tratamientosFiltrados = tratamientos.filter((t) => {
     const cumpleTipo = !filtroTipo || t.tratamiento === filtroTipo;
     const cumpleDoctor = !filtroDoctor || t.doctor === filtroDoctor;
     const cumpleDesde = !filtroDesde || new Date(t.fecha) >= new Date(filtroDesde);
     const cumpleHasta = !filtroHasta || new Date(t.fecha) <= new Date(filtroHasta);
     return cumpleTipo && cumpleDoctor && cumpleDesde && cumpleHasta;
   });
-  const tratamientosOrdenados = [...tratamientosFiltrados].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+  const tratamientosOrdenados = [...tratamientosFiltrados].sort(
+    (a, b) => new Date(b.fecha) - new Date(a.fecha)
+  );
 
   const handleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -117,42 +161,79 @@ const TreatmentHistory = ({ pacienteId }) => {
 
   return (
     <div className="treatment-history">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h2>Historial de Tratamientos</h2>
-        <button className="treatment-export-btn" onClick={handleExportPDF} style={{ padding: '8px 18px', borderRadius: 6, background: '#2563eb', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-          <i className="fas fa-file-pdf" style={{ marginRight: 6 }}></i> Exportar a PDF
+        <button
+          className="treatment-export-btn"
+          onClick={handleExportPDF}
+          style={{
+            padding: "8px 18px",
+            borderRadius: 6,
+            background: "#2563eb",
+            color: "#fff",
+            border: "none",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          <i className="fas fa-file-pdf" style={{ marginRight: 6 }}></i>
+          Exportar a PDF
         </button>
       </div>
-      {exportMsg && <div style={{ margin: '10px 0', color: '#2563eb', fontWeight: 'bold' }}>{exportMsg}</div>}
+
+      {exportMsg && (
+        <div style={{ margin: "10px 0", color: "#2563eb", fontWeight: "bold" }}>
+          {exportMsg}
+        </div>
+      )}
+
       <div className="treatment-filters">
         <label>
           Tipo:
-          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
+          <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
             <option value="">Todos</option>
             {tiposUnicos.map((tipo, i) => (
-              <option key={i} value={tipo}>{tipo}</option>
+              <option key={i} value={tipo}>
+                {tipo}
+              </option>
             ))}
           </select>
         </label>
+
         <label>
           Doctor:
-          <select value={filtroDoctor} onChange={e => setFiltroDoctor(e.target.value)}>
+          <select value={filtroDoctor} onChange={(e) => setFiltroDoctor(e.target.value)}>
             <option value="">Todos</option>
             {doctoresUnicos.map((doc, i) => (
-              <option key={i} value={doc}>{doc}</option>
+              <option key={i} value={doc}>
+                {doc}
+              </option>
             ))}
           </select>
         </label>
+
         <label>
           Desde:
-          <input type="date" value={filtroDesde} onChange={e => setFiltroDesde(e.target.value)} />
+          <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
         </label>
+
         <label>
           Hasta:
-          <input type="date" value={filtroHasta} onChange={e => setFiltroHasta(e.target.value)} />
+          <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
         </label>
-        <button onClick={() => { setFiltroTipo(''); setFiltroDoctor(''); setFiltroDesde(''); setFiltroHasta(''); }}>Limpiar filtros</button>
+
+        <button
+          onClick={() => {
+            setFiltroTipo("");
+            setFiltroDoctor("");
+            setFiltroDesde("");
+            setFiltroHasta("");
+          }}
+        >
+          Limpiar filtros
+        </button>
       </div>
+
       <table className="treatment-table">
         <thead>
           <tr>
@@ -164,6 +245,7 @@ const TreatmentHistory = ({ pacienteId }) => {
             <th></th>
           </tr>
         </thead>
+
         <tbody>
           {tratamientosOrdenados.map((t) => (
             <React.Fragment key={t.id}>
@@ -179,28 +261,39 @@ const TreatmentHistory = ({ pacienteId }) => {
                   </button>
                 </td>
               </tr>
+
               {expandedId === t.id && (
                 <tr className="treatment-details-row">
                   <td colSpan={6}>
                     <div className="treatment-details">
-                      <strong>Diagnóstico:</strong> {t.diagnostico}<br />
-                      <strong>Observaciones:</strong> {t.observaciones}<br />
+                      <strong>Diagnóstico:</strong> {t.diagnostico}
+                      <br />
+                      <strong>Observaciones:</strong> {t.observaciones}
+                      <br />
                       <strong>Materiales usados:</strong>
                       <ul>
-                        {t.materiales.map((m, i) => <li key={i}>{m}</li>)}
+                        {t.materiales.map((m, i) => (
+                          <li key={i}>{m}</li>
+                        ))}
                       </ul>
+
                       <div className="treatment-xrays-section">
                         <strong>Radiografías:</strong>
                         {t.radiografias && t.radiografias.length > 0 ? (
                           <div className="treatment-xrays-list">
-                            {t.radiografias.map(rx => (
+                            {t.radiografias.map((rx) => (
                               <img
                                 key={rx.id}
                                 src={rx.url}
                                 alt={rx.nombre}
                                 title={rx.nombre}
                                 className="treatment-xray-thumb"
-                                style={{ cursor: 'pointer', marginRight: 8, border: '1px solid #aaa', borderRadius: 4 }}
+                                style={{
+                                  cursor: "pointer",
+                                  marginRight: 8,
+                                  border: "1px solid #aaa",
+                                  borderRadius: 4,
+                                }}
                                 onClick={() => setModalRx(rx)}
                               />
                             ))}
@@ -209,7 +302,7 @@ const TreatmentHistory = ({ pacienteId }) => {
                           <span> No hay radiografías.</span>
                         )}
                       </div>
-                      {/* Sección de sesiones multi-sesión */}
+
                       {t.sesiones && t.sesiones.length > 0 && (
                         <MultiSesionViewer sesiones={t.sesiones} />
                       )}
@@ -217,34 +310,51 @@ const TreatmentHistory = ({ pacienteId }) => {
                   </td>
                 </tr>
               )}
-            // Componente para mostrar y navegar sesiones de un tratamiento multi-sesión
-            function MultiSesionViewer({ sesiones }) {
-              const [idx, setIdx] = useState(0);
-              const sesion = sesiones[idx];
-              return (
-                <div className="multi-sesion-viewer" style={{ marginTop: 16, padding: 12, background: '#f7f7f7', borderRadius: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                    <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0} style={{ marginRight: 8 }}>&lt;</button>
-                    <span style={{ fontWeight: 'bold' }}>Sesión {idx + 1} de {sesiones.length}</span>
-                    <button onClick={() => setIdx(i => Math.min(sesiones.length - 1, i + 1))} disabled={idx === sesiones.length - 1} style={{ marginLeft: 8 }}>&gt;</button>
-                  </div>
-                  <div>
-                    <strong>Fecha:</strong> {new Date(sesion.fecha).toLocaleDateString()}<br />
-                    <strong>Descripción:</strong> {sesion.descripcion}<br />
-                    <strong>Observaciones:</strong> {sesion.observaciones}
-                  </div>
-                </div>
-              );
-            }
             </React.Fragment>
           ))}
         </tbody>
       </table>
-      {/* Modal placeholder para visualizador de radiografías */}
+
       {modalRx && (
-        <div className="treatment-xray-modal" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#fff', padding: 24, borderRadius: 8, position: 'relative', maxWidth: 500 }}>
-            <button style={{ position: 'absolute', top: 8, right: 8, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setModalRx(null)}>&times;</button>
+        <div
+          className="treatment-xray-modal"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: 24,
+              borderRadius: 8,
+              position: "relative",
+              maxWidth: 500,
+            }}
+          >
+            <button
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                fontSize: 18,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onClick={() => setModalRx(null)}
+            >
+              &times;
+            </button>
+
             <h3 style={{ marginTop: 0 }}>{modalRx.nombre}</h3>
             {/* Cuando DM24 esté listo, reemplazar el <img> por el componente VisualizadorDocumentos */}
             {/* <VisualizadorDocumentos documento={modalRx} onClose={() => setModalRx(null)} /> */}

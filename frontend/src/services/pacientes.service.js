@@ -1,12 +1,12 @@
-import { getAuthToken } from "../utils/auth";
+import { getAuthToken } from '../utils/auth';
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = 'http://localhost:3000/api';
 
 const getHeaders = () => {
   const token = getAuthToken();
 
   const headers = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 
   if (token) {
@@ -16,42 +16,70 @@ const getHeaders = () => {
   return headers;
 };
 
-const parseResponse = async (response) => {
-  const contentType = response.headers.get("content-type") || "";
-  const rawText = await response.text();
+export const buscarPacientes = async ({ q = '', page = 1, limit = 10, filtros = {} }) => {
+  const params = new URLSearchParams({
+    q,
+    page: String(page),
+    limit: String(limit),
+    filtros_json: JSON.stringify(filtros),
+  });
 
-  if (!contentType.includes("application/json")) {
-    console.error("Respuesta no JSON:", rawText);
-    throw new Error("El servidor no devolvió JSON.");
-  }
+  const response = await fetch(`${API_URL}/pacientes/buscar?${params.toString()}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
 
-  const data = JSON.parse(rawText);
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || "Error en la petición");
+    throw new Error(data?.message || 'Error al buscar pacientes');
   }
 
   return data;
 };
 
-export const buscarPacientes = async (q) => {
-  const response = await fetch(
-    `${API_URL}/pacientes/buscar?q=${encodeURIComponent(q)}`,
-    {
-      method: "GET",
-      headers: getHeaders(),
-    }
-  );
+export const obtenerPacienteDetalle = async (id) => {
+  const response = await fetch(`${API_URL}/pacientes/${id}?from_search=1`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
 
-  return parseResponse(response);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Error al obtener detalle del paciente');
+  }
+
+  return data;
+};
+
+export const obtenerPacientesRecientes = async () => {
+  const response = await fetch(`${API_URL}/pacientes/recientes`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Error al obtener pacientes recientes');
+  }
+
+  return data;
 };
 
 export const crearPacienteRapido = async (payload) => {
-  const response = await fetch(`${API_URL}/pacientes`, {
-    method: "POST",
+  const response = await fetch(`${API_URL}/pacientes/crear-rapido`, {
+    method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(payload),
   });
 
-  return parseResponse(response);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Error al crear paciente rápido');
+  }
+
+  return data;
 };

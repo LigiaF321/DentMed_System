@@ -7,7 +7,6 @@ import {
   verificarDisponibilidad,
   crearCita,
 } from "../../services/citas.service";
-import bloquesService from "../../services/bloques.service"; 
 import "./NuevaCitaModal.css";
 
 const DURACIONES = [30, 45, 60];
@@ -257,47 +256,26 @@ export default function NuevaCitaModal({
       try {
         setChecking(true);
 
-        // Tarea F5: Doble validación (Citas existentes Y Bloqueos manuales)
-        const [resCitas, resBloqueos] = await Promise.all([
-          verificarDisponibilidad({
-            fecha: form.fecha,
-            hora: form.hora,
-            duracion: form.duracion,
-            id_consultorio: form.id_consultorio,
-          }),
-          bloquesService.verificarDisponibilidad(
-            form.fecha,
-            form.hora,
-            form.id_consultorio
-          )
-        ]);
+        const response = await verificarDisponibilidad({
+          fecha: form.fecha,
+          hora: form.hora,
+          duracion: form.duracion,
+          id_consultorio: form.id_consultorio,
+        });
 
-        if (!resCitas.disponible) {
-          setDisponibilidad({
-            disponible: false,
-            message: resCitas.message || "Este horario ya tiene una cita asignada.",
-          });
-        } else if (!resBloqueos.disponible) {
-          setDisponibilidad({
-            disponible: false,
-            message: "⚠️ Horario Bloqueado: El dentista ha marcado este tiempo como no disponible.",
-          });
-        } else {
-          setDisponibilidad({
-            disponible: true,
-            message: "Horario disponible",
-          });
-        }
-
+        setDisponibilidad({
+          disponible: !!response.disponible,
+          message: response.message || "",
+        });
       } catch (err) {
         setDisponibilidad({
           disponible: false,
-          message: err.message || "No se pudo verificar la agenda",
+          message: err.message || "No se pudo verificar disponibilidad",
         });
       } finally {
         setChecking(false);
       }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [form.fecha, form.hora, form.duracion, form.id_consultorio, open]);
@@ -547,9 +525,7 @@ export default function NuevaCitaModal({
             ) : null}
 
             {!disponibilidad.disponible ? (
-              <div className="dm17-error" style={{ fontWeight: 'bold' }}>
-                {disponibilidad.message}
-              </div>
+              <div className="dm17-error">{disponibilidad.message}</div>
             ) : null}
 
             {error ? <div className="dm17-error">{error}</div> : null}
