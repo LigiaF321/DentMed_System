@@ -10,6 +10,7 @@ import AppointmentsList from './AppointmentsList';
 import Odontograma from './Odontograma';
 import PatientTabs from './PatientTabs';
 import NuevaCitaModal from './NuevaCitaModal';
+import MisPacientesScreen from './MisPacientesScreen';
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
 import './DentistDashboard.css';
@@ -157,7 +158,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
   };
 
   const obtenerPacienteNombre = (cita) => {
-    return cita.paciente_nombre || cita.paciente?.nombre || 'Paciente';
+    return (
+      cita.paciente_nombre ||
+      cita.paciente?.nombre_completo ||
+      cita.paciente?.nombre ||
+      'Paciente'
+    );
   };
 
   const getAuthHeaders = () => {
@@ -206,6 +212,53 @@ const DentistDashboard = ({ userData, onLogout }) => {
         calendarApi.gotoDate(event.start);
       }
     }
+  };
+
+  const handleSelectPatientFromSearch = (pacienteDetalle) => {
+    const citaHoy = citas.find((cita) => {
+      const samePatient = Number(cita.id_paciente) === Number(pacienteDetalle.id);
+      const sameDay = esMismoDia(cita.fecha_hora, new Date());
+      const estado = normalizarEstado(cita.estado);
+
+      return samePatient && sameDay && !['cancelada', 'completada'].includes(estado);
+    });
+
+    if (citaHoy) {
+      setSelectedCita(citaHoy);
+      setAgendaDate(new Date(citaHoy.fecha_hora));
+
+      if (calendarRef.current) {
+        const calendarApi = calendarRef.current.getApi();
+        calendarApi.gotoDate(new Date(citaHoy.fecha_hora));
+      }
+    } else {
+      const citaVirtual = {
+        id: `paciente-${pacienteDetalle.id}`,
+        id_paciente: pacienteDetalle.id,
+        fecha_hora: new Date().toISOString(),
+        fecha_fin: sumarMinutos(new Date(), 30).toISOString(),
+        motivo: 'Paciente seleccionado desde Mis Pacientes',
+        estado: 'pendiente',
+        duracion_estimada: 30,
+        paciente_nombre:
+          pacienteDetalle.nombre_completo ||
+          pacienteDetalle.nombre ||
+          'Paciente',
+        paciente: pacienteDetalle,
+        esBusquedaPaciente: true,
+      };
+
+      setSelectedCita(citaVirtual);
+      setAgendaDate(new Date());
+
+      if (calendarRef.current) {
+        const calendarApi = calendarRef.current.getApi();
+        calendarApi.gotoDate(new Date());
+      }
+    }
+
+    setActiveView('agenda');
+    mostrarToast('Paciente seleccionado correctamente');
   };
 
   const handleEventClick = (info) => {
@@ -427,7 +480,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
                     headerToolbar={{
                       left: 'prev,next today',
                       center: 'title',
-                      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                      right: 'dayGridMonth,timeGridWeek,timeGridDay',
                     }}
                     initialView={currentView}
                     events={citas.map((cita) => {
@@ -441,11 +494,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
                         extendedProps: {
                           estado,
                           motivo: cita.motivo,
-                          paciente: cita.paciente
+                          paciente: cita.paciente,
                         },
                         backgroundColor: estadoColores[estado]?.background || '#007bff',
                         borderColor: estadoColores[estado]?.border || '#0069d9',
-                        textColor: '#ffffff'
+                        textColor: '#ffffff',
                       };
                     })}
                     eventClick={handleEventClick}
@@ -462,15 +515,15 @@ const DentistDashboard = ({ userData, onLogout }) => {
                       today: 'Hoy',
                       month: 'Mes',
                       week: 'Semana',
-                      day: 'Día'
+                      day: 'Día',
                     }}
                     titleFormat={{
                       year: 'numeric',
-                      month: 'long'
+                      month: 'long',
                     }}
                     dayHeaderFormat={{
                       weekday: 'short',
-                      day: 'numeric'
+                      day: 'numeric',
                     }}
                   />
                 </div>
@@ -492,10 +545,10 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
       case 'pacientes':
         return (
-          <div className="placeholder-content">
-            <h2>Mis Pacientes</h2>
-            <p>Próximamente...</p>
-          </div>
+          <MisPacientesScreen
+            dentistaInfo={dentistaInfo}
+            onSelectPatient={handleSelectPatientFromSearch}
+          />
         );
 
       case 'tratamientos':
@@ -518,6 +571,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
         return (
           <div className="placeholder-content">
             <h2>Mi Perfil</h2>
+            <p>Próximamente...</p>
+          </div>
+        );
+
+      case 'configuracion':
+        return (
+          <div className="placeholder-content">
+            <h2>Configuración</h2>
             <p>Próximamente...</p>
           </div>
         );
@@ -620,7 +681,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
               style={{
                 borderLeftColor: selectedEvent.backgroundColor,
                 borderLeftWidth: '4px',
-                borderLeftStyle: 'solid'
+                borderLeftStyle: 'solid',
               }}
             >
               <h3>
@@ -648,7 +709,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </span>
               </div>
@@ -660,12 +721,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
                 <span className="detail-value">
                   {new Date(selectedEvent.start).toLocaleTimeString('es-ES', {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}{' '}
                   -{' '}
                   {new Date(selectedEvent.end).toLocaleTimeString('es-ES', {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </span>
               </div>
