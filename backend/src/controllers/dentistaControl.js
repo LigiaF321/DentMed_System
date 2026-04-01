@@ -84,8 +84,6 @@ const dentistaController = {
             });
         }
     },
-
-    // --- SECCIÓN DE COMPAÑEROS (MANTENIDA SIN CAMBIOS) ---
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({

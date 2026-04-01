@@ -29,6 +29,7 @@ const citasRoutes = require("./routes/citas.routes");
 const consultoriosRoutes = require("./routes/consultorios.routes");
 // --- INTEGRACIÓN DM19: Importación de la nueva ruta ---
 const bloquesRoutes = require("./routes/bloques.routes"); 
+const auditoriaRoutes = require("./routes/auditoria.routes");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,6 +44,9 @@ app.use("/api/admin/alertas", alertasInventarioRoutes);
 app.use("/api/admin/seguridad", alertasSeguridadRoutes);
 app.use("/api/admin/kardex", kardexRoutes);
 app.use("/api/admin/reportes", reportesConsumoRoutes);
+
+// --- INTEGRACIÓN AUDITORÍA: Registro de rutas ---
+app.use("/api/auditoria", auditoriaRoutes);
 
 app.use("/api/restauracion", restauracionRoutes);
 app.use("/api/dentistas", dentistaRoutes);
@@ -65,6 +69,9 @@ app.get("/", (req, res) => {
       "/api/admin/kardex",
       "/api/admin/reportes",
       "/api/bloques", // Integrado en la lista informativa
+      "/api/auditoria", // Añadido a la lista de endpoints
+      "/api/citas",
+      "/api/consultorios"
     ],
   });
 });
