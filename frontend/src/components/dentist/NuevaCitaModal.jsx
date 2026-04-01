@@ -11,7 +11,6 @@ import {
 import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
 import bloquesService from "../../services/bloques.service";
 import { sugerirConsultorios } from "../../services/consultorios.service";
->>>>>>> 968dab2995282f0b6e7d2c09331d1e7e72c55d59
 import "./NuevaCitaModal.css";
 
 const DURACIONES = [30, 45, 60];
