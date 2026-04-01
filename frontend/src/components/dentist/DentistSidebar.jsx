@@ -7,12 +7,11 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout }) => {
     { id: 'agenda', icon: 'fa-calendar-alt', label: 'Mi Agenda' },
     { id: 'pacientes', icon: 'fa-users', label: 'Mis Pacientes' },
     { id: 'tratamientos', icon: 'fa-tooth', label: 'Tratamientos' },
-    { id: 'notas', icon: 'fa-sticky-note', label: 'Notas' }
+    { id: 'notas', icon: 'fa-sticky-note', label: 'Notas' },
   ];
 
   return (
     <aside className="dentist-sidebar">
-      {/* Logo DentMed */}
       <div className="sidebar-logo">
         <div className="logo-icon">
           <i className="fas fa-tooth"></i>
@@ -22,10 +21,9 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout }) => {
           <span className="logo-med">Med</span>
         </div>
       </div>
-      
-      {/* Menú de navegación */}
+
       <nav className="sidebar-nav">
-        {menuItems.map(item => (
+        {menuItems.map((item) => (
           <button
             key={item.id}
             className={`sidebar-nav-item ${activeView === item.id ? 'active' : ''}`}
@@ -36,8 +34,7 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout }) => {
           </button>
         ))}
       </nav>
-      
-      {/* Botón de salir */}
+
       <div className="sidebar-logout">
         <button className="logout-btn-sidebar" onClick={onLogout}>
           <i className="fas fa-sign-out-alt"></i>

@@ -12,6 +12,7 @@ const Consultorio = require("./Consultorio");
 const Material = require("./Material");
 const Cita = require("./Cita");
 const Tratamiento = require("./Tratamiento");
+const Bloque = require("./Bloque");
 
 // Alertas
 const AlertaInventario = require("./AlertaInventario");
@@ -71,6 +72,12 @@ Tratamiento.belongsTo(Paciente, { foreignKey: "pacienteId" });
 
 Dentista.hasMany(Tratamiento, { foreignKey: "doctorId" });
 Tratamiento.belongsTo(Dentista, { foreignKey: "doctorId" });
+
+// ===============================
+// DENTISTA -> BLOQUE
+// ===============================
+Dentista.hasMany(Bloque, { foreignKey: "id_dentista" });
+Bloque.belongsTo(Dentista, { foreignKey: "id_dentista" });
 
 // ===============================
 // ALERTAS DE INVENTARIO
@@ -217,6 +224,7 @@ module.exports = {
   Material,
   Cita,
   Tratamiento,
+  Bloque,
   AlertaInventario,
   ConfiguracionAlerta,
   HistorialNotificacion,

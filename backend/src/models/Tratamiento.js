@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('./index');
+const sequelize = require('../config/database');
 
 const Tratamiento = sequelize.define('Tratamiento', {
   id: {
@@ -36,7 +36,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
     },
   },
   costo: {
-    type: DataTypes.DECIMAL(10,2),
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
   },
   descripcion: {

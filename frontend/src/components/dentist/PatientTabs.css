@@ -1,45 +1,65 @@
 /* frontend/src/components/dentist/PatientTabs.css */
 
+* {
+  box-sizing: border-box;
+}
+
 .patient-tabs {
-  background: white;
+  background: #ffffff;
   border-radius: 20px;
   margin-top: 20px;
   overflow: hidden;
   border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .patient-tabs-empty {
-  background: white;
+  background: #ffffff;
   border-radius: 20px;
-  padding: 40px 20px;
+  padding: 48px 24px;
   margin-top: 20px;
   text-align: center;
   color: #6c757d;
-  border: 1px dashed #e9ecef;
+  border: 1px dashed #dbe3ea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .patient-tabs-empty i {
   font-size: 48px;
-  color: #dee2e6;
+  color: #d5dde5;
   margin-bottom: 16px;
+  display: block;
 }
 
+.patient-tabs-empty p,
+.patient-tabs-empty span,
+.patient-tabs-empty h3 {
+  margin: 0;
+}
+
+/* Header de tabs */
 .tabs-header {
   display: flex;
+  align-items: stretch;
   border-bottom: 1px solid #e9ecef;
   background: #f8f9fa;
+  padding: 6px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
   flex: 1;
+  min-width: 120px;
   padding: 14px 16px;
   background: transparent;
   border: none;
+  border-radius: 14px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  color: #6c757d;
-  transition: all 0.2s;
+  color: #5a6e7c;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,29 +68,63 @@
 
 .tab-btn i {
   font-size: 14px;
+  color: #7b8a97;
+  transition: color 0.2s ease;
 }
 
 .tab-btn:hover {
-  background: #e9ecef;
-  color: #1a2c3e;
+  background: #eef4f8;
+  color: #0088cc;
+  transform: translateY(-1px);
+}
+
+.tab-btn:hover i {
+  color: #0088cc;
 }
 
 .tab-btn.active {
-  background: white;
+  background: #ffffff;
   color: #0088cc;
-  border-bottom: 2px solid #0088cc;
+  box-shadow: 0 2px 6px rgba(0, 136, 204, 0.12);
+  border: 1px solid #dbeaf3;
+}
+
+.tab-btn.active i {
+  color: #0088cc;
 }
 
 .tabs-content {
-  padding: 20px;
-  max-height: 300px;
+  padding: 24px;
+  max-height: 360px;
   overflow-y: auto;
+  background: #ffffff;
 }
 
-/* Historia */
+/* Scrollbar */
+.tabs-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tabs-content::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 10px;
+}
+
+.tabs-content::-webkit-scrollbar-thumb {
+  background: #c9d6df;
+  border-radius: 10px;
+}
+
+.tabs-content::-webkit-scrollbar-thumb:hover {
+  background: #aebdca;
+}
+
+/* =========================
+   HISTORIA
+========================= */
 .historia-item {
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 14px 0;
+  border-bottom: 1px solid #eef2f5;
 }
 
 .historia-item:last-child {
@@ -80,46 +134,61 @@
 .historia-fecha {
   font-size: 12px;
   color: #6c757d;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.historia-fecha i {
+  color: #0088cc;
+}
+
 .historia-tratamiento {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
   color: #1a2c3e;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  line-height: 1.35;
 }
 
 .historia-doctor {
-  font-size: 11px;
+  font-size: 12px;
   color: #ff69b4;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-weight: 600;
 }
 
-/* Plan de Tratamientos */
+.historia-doctor i {
+  color: #ff69b4;
+}
+
+/* =========================
+   PLAN DE TRATAMIENTOS
+========================= */
 .plan-header {
   display: grid;
-  grid-template-columns: 80px 1fr 100px;
-  gap: 12px;
-  padding: 10px 0;
+  grid-template-columns: 110px 1fr 120px;
+  gap: 14px;
+  padding: 12px 0;
   border-bottom: 1px solid #e9ecef;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .plan-item {
   display: grid;
-  grid-template-columns: 80px 1fr 100px;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  grid-template-columns: 110px 1fr 120px;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eef2f5;
   font-size: 13px;
+  align-items: center;
 }
 
 .plan-item:last-child {
@@ -127,42 +196,48 @@
 }
 
 .plan-prioridad {
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   width: fit-content;
+  min-width: 74px;
 }
 
 .prioridad-alta {
-  background: #ffebee;
-  color: #dc3545;
+  background: #fdecea;
+  color: #c62828;
 }
 
 .prioridad-media {
-  background: #fff3e0;
-  color: #ffc107;
+  background: #fff4db;
+  color: #d68910;
 }
 
 .prioridad-baja {
   background: #e8f5e9;
-  color: #28a745;
+  color: #2e7d32;
 }
 
 .plan-tratamiento {
   color: #1a2c3e;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .plan-fecha {
   color: #6c757d;
   font-size: 12px;
+  font-weight: 500;
 }
 
-/* Notas */
+/* =========================
+   NOTAS
+========================= */
 .nota-item {
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 14px 0;
+  border-bottom: 1px solid #eef2f5;
 }
 
 .nota-item:last-child {
@@ -172,17 +247,21 @@
 .nota-fecha {
   font-size: 11px;
   color: #adb5bd;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.nota-fecha i {
+  color: #0088cc;
+}
+
 .nota-texto {
   font-size: 13px;
   color: #1a2c3e;
-  margin-bottom: 6px;
-  line-height: 1.4;
+  margin-bottom: 8px;
+  line-height: 1.55;
 }
 
 .nota-autor {
@@ -190,22 +269,78 @@
   color: #0088cc;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-weight: 700;
 }
 
-/* Responsive */
+.nota-autor i {
+  color: #0088cc;
+}
+
+/* =========================
+   ESTADOS VACÍOS INTERNOS
+========================= */
+.tabs-content .empty-state,
+.tabs-content .no-data {
+  text-align: center;
+  color: #6c757d;
+  padding: 28px 16px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 768px) {
+  .tabs-header {
+    flex-direction: column;
+  }
+
   .tab-btn {
-    padding: 10px 12px;
-    font-size: 12px;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 14px;
+    font-size: 13px;
   }
-  
-  .plan-header, .plan-item {
-    grid-template-columns: 70px 1fr 80px;
-    gap: 8px;
+
+  .tabs-content {
+    padding: 18px;
+    max-height: none;
   }
-  
+
+  .plan-header,
+  .plan-item {
+    grid-template-columns: 90px 1fr 90px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .patient-tabs,
+  .patient-tabs-empty {
+    border-radius: 18px;
+  }
+
   .tabs-content {
     padding: 16px;
+  }
+
+  .plan-header {
+    display: none;
+  }
+
+  .plan-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 14px 0;
+  }
+
+  .plan-prioridad,
+  .plan-fecha {
+    width: fit-content;
+  }
+
+  .historia-tratamiento,
+  .nota-texto {
+    font-size: 13px;
   }
 }
