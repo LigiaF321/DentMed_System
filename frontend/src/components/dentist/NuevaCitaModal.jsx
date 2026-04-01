@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import ConsultorioSugerido from "./ConsultorioSugerido";
 import {
   buscarPacientes,
   crearPacienteRapido,
@@ -632,27 +633,13 @@ export default function NuevaCitaModal({
                   placeholder="Ej. Limpieza, revisión, extracción"
                   autoComplete="off"
                 />
-                {/* Sugerencias de consultorios */}
-                {sugiriendo && (
-                  <div className="dm17-help">Buscando consultorios sugeridos...</div>
-                )}
-                {!sugiriendo && consultoriosSugeridos.length > 0 && (
-                  <div className="dm17-sugeridos-list">
-                    <div className="dm17-sugeridos-title">Consultorios sugeridos para este procedimiento:</div>
-                    {consultoriosSugeridos.map((c) => (
-                      <button
-                        type="button"
-                        key={c.id}
-                        className={`dm17-sugerido-item${form.id_consultorio === String(c.id) ? ' seleccionado' : ''}`}
-                        onClick={() => setForm((prev) => ({ ...prev, id_consultorio: String(c.id) }))}
-                      >
-                        <div className="dm17-sugerido-nombre">{c.nombre}</div>
-                        <div className="dm17-sugerido-equipamiento">{c.equipamiento?.join(', ') || 'Sin equipamiento registrado'}</div>
-                        <div className={`dm17-sugerido-disponibilidad ${c.disponible ? 'disponible' : 'no-disponible'}`}>{c.disponible ? 'Disponible' : 'No disponible'}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Sugerencias de consultorios con componente modularizado */}
+                <ConsultorioSugerido
+                  procedimiento={form.motivo}
+                  consultorios={consultoriosSugeridos}
+                  loading={sugiriendo}
+                  onSelectConsultorio={(c) => setForm((prev) => ({ ...prev, id_consultorio: String(c.id) }))}
+                />
               </div>
             </div>
 

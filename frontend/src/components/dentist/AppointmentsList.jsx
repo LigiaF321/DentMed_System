@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
+import CambiarConsultorioModal from './CambiarConsultorioModal';
 import './AppointmentsList.css';
 
+const API_URL = "http://localhost:3000/api";
+
 const AppointmentsList = ({ citas, onSelectCita, selectedCitaId, selectedDate }) => {
+  const [citaCambio, setCitaCambio] = useState(null);
+  const [citasLocal, setCitasLocal] = useState(citas);
+
+  React.useEffect(() => {
+    setCitasLocal(citas);
+  }, [citas]);
+
   const formatHora = (fecha) => {
     return new Date(fecha).toLocaleTimeString('es-ES', {
       hour: '2-digit',
@@ -11,6 +21,20 @@ const AppointmentsList = ({ citas, onSelectCita, selectedCitaId, selectedDate })
 
   const fechaBase = selectedDate ? new Date(selectedDate) : new Date();
   const esHoy = fechaBase.toDateString() === new Date().toDateString();
+
+  // Refresca solo la lista local tras cambiar consultorio
+  const refrescarCitas = async () => {
+    try {
+      const res = await fetch(`${API_URL}/citas/dentista`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      const citasData = Array.isArray(data) ? data : data?.data || [];
+      setCitasLocal(citasData);
+    } catch (e) {
+      // Si falla, no actualiza
+    }
+  };
 
   return (
     <div className="appointments-list">
@@ -26,13 +50,13 @@ const AppointmentsList = ({ citas, onSelectCita, selectedCitaId, selectedDate })
       </div>
 
       <div className="appointments-items">
-        {citas.length === 0 ? (
+        {citasLocal.length === 0 ? (
           <div className="no-appointments">
             <i className="fas fa-calendar-day"></i>
             <p>No hay citas programadas para esta fecha</p>
           </div>
         ) : (
-          citas.map((cita) => (
+          citasLocal.map((cita) => (
             <div
               key={cita.id}
               className={`appointment-item ${selectedCitaId === cita.id ? 'selected' : ''}`}
@@ -57,10 +81,30 @@ const AppointmentsList = ({ citas, onSelectCita, selectedCitaId, selectedDate })
                 {cita.estado === 'cancelada' && 'Cancelada'}
                 {cita.estado === 'programada' && 'Programada'}
               </div>
+
+              {/* Botón para cambiar consultorio */}
+              <button
+                className="dm17-btn dm17-btn-small"
+                type="button"
+                onClick={e => { e.stopPropagation(); setCitaCambio(cita); }}
+                style={{ marginLeft: 8 }}
+              >
+                Cambiar consultorio
+              </button>
             </div>
           ))
         )}
       </div>
+      {/* Modal de cambio de consultorio */}
+      <CambiarConsultorioModal
+        open={!!citaCambio}
+        cita={citaCambio}
+        onClose={() => setCitaCambio(null)}
+        onUpdated={() => {
+          setCitaCambio(null);
+          refrescarCitas();
+        }}
+      />
     </div>
   );
 };
