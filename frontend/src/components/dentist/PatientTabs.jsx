@@ -1,5 +1,7 @@
 // frontend/src/components/dentist/PatientTabs.jsx
+
 import React, { useState } from 'react';
+import TreatmentHistory from './TreatmentHistory';
 import './PatientTabs.css';
 
 const PatientTabs = ({ paciente }) => {
@@ -15,13 +17,7 @@ const PatientTabs = ({ paciente }) => {
   }
 
   // Datos de ejemplo (esto vendrá del backend)
-  const historiaData = [
-    { fecha: '20/03/2026', tratamiento: 'Extracción muela del juicio (#18)', doctor: 'Dr. Juan Pérez' },
-    { fecha: '15/03/2026', tratamiento: 'Obturación resina (#14)', doctor: 'Dr. Juan Pérez' },
-    { fecha: '10/03/2026', tratamiento: 'Endodoncia muela #16 (En curso)', doctor: 'Dr. Juan Pérez' },
-    { fecha: '05/03/2026', tratamiento: 'Limpieza dental', doctor: 'Dr. Juan Pérez' },
-    { fecha: '28/02/2026', tratamiento: 'Revisión general', doctor: 'Dr. Juan Pérez' },
-  ];
+  // El historial real se muestra con el componente TreatmentHistory
 
   const planTratamientosData = [
     { prioridad: 'Alta', tratamiento: 'Endodoncia muela #16', fechaPropuesta: '05/04/2026' },
@@ -61,17 +57,7 @@ const PatientTabs = ({ paciente }) => {
       <div className="tabs-content">
         {activeTab === 'historia' && (
           <div className="tab-pane">
-            {historiaData.map((item, index) => (
-              <div key={index} className="historia-item">
-                <div className="historia-fecha">
-                  <i className="fas fa-calendar-day"></i> {item.fecha}
-                </div>
-                <div className="historia-tratamiento">{item.tratamiento}</div>
-                <div className="historia-doctor">
-                  <i className="fas fa-user-md"></i> {item.doctor}
-                </div>
-              </div>
-            ))}
+            <TreatmentHistory pacienteId={paciente?.id} />
           </div>
         )}
         
