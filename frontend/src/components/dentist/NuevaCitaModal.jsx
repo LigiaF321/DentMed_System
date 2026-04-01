@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   buscarPacientes,
   crearPacienteRapido,
@@ -7,7 +7,9 @@ import {
   verificarDisponibilidad,
   crearCita,
 } from "../../services/citas.service";
-import bloquesService from "../../services/bloques.service"; 
+import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
+import bloquesService from "../../services/bloques.service";
+import { sugerirConsultorios } from "../../services/consultorios.service";
 import "./NuevaCitaModal.css";
 
 const DURACIONES = [30, 45, 60];
@@ -155,6 +157,7 @@ export default function NuevaCitaModal({
   onClose,
   onCreated,
   consultorios = [],
+  citasDentista = [], // <-- Recibe citas del dentista
 }) {
   const [form, setForm] = useState({
     paciente: null,
@@ -164,7 +167,22 @@ export default function NuevaCitaModal({
     duracion: 30,
     id_consultorio: "",
     motivo: "",
+    preReserva: false, // flag para pre-reserva
   });
+  // Determinar si la cita es pre-reserva automáticamente
+  useEffect(() => {
+    if (!form.fecha || !form.hora) {
+      setForm((prev) => ({ ...prev, preReserva: false }));
+      return;
+    }
+    const now = new Date();
+    const citaDate = new Date(`${form.fecha}T${form.hora}`);
+    const diffMs = citaDate - now;
+    const diffHrs = diffMs / (1000 * 60 * 60);
+    // Pre-reserva si es más de 24h y menos de 7 días
+    const isPreReserva = diffHrs > 24 && diffHrs <= 24 * 7;
+    setForm((prev) => ({ ...prev, preReserva: isPreReserva }));
+  }, [form.fecha, form.hora]);
 
   const [resultados, setResultados] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -176,6 +194,84 @@ export default function NuevaCitaModal({
     disponible: true,
     message: "",
   });
+  // Consultorios sugeridos por procedimiento
+  const [consultoriosSugeridos, setConsultoriosSugeridos] = useState([]);
+  const [sugiriendo, setSugiriendo] = useState(false);
+  // Estado para polling de disponibilidad
+  const [consultoriosDisponibles, setConsultoriosDisponibles] = useState(consultorios);
+  const pollingRef = useRef(null);
+    // Polling para sincronización en tiempo real de consultorios
+    useEffect(() => {
+      if (!open) return;
+      // Si no hay consultorios, no hacer polling
+      if (!consultorios.length) return;
+      // Limpiar polling anterior
+      if (pollingRef.current) clearInterval(pollingRef.current);
+
+      // Función para actualizar disponibilidad
+      const fetchDisponibilidad = async () => {
+        try {
+          // Se asume que obtenerConsultorios retorna el estado actualizado
+          const { data } = await import("../../services/consultorios.service").then(m => m.obtenerConsultorios());
+          if (Array.isArray(data)) {
+            setConsultoriosDisponibles(data);
+          }
+        } catch (err) {
+          // No hacer nada, mantener el estado anterior
+        }
+      };
+      // Llamada inicial
+      fetchDisponibilidad();
+      // Polling cada 10 segundos
+      pollingRef.current = setInterval(fetchDisponibilidad, 10000);
+      return () => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      };
+    }, [open, consultorios.length]);
+  // Conflicto de citas simultáneas
+  const [conflictoSimultaneo, setConflictoSimultaneo] = useState(null);
+    // Validación en tiempo real de conflicto de citas simultáneas
+    useEffect(() => {
+      if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) {
+        setConflictoSimultaneo(null);
+        return;
+      }
+      // Calcular inicio y fin de la cita actual
+      const inicio = new Date(`${form.fecha}T${form.hora}`);
+      const fin = new Date(inicio.getTime() + Number(form.duracion) * 60000);
+      // Buscar si hay otra cita del dentista en ese rango, en otro consultorio
+      const conflicto = (citasDentista || []).find((c) => {
+        if (!c.fecha_hora || !c.duracion_estimada) return false;
+        const inicioC = new Date(c.fecha_hora);
+        const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada) * 60000);
+        // Se traslapan y no es el mismo consultorio
+        return (
+          c.id_consultorio && String(c.id_consultorio) !== String(form.id_consultorio) &&
+          ((inicio < finC && fin > inicioC))
+        );
+      });
+      setConflictoSimultaneo(conflicto || null);
+    }, [form.fecha, form.hora, form.duracion, form.id_consultorio, citasDentista]);
+  // Sugerir consultorios cuando cambia el motivo (procedimiento)
+  useEffect(() => {
+    if (!form.motivo || form.motivo.trim().length < 3) {
+      setConsultoriosSugeridos([]);
+      return;
+    }
+    let cancelado = false;
+    setSugiriendo(true);
+    sugerirConsultorios(form.motivo.trim())
+      .then((res) => {
+        if (!cancelado) setConsultoriosSugeridos(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelado) setConsultoriosSugeridos([]);
+      })
+      .finally(() => {
+        if (!cancelado) setSugiriendo(false);
+      });
+    return () => { cancelado = true; };
+  }, [form.motivo]);
 
   useEffect(() => {
     if (open) {
@@ -203,17 +299,16 @@ export default function NuevaCitaModal({
 
   useEffect(() => {
     if (!open) return;
-    if (!consultorios.length) return;
+    if (!consultoriosDisponibles.length) return;
 
     setForm((prev) => {
       if (prev.id_consultorio) return prev;
-
       return {
         ...prev,
-        id_consultorio: String(consultorios[0].id),
+        id_consultorio: String(consultoriosDisponibles[0].id),
       };
     });
-  }, [open, consultorios]);
+  }, [open, consultoriosDisponibles]);
 
   useEffect(() => {
     if (!open) return;
@@ -310,9 +405,10 @@ export default function NuevaCitaModal({
       !!form.duracion &&
       !!form.id_consultorio &&
       disponibilidad.disponible &&
+      !conflictoSimultaneo &&
       !saving
     );
-  }, [form, disponibilidad.disponible, saving]);
+  }, [form, disponibilidad.disponible, saving, conflictoSimultaneo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -350,6 +446,11 @@ export default function NuevaCitaModal({
     e.preventDefault();
     setError("");
 
+    // Validación de conflicto antes de guardar
+    if (conflictoSimultaneo) {
+      setError("Conflicto: Ya tienes una cita en otro consultorio en este horario.");
+      return;
+    }
     if (!canSave) return;
 
     try {
@@ -364,7 +465,31 @@ export default function NuevaCitaModal({
           ? Number(form.id_consultorio)
           : null,
         motivo: form.motivo.trim(),
+        preReserva: form.preReserva,
       });
+
+      // Registrar auditoría de creación de cita
+      try {
+        await registrarAuditoriaConsultorio({
+          accion: "crear_cita",
+          modulo: "Consultorios",
+          detalle: `Cita creada para paciente ${form.paciente.nombre} (${form.paciente.id}), consultorio ${form.id_consultorio}, fecha ${form.fecha} ${form.hora}, motivo: ${form.motivo}`,
+          resultado: "exito",
+          id_usuario: response?.data?.id_dentista || null,
+          metadatos: {
+            id_cita: response?.data?.id,
+            id_paciente: form.paciente.id,
+            id_consultorio: form.id_consultorio,
+            fecha: form.fecha,
+            hora: form.hora,
+            motivo: form.motivo,
+            preReserva: form.preReserva,
+          },
+        });
+      } catch (err) {
+        // No bloquear la creación si falla la auditoría
+        console.warn("No se pudo registrar auditoría de consultorio", err);
+      }
 
       if (onCreated) {
         onCreated(response);
@@ -377,6 +502,7 @@ export default function NuevaCitaModal({
       setSaving(false);
     }
   };
+
 
   if (!open) return null;
 
@@ -501,14 +627,14 @@ export default function NuevaCitaModal({
                   value={form.id_consultorio}
                   onChange={handleChange}
                   required
-                  disabled={!consultorios.length}
+                  disabled={!consultoriosDisponibles.length}
                 >
                   <option value="">
-                    {consultorios.length
+                    {consultoriosDisponibles.length
                       ? "Seleccione"
                       : "No hay consultorios disponibles"}
                   </option>
-                  {consultorios.map((consultorio) => (
+                  {consultoriosDisponibles.map((consultorio) => (
                     <option key={consultorio.id} value={String(consultorio.id)}>
                       {consultorio.nombre}
                     </option>
@@ -517,18 +643,41 @@ export default function NuevaCitaModal({
               </div>
 
               <div className="dm17-field dm17-field-full">
-                <label>Motivo</label>
+                <label>Motivo / Procedimiento</label>
                 <input
                   type="text"
                   name="motivo"
                   value={form.motivo}
                   onChange={handleChange}
                   placeholder="Ej. Limpieza, revisión, extracción"
+                  autoComplete="off"
                 />
+                {/* Sugerencias de consultorios */}
+                {sugiriendo && (
+                  <div className="dm17-help">Buscando consultorios sugeridos...</div>
+                )}
+                {!sugiriendo && consultoriosSugeridos.length > 0 && (
+                  <div className="dm17-sugeridos-list">
+                    <div className="dm17-sugeridos-title">Consultorios sugeridos para este procedimiento:</div>
+                    {consultoriosSugeridos.map((c) => (
+                      <button
+                        type="button"
+                        key={c.id}
+                        className={`dm17-sugerido-item${form.id_consultorio === String(c.id) ? ' seleccionado' : ''}`}
+                        onClick={() => setForm((prev) => ({ ...prev, id_consultorio: String(c.id) }))}
+                      >
+                        <div className="dm17-sugerido-nombre">{c.nombre}</div>
+                        <div className="dm17-sugerido-equipamiento">{c.equipamiento?.join(', ') || 'Sin equipamiento registrado'}</div>
+                        <div className={`dm17-sugerido-disponibilidad ${c.disponible ? 'disponible' : 'no-disponible'}`}>{c.disponible ? 'Disponible' : 'No disponible'}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {!consultorios.length ? (
+
+            {!consultoriosDisponibles.length ? (
               <div className="dm17-error">
                 No hay consultorios disponibles para agendar.
               </div>
@@ -538,22 +687,59 @@ export default function NuevaCitaModal({
               <div className="dm17-help">Verificando disponibilidad...</div>
             ) : null}
 
-            {!checking &&
-            form.fecha &&
-            form.hora &&
-            form.id_consultorio &&
-            disponibilidad.disponible ? (
-              <div className="dm17-success">Horario disponible</div>
-            ) : null}
+            {/* Notificación por mantenimiento */}
+            {consultoriosDisponibles.length > 0 && form.id_consultorio && (() => {
+              const consultorioSel = consultoriosDisponibles.find(c => String(c.id) === String(form.id_consultorio));
+              if (consultorioSel && consultorioSel.estado === 'Mantenimiento') {
+                return (
+                  <div className="dm17-error" style={{ fontWeight: 'bold', background: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>
+                    El consultorio seleccionado está en <b>mantenimiento</b>.
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
-            {!disponibilidad.disponible ? (
+            {/* Notificación por conflicto */}
+            {!checking && !disponibilidad.disponible ? (
               <div className="dm17-error" style={{ fontWeight: 'bold' }}>
                 {disponibilidad.message}
               </div>
             ) : null}
 
+            {/* Notificación por conflicto simultáneo */}
+            {conflictoSimultaneo ? (
+              <div className="dm17-error" style={{ fontWeight: 'bold' }}>
+                Conflicto: Ya tienes una cita en otro consultorio en este horario.
+              </div>
+            ) : null}
+
+            {/* Sugerir consultorios alternativos si hay conflicto o mantenimiento */}
+            {((consultoriosDisponibles.length > 0 && form.id_consultorio && consultoriosDisponibles.find(c => String(c.id) === String(form.id_consultorio) && c.estado === 'Mantenimiento')) || (!disponibilidad.disponible)) && (
+              <div className="dm17-sugeridos-list" style={{ marginTop: 12 }}>
+                <div className="dm17-sugeridos-title">Alternativas disponibles:</div>
+                {consultoriosDisponibles.filter(c => c.estado !== 'Mantenimiento' && String(c.id) !== String(form.id_consultorio)).map(c => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    className="dm17-sugerido-item"
+                    onClick={() => setForm(prev => ({ ...prev, id_consultorio: String(c.id) }))}
+                  >
+                    <div className="dm17-sugerido-nombre">{c.nombre}</div>
+                    <div className="dm17-sugerido-equipamiento">{c.equipamiento?.join(', ') || 'Sin equipamiento registrado'}</div>
+                    <div className={`dm17-sugerido-disponibilidad ${c.estado === 'Disponible' ? 'disponible' : 'no-disponible'}`}>{c.estado === 'Disponible' ? 'Disponible' : c.estado}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {error ? <div className="dm17-error">{error}</div> : null}
 
+            {form.preReserva && (
+              <div className="dm17-help" style={{ background: '#fffbe6', color: '#b26a00', border: '1px solid #ffe58f', marginBottom: 10 }}>
+                Esta cita será registrada como <b>pre-reserva provisional</b> (puede requerir confirmación).
+              </div>
+            )}
             <div className="dm17-actions">
               <button
                 type="button"

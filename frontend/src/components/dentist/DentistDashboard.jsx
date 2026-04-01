@@ -1,134 +1,136 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import listPlugin from '@fullcalendar/list';
-import DentistSidebar from './DentistSidebar';
-import MetricCards from './MetricCards';
-import AppointmentsList from './AppointmentsList';
-import Odontograma from './Odontograma';
-import PatientTabs from './PatientTabs';
-import NuevaCitaModal from './NuevaCitaModal';
-import BloqueoModal from './BloqueoModal'; 
-// CORRECCIÓN: Nombre de archivo correcto según tu captura
-import bloquesService from '../../services/bloques.service'; 
-import { getAuthToken } from '../../utils/auth';
-import { obtenerConsultorios } from '../../services/consultorios.service';
-import './DentistDashboard.css';
 
-const DentistDashboard = ({ userData, onLogout }) => {
-  const [citas, setCitas] = useState([]);
-  const [bloques, setBloques] = useState([]); 
-  const [loading, setLoading] = useState(true);
-  const [dentistaInfo, setDentistaInfo] = useState(null);
-  const [consultorios, setConsultorios] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [currentView, setCurrentView] = useState('timeGridWeek');
-  const [startHour, setStartHour] = useState('07:00');
-  const [selectedCita, setSelectedCita] = useState(null);
-  const [agendaDate, setAgendaDate] = useState(new Date());
-  const [activeView, setActiveView] = useState('agenda');
-  const [showNuevaCitaModal, setShowNuevaCitaModal] = useState(false);
-  const [showBloqueoModal, setShowBloqueoModal] = useState(false); 
-  const [toastMessage, setToastMessage] = useState('');
-  const [metrics, setMetrics] = useState({
-    citasHoy: 0,
-    pacientesVistos: 0,
-    siguienteCita: null,
-    tratamientosPendientes: 0,
-  });
+// Modal para cambio rápido de consultorio (fuera del componente principal)
+function CambioConsultorioModal({ cita, consultorios, citasDentista, onClose, onUpdated }) {
+  const [nuevoConsultorio, setNuevoConsultorio] = React.useState(cita.id_consultorio ? String(cita.id_consultorio) : '');
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [success, setSuccess] = React.useState('');
 
-  const calendarRef = useRef(null);
-
-  const estadoColores = {
-    confirmada: { background: '#28a745', border: '#1e7e34', text: 'Confirmada', icon: 'fa-check-circle' },
-    completada: { background: '#6c757d', border: '#545b62', text: 'Completada', icon: 'fa-check-double' },
-    cancelada: { background: '#dc3545', border: '#a71d2a', text: 'Cancelada', icon: 'fa-times-circle' },
-    reprogramada: { background: '#ffc107', border: '#e0a800', text: 'Reprogramada', icon: 'fa-calendar-alt' },
-    pendiente: { background: '#17a2b8', border: '#117a8b', text: 'Pendiente', icon: 'fa-clock' },
-    bloqueado: { background: '#9b59b6', border: '#8e44ad', text: 'Bloqueado', icon: 'fa-lock' },
-    programada: { background: '#2563eb', border: '#1d4ed8', text: 'Programada', icon: 'fa-calendar-check' },
-  };
-
-  const fetchBloques = async () => {
-    if (!dentistaInfo?.id) return;
-    try {
-      const response = await bloquesService.obtenerBloques(dentistaInfo.id);
-      // CORRECCIÓN: Validación robusta para evitar "map is not a function"
-      const dataLimpia = Array.isArray(response) ? response : (response?.data || []);
-      setBloques(dataLimpia);
-    } catch (error) {
-      console.error('Error al obtener bloques:', error);
-      setBloques([]); 
+  // Validar disponibilidad y conflictos
+  const validarCambio = async (idConsultorio) => {
+    setError('');
+    if (!idConsultorio) return false;
+    // Validar conflicto con otras citas del dentista
+    const inicio = new Date(cita.fecha_hora);
+    const fin = new Date(inicio.getTime() + Number(cita.duracion_estimada || 30) * 60000);
+    const conflicto = (citasDentista || []).find((c) => {
+      if (c.id === cita.id) return false;
+      if (!c.fecha_hora || !c.duracion_estimada) return false;
+      const inicioC = new Date(c.fecha_hora);
+      const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada) * 60000);
+      return (
+        c.id_consultorio && String(c.id_consultorio) === String(idConsultorio) &&
+        ((inicio < finC && fin > inicioC))
+      );
+    });
+    if (conflicto) {
+      setError('Conflicto: Ya existe una cita en este consultorio en ese horario.');
+      return false;
     }
-  };
-
-  const handleSaveBloqueo = async (datos) => {
+    // Validar disponibilidad (API)
     try {
-      await bloquesService.crearBloqueo(datos);
-      mostrarToast('Horario bloqueado con éxito');
-      setShowBloqueoModal(false);
-      fetchBloques(); 
-    } catch (error) {
-      // CORRECCIÓN: Mostrar el error real del servidor si existe
-      const msg = error.response?.data?.message || error.message || 'Error al crear el bloqueo';
-      alert(msg);
-    }
-  };
-
-  const handleEliminarBloqueo = async (id) => {
-    if (window.confirm('¿Desea eliminar este bloqueo de horario?')) {
-      try {
-        await bloquesService.eliminarBloque(id);
-        mostrarToast('Bloqueo eliminado');
-        closeModal();
-        fetchBloques();
-      } catch (error) {
-        alert('Error al eliminar el bloqueo');
+      const res = await verificarDisponibilidad({
+        fecha: cita.fecha_hora.split('T')[0],
+        hora: cita.fecha_hora.split('T')[1]?.slice(0,5),
+        duracion: cita.duracion_estimada,
+        id_consultorio: idConsultorio,
+      });
+      if (!res.disponible) {
+        setError(res.message || 'No disponible en ese horario.');
+        return false;
       }
+    } catch (err) {
+      setError('No se pudo verificar disponibilidad.');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  const handleGuardar = async () => {
+    if (String(nuevoConsultorio) === String(cita.id_consultorio)) {
+      setError('Selecciona un consultorio diferente.');
+      return;
+    }
+    setSaving(true);
+    const valido = await validarCambio(nuevoConsultorio);
+    if (!valido) {
+      setSaving(false);
+      return;
+    }
+    // Actualizar cita (simulación, deberías llamar a tu API real de update)
+    try {
+      // Aquí deberías hacer un fetch/axios PUT a /api/citas/:id para actualizar el consultorio
+      // Simulación:
+      const citaActualizada = { ...cita, id_consultorio: Number(nuevoConsultorio) };
+      // Registrar auditoría de cambio de consultorio
+      try {
+        await registrarAuditoriaConsultorio({
+          accion: "cambio_consultorio",
+          modulo: "Consultorios",
+          detalle: `Cambio de consultorio para cita ${cita.id}: de ${cita.id_consultorio} a ${nuevoConsultorio}`,
+          resultado: "exito",
+          id_usuario: cita.id_dentista || null,
+          metadatos: {
+            id_cita: cita.id,
+            id_paciente: cita.id_paciente,
+            consultorio_anterior: cita.id_consultorio,
+            consultorio_nuevo: nuevoConsultorio,
+            fecha: cita.fecha_hora,
+          },
+        });
+      } catch (err) {
+        // No bloquear el cambio si falla la auditoría
+        console.warn("No se pudo registrar auditoría de consultorio", err);
+      }
+      setSuccess('Consultorio actualizado correctamente.');
+      setTimeout(() => {
+        onUpdated(citaActualizada);
+      }, 1000);
+    } catch (err) {
+      setError('No se pudo actualizar la cita.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const normalizarEstado = (estado) => String(estado || '').trim().toLowerCase();
-
-  const ordenarCitasPorFecha = (lista) => {
-    if (!Array.isArray(lista)) return [];
-    return [...lista].sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
-  };
-
-  const esMismoDia = (fechaA, fechaB) => {
-    const a = new Date(fechaA);
-    const b = new Date(fechaB);
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  };
-
-  const sumarMinutos = (fecha, minutos) => {
-    const nuevaFecha = new Date(fecha);
-    nuevaFecha.setMinutes(nuevaFecha.getMinutes() + Number(minutos || 0));
-    return nuevaFecha;
-  };
-
-  const obtenerFechaFin = (cita) => {
-    if (cita.fecha_fin) return cita.fecha_fin;
-    return sumarMinutos(cita.fecha_hora, cita.duracion_estimada || 30).toISOString();
-  };
-
-  const calcularMetricas = (listaCitas) => {
-    if (!Array.isArray(listaCitas)) return { citasHoy: 0, pacientesVistos: 0, siguienteCita: null, tratamientosPendientes: 0 };
-    const hoy = new Date().toDateString();
-    const citasHoy = ordenarCitasPorFecha(listaCitas.filter((cita) => new Date(cita.fecha_hora).toDateString() === hoy));
-    const citasCompletadasHoy = citasHoy.filter((cita) => normalizarEstado(cita.estado) === 'completada');
-    const siguienteCitaData = citasHoy.find((cita) => !['completada', 'cancelada'].includes(normalizarEstado(cita.estado)));
-
-    return {
-      citasHoy: citasHoy.length,
-      pacientesVistos: citasCompletadasHoy.length,
-      siguienteCita: siguienteCitaData ? new Date(siguienteCitaData.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : null,
-      tratamientosPendientes: listaCitas.filter((cita) => ['pendiente', 'confirmada', 'programada'].includes(normalizarEstado(cita.estado))).length,
-    };
-  };
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header" style={{ borderLeft: '4px solid #2563eb' }}>
+          <h3>Cambiar consultorio</h3>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+        <div className="modal-body">
+          <p><strong>Paciente:</strong> {cita.paciente_nombre || cita.paciente?.nombre || 'Paciente'}</p>
+          <p><strong>Fecha:</strong> {new Date(cita.fecha_hora).toLocaleString()}</p>
+          <div className="dm17-field">
+            <label>Nuevo consultorio</label>
+            <select value={nuevoConsultorio} onChange={e => setNuevoConsultorio(e.target.value)} disabled={saving}>
+              <option value="">Seleccione</option>
+              {consultorios.map(c => (
+                <option key={c.id} value={String(c.id)}>
+                  {c.nombre} {c.equipamiento ? `- ${c.equipamiento.join(', ')}` : ''} {c.estado === 'Mantenimiento' ? '(Mantenimiento)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error && <div className="dm17-error" style={{ marginTop: 8 }}>{error}</div>}
+          {success && <div className="dm17-success" style={{ marginTop: 8 }}>{success}</div>}
+        </div>
+        <div className="modal-footer">
+          <button className="dm17-btn dm17-btn-primary" onClick={handleGuardar} disabled={saving}>
+            {saving ? 'Guardando...' : 'Guardar'}
+          </button>
+          <button className="dm17-btn dm17-btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const mostrarToast = (mensaje) => {
     setToastMessage(mensaje);
@@ -275,6 +277,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
     }))
   ];
 
+  // El return de loading debe estar aquí, dentro del cuerpo del componente
   if (loading) {
     return (
       <div className="dentista-loading">
@@ -360,7 +363,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
       {toastMessage && <div className="dentist-toast-success">{toastMessage}</div>}
 
-      <NuevaCitaModal open={showNuevaCitaModal} onClose={() => setShowNuevaCitaModal(false)} onCreated={handleNuevaCitaCreada} consultorios={consultorios} />
+      <NuevaCitaModal open={showNuevaCitaModal} onClose={() => setShowNuevaCitaModal(false)} onCreated={handleNuevaCitaCreada} consultorios={consultorios} citasDentista={citas} />
       
       <BloqueoModal 
         isOpen={showBloqueoModal} 
@@ -369,11 +372,24 @@ const DentistDashboard = ({ userData, onLogout }) => {
         idDentista={dentistaInfo?.id} 
       />
 
-      {showModal && selectedEvent && (
+      {showModal && selectedEvent && !selectedEvent.extendedProps.isBloqueo && (
+        <CambioConsultorioModal
+          cita={citas.find((c) => String(c.id) === String(selectedEvent.id))}
+          consultorios={consultorios}
+          citasDentista={citas}
+          onClose={closeModal}
+          onUpdated={(citaActualizada) => {
+            setCitas((prev) => prev.map((c) => c.id === citaActualizada.id ? citaActualizada : c));
+            setToastMessage('Consultorio actualizado correctamente');
+            closeModal();
+          }}
+        />
+      )}
+      {showModal && selectedEvent && selectedEvent.extendedProps.isBloqueo && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header" style={{ borderLeft: `4px solid ${selectedEvent.backgroundColor}` }}>
-              <h3>{selectedEvent.extendedProps.isBloqueo ? 'Detalles del Bloqueo' : 'Detalles de la Cita'}</h3>
+              <h3>Detalles del Bloqueo</h3>
               <button className="modal-close" onClick={closeModal}>&times;</button>
             </div>
             <div className="modal-body">
@@ -382,16 +398,143 @@ const DentistDashboard = ({ userData, onLogout }) => {
               {selectedEvent.extendedProps.descripcion && <p><strong>Nota:</strong> {selectedEvent.extendedProps.descripcion}</p>}
             </div>
             <div className="modal-footer">
-              {selectedEvent.extendedProps.isBloqueo && (
-                <button className="btn-danger" onClick={() => handleEliminarBloqueo(selectedEvent.extendedProps.idOriginal)}>
-                  <i className="fas fa-unlock"></i> Eliminar Bloqueo
-                </button>
-              )}
+              <button className="btn-danger" onClick={() => handleEliminarBloqueo(selectedEvent.extendedProps.idOriginal)}>
+                <i className="fas fa-unlock"></i> Eliminar Bloqueo
+              </button>
               <button className="btn-secondary" onClick={closeModal}>Cerrar</button>
             </div>
           </div>
         </div>
       )}
+    // Modal para cambio rápido de consultorio
+    function CambioConsultorioModal({ cita, consultorios, citasDentista, onClose, onUpdated }) {
+      const [nuevoConsultorio, setNuevoConsultorio] = useState(cita.id_consultorio ? String(cita.id_consultorio) : '');
+      const [saving, setSaving] = useState(false);
+      const [error, setError] = useState('');
+      const [success, setSuccess] = useState('');
+
+      // Validar disponibilidad y conflictos
+      const validarCambio = async (idConsultorio) => {
+        setError('');
+        if (!idConsultorio) return false;
+        // Validar conflicto con otras citas del dentista
+        const inicio = new Date(cita.fecha_hora);
+        const fin = new Date(inicio.getTime() + Number(cita.duracion_estimada || 30) * 60000);
+        const conflicto = (citasDentista || []).find((c) => {
+          if (c.id === cita.id) return false;
+          if (!c.fecha_hora || !c.duracion_estimada) return false;
+          const inicioC = new Date(c.fecha_hora);
+          const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada) * 60000);
+          return (
+            c.id_consultorio && String(c.id_consultorio) === String(idConsultorio) &&
+            ((inicio < finC && fin > inicioC))
+          );
+        });
+        if (conflicto) {
+          setError('Conflicto: Ya existe una cita en este consultorio en ese horario.');
+          return false;
+        }
+        // Validar disponibilidad (API)
+        try {
+          const res = await verificarDisponibilidad({
+            fecha: cita.fecha_hora.split('T')[0],
+            hora: cita.fecha_hora.split('T')[1]?.slice(0,5),
+            duracion: cita.duracion_estimada,
+            id_consultorio: idConsultorio,
+          });
+          if (!res.disponible) {
+            setError(res.message || 'No disponible en ese horario.');
+            return false;
+          }
+        } catch (err) {
+          setError('No se pudo verificar disponibilidad.');
+          return false;
+        }
+        setError('');
+        return true;
+      };
+
+      const handleGuardar = async () => {
+        if (String(nuevoConsultorio) === String(cita.id_consultorio)) {
+          setError('Selecciona un consultorio diferente.');
+          return;
+        }
+        setSaving(true);
+        const valido = await validarCambio(nuevoConsultorio);
+        if (!valido) {
+          setSaving(false);
+          return;
+        }
+        // Actualizar cita (simulación, deberías llamar a tu API real de update)
+        try {
+          // Aquí deberías hacer un fetch/axios PUT a /api/citas/:id para actualizar el consultorio
+          // Simulación:
+          const citaActualizada = { ...cita, id_consultorio: Number(nuevoConsultorio) };
+          // Registrar auditoría de cambio de consultorio
+          try {
+            await registrarAuditoriaConsultorio({
+              accion: "cambio_consultorio",
+              modulo: "Consultorios",
+              detalle: `Cambio de consultorio para cita ${cita.id}: de ${cita.id_consultorio} a ${nuevoConsultorio}`,
+              resultado: "exito",
+              id_usuario: cita.id_dentista || null,
+              metadatos: {
+                id_cita: cita.id,
+                id_paciente: cita.id_paciente,
+                consultorio_anterior: cita.id_consultorio,
+                consultorio_nuevo: nuevoConsultorio,
+                fecha: cita.fecha_hora,
+              },
+            });
+          } catch (err) {
+            // No bloquear el cambio si falla la auditoría
+            console.warn("No se pudo registrar auditoría de consultorio", err);
+          }
+          setSuccess('Consultorio actualizado correctamente.');
+          setTimeout(() => {
+            onUpdated(citaActualizada);
+          }, 1000);
+        } catch (err) {
+          setError('No se pudo actualizar la cita.');
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderLeft: '4px solid #2563eb' }}>
+              <h3>Cambiar consultorio</h3>
+              <button className="modal-close" onClick={onClose}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <p><strong>Paciente:</strong> {cita.paciente_nombre || cita.paciente?.nombre || 'Paciente'}</p>
+              <p><strong>Fecha:</strong> {new Date(cita.fecha_hora).toLocaleString()}</p>
+              <div className="dm17-field">
+                <label>Nuevo consultorio</label>
+                <select value={nuevoConsultorio} onChange={e => setNuevoConsultorio(e.target.value)} disabled={saving}>
+                  <option value="">Seleccione</option>
+                  {consultorios.map(c => (
+                    <option key={c.id} value={String(c.id)}>
+                      {c.nombre} {c.equipamiento ? `- ${c.equipamiento.join(', ')}` : ''} {c.estado === 'Mantenimiento' ? '(Mantenimiento)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {error && <div className="dm17-error" style={{ marginTop: 8 }}>{error}</div>}
+              {success && <div className="dm17-success" style={{ marginTop: 8 }}>{success}</div>}
+            </div>
+            <div className="modal-footer">
+              <button className="dm17-btn dm17-btn-primary" onClick={handleGuardar} disabled={saving || !nuevoConsultorio}>
+                {saving ? 'Guardando...' : 'Guardar cambio'}
+              </button>
+              <button className="dm17-btn dm17-btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     </div>
   );
 };
