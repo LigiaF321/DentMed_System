@@ -24,6 +24,7 @@ const kardexRoutes = require("./routes/kardex.routes");
 const reportesConsumoRoutes = require("./routes/reportesConsumo.routes");
 const alertasSeguridadRoutes = require("./routes/alertasSeguridad.routes");
 const pacientesRoutes = require("./routes/pacientes.routes");
+const tratamientosRoutes = require("./routes/tratamientos.routes");
 const citasRoutes = require("./routes/citas.routes");
 const consultoriosRoutes = require("./routes/consultorios.routes");
 
@@ -44,6 +45,7 @@ app.use("/api/admin/reportes", reportesConsumoRoutes);
 app.use("/api/restauracion", restauracionRoutes);
 app.use("/api/dentistas", dentistaRoutes);
 app.use("/api/pacientes", pacientesRoutes);
+app.use("/api", tratamientosRoutes);
 app.use("/api/citas", citasRoutes);
 app.use("/api/consultorios", consultoriosRoutes);
 
