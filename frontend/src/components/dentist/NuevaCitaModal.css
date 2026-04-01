@@ -1,3 +1,54 @@
+/* Sugerencias de consultorios inteligentes */
+.dm17-sugeridos-list {
+  margin-top: 8px;
+  background: #f8fafc;
+  border: 1px solid #e0e7ef;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.dm17-sugeridos-title {
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.dm17-sugerido-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e0e7ef;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: border 0.2s, background 0.2s;
+  width: 100%;
+  text-align: left;
+}
+.dm17-sugerido-item.seleccionado {
+  border: 2px solid #2563eb;
+  background: #e0e7ef;
+}
+.dm17-sugerido-nombre {
+  font-weight: 600;
+  color: #1a2c3e;
+}
+.dm17-sugerido-equipamiento {
+  font-size: 13px;
+  color: #64748b;
+}
+.dm17-sugerido-disponibilidad {
+  font-size: 13px;
+  font-weight: 600;
+}
+.dm17-sugerido-disponibilidad.disponible {
+  color: #22c55e;
+}
+.dm17-sugerido-disponibilidad.no-disponible {
+  color: #dc2626;
+}
 /* frontend/src/components/dentist/NuevaCitaModal.css */
 
 .dm17-overlay {

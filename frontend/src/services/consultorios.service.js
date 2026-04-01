@@ -17,6 +17,14 @@ const getHeaders = () => {
 };
 
 const parseResponse = async (response) => {
+  // Sugerir consultorios según procedimiento
+  export const sugerirConsultorios = async (procedimiento) => {
+    const response = await fetch(`${API_URL}/consultorios/sugerir?procedimiento=${encodeURIComponent(procedimiento)}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return parseResponse(response);
+  };
   const contentType = response.headers.get("content-type") || "";
   const rawText = await response.text();
 

@@ -63,3 +63,12 @@ export const crearCita = async (payload) => {
 
   return parseResponse(response);
 };
+
+export const actualizarConsultorioCita = async (idCita, idConsultorio) => {
+  const response = await fetch(`${API_URL}/citas/${idCita}/consultorio`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ id_consultorio: idConsultorio }),
+  });
+  return parseResponse(response);
+};
