@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { Cita, Paciente, Dentista } = require("../models");
+const { Cita, Paciente, Dentista, Bloque } = require("../models");
 
 const ESTADOS_NO_DISPONIBLES = ["cancelada"];
 
@@ -29,6 +29,21 @@ const obtenerInicioYFinDia = (fechaBase) => {
   fin.setHours(23, 59, 59, 999);
 
   return { inicio, fin };
+};
+
+const obtenerBloquesDelDiaParaValidar = async ({ fechaHoraInicio, idDentista }) => {
+  const { inicio, fin } = obtenerInicioYFinDia(fechaHoraInicio);
+
+  return Bloque.findAll({
+    where: {
+      id_dentista: idDentista,
+      activo: true,
+      [Op.or]: [
+        { fecha_inicio: { [Op.between]: [inicio, fin] } },
+        { fecha_fin: { [Op.between]: [inicio, fin] } }
+      ]
+    }
+  });
 };
 
 const obtenerDentistaIdDesdeRequest = async (req) => {
@@ -135,6 +150,30 @@ const verificarDisponibilidad = async (req, res) => {
     const inicioNuevaCita = combinarFechaHora(fecha, hora);
     const finNuevaCita = sumarMinutos(inicioNuevaCita, Number(duracion));
 
+    // --- INTEGRACIÓN: Validar contra BLOQUES primero ---
+    const bloquesDelDia = await obtenerBloquesDelDiaParaValidar({
+      fechaHoraInicio: inicioNuevaCita,
+      idDentista
+    });
+
+    const conflictoBloque = bloquesDelDia.find((bloque) => {
+      return haySolapamiento(
+        inicioNuevaCita,
+        finNuevaCita,
+        new Date(bloque.fecha_inicio),
+        new Date(bloque.fecha_fin)
+      );
+    });
+
+    if (conflictoBloque) {
+      return res.status(200).json({
+        ok: true,
+        disponible: false,
+        message: `El dentista tiene un bloqueo: ${conflictoBloque.tipo}`,
+      });
+    }
+
+    // --- Validar contra CITAS ---
     const citasDelDia = await obtenerCitasDelDiaParaValidar({
       fechaHoraInicio: inicioNuevaCita,
       idDentista,
@@ -166,7 +205,7 @@ const verificarDisponibilidad = async (req, res) => {
       return res.status(200).json({
         ok: true,
         disponible: false,
-        message: "Ya existe una cita o un bloqueo en ese horario",
+        message: "Ya existe una cita en ese horario",
       });
     }
 
@@ -214,6 +253,26 @@ const crearCita = async (req, res) => {
     const inicioNuevaCita = combinarFechaHora(fecha, hora);
     const finNuevaCita = sumarMinutos(inicioNuevaCita, Number(duracion));
 
+    const bloquesDelDia = await obtenerBloquesDelDiaParaValidar({
+      fechaHoraInicio: inicioNuevaCita,
+      idDentista
+    });
+
+    const conflictoBloque = bloquesDelDia.find((bloque) => {
+      return haySolapamiento(
+        inicioNuevaCita,
+        finNuevaCita,
+        new Date(bloque.fecha_inicio),
+        new Date(bloque.fecha_fin)
+      );
+    });
+
+    if (conflictoBloque) {
+      return res.status(409).json({
+        ok: false,
+        message: `No se puede agendar: Horario bloqueado por ${conflictoBloque.tipo}.`,
+      });
+    }
     const citasDelDia = await obtenerCitasDelDiaParaValidar({
       fechaHoraInicio: inicioNuevaCita,
       idDentista,
