@@ -9,6 +9,7 @@ import MetricCards from './MetricCards';
 import AppointmentsList from './AppointmentsList';
 import Odontograma from './Odontograma';
 import PatientTabs from './PatientTabs';
+import TreatmentHistory from './TreatmentHistory';
 import NuevaCitaModal from './NuevaCitaModal';
 import MisPacientesScreen from './MisPacientesScreen';
 import BloqueoModal from './BloqueoModal';
@@ -692,8 +693,13 @@ const DentistDashboard = ({ userData, onLogout }) => {
       case 'pacientes':
         return <MisPacientesScreen dentistaInfo={dentistaInfo} onSelectPatient={handleSelectPatientFromSearch} />;
 
+
       case 'tratamientos':
-        return <div className="placeholder-content"><h2>Tratamientos</h2><p>Próximamente...</p></div>;
+        return (
+          <div className="dashboard-treatments-main">
+            <TreatmentHistory />
+          </div>
+        );
 
       case 'notas':
         return <div className="placeholder-content"><h2>Notas</h2><p>Próximamente...</p></div>;

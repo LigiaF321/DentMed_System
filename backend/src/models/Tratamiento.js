@@ -43,6 +43,29 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  diagnostico: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  observaciones: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  materiales: {
+    type: DataTypes.TEXT, // Se guarda como JSON.stringify(array)
+    allowNull: true,
+    get() {
+      const raw = this.getDataValue('materiales');
+      try {
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('materiales', Array.isArray(val) ? JSON.stringify(val) : val);
+    }
+  },
 }, {
   tableName: 'Tratamientos',
   timestamps: false,

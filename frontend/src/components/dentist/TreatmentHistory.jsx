@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-// Cuando DM24 esté listo, descomentar la siguiente línea:
-// import VisualizadorDocumentos from "../documentos/VisualizadorDocumentos";
+import './MisPacientesScreen.css';
 
 function MultiSesionViewer({ sesiones }) {
   const [idx, setIdx] = useState(0);
@@ -46,79 +45,27 @@ function MultiSesionViewer({ sesiones }) {
 }
 
 const TreatmentHistory = ({ pacienteId }) => {
-  // Aquí se obtendrán los tratamientos del paciente
-  // const [tratamientos, setTratamientos] = React.useState([]);
+  const [tratamientos, setTratamientos] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Datos simulados de tratamientos
-  const tratamientos = [
-    {
-      id: 1,
-      fecha: "2026-03-28",
-      tratamiento: "Endodoncia",
-      dientes: "16, 17",
-      doctor: "Dr. Juan Pérez",
-      costo: 2500,
-      diagnostico: "Necrosis pulpar. Dolor persistente.",
-      observaciones: "Paciente refiere dolor nocturno. Se indicó antibiótico previo.",
-      materiales: ["Lima K #25", "Hipoclorito de sodio", "Gutta-percha"],
-      radiografias: [
-        { id: 1, url: "https://dummyimage.com/80x80/cccccc/000000&text=RX1", nombre: "Periapical 1" },
-        { id: 2, url: "https://dummyimage.com/80x80/cccccc/000000&text=RX2", nombre: "Periapical 2" }
-      ],
-      sesiones: [
-        {
-          id: 1,
-          fecha: "2026-03-28",
-          descripcion: "Apertura cameral, instrumentación, medicación temporal.",
-          observaciones: "Paciente toleró bien el procedimiento.",
-        },
-        {
-          id: 2,
-          fecha: "2026-04-04",
-          descripcion: "Obturación de conductos, control radiográfico.",
-          observaciones: "Tratamiento finalizado con éxito.",
-        }
-      ],
-    },
-    {
-      id: 2,
-      fecha: "2026-03-20",
-      tratamiento: "Obturación resina",
-      dientes: "14",
-      doctor: "Dr. Juan Pérez",
-      costo: 800,
-      diagnostico: "Caries dental. Lesión en esmalte.",
-      observaciones: "Se utilizó resina compuesta de alta estética.",
-      materiales: ["Resina Filtek", "Ácido ortofosfórico", "Adhesivo dental"],
-      radiografias: [
-        { id: 3, url: "https://dummyimage.com/80x80/cccccc/000000&text=RX3", nombre: "Bitewing" }
-      ],
-    },
-    {
-      id: 3,
-      fecha: "2026-03-10",
-      tratamiento: "Extracción",
-      dientes: "18",
-      doctor: "Dra. Ligia",
-      costo: 1200,
-      diagnostico: "Diente impactado.",
-      observaciones: "Extracción sin complicaciones. Sutura absorbible.",
-      materiales: ["Elevador", "Pinza de extracción", "Sutura absorbible"],
-      radiografias: [],
-    },
-    {
-      id: 4,
-      fecha: "2026-02-28",
-      tratamiento: "Limpieza dental",
-      dientes: "-",
-      doctor: "Dr. Juan Pérez",
-      costo: 600,
-      diagnostico: "Profilaxis preventiva.",
-      observaciones: "Sin hallazgos patológicos.",
-      materiales: ["Pasta profiláctica", "Cepillo dental"],
-      radiografias: [],
-    },
-  ];
+  useEffect(() => {
+    if (!pacienteId) return;
+    setLoading(true);
+    fetch(`/api/tratamientos/pacientes/${pacienteId}/tratamientos`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTratamientos(data.tratamientos || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setTratamientos([]);
+        setLoading(false);
+      });
+  }, [pacienteId]);
 
   const [expandedId, setExpandedId] = useState(null);
   const [exportMsg, setExportMsg] = useState("");
@@ -129,23 +76,43 @@ const TreatmentHistory = ({ pacienteId }) => {
   const [filtroHasta, setFiltroHasta] = useState("");
 
   const handleExportPDF = async () => {
-    setExportMsg("Generando PDF...");
-    setTimeout(() => {
-      const blob = new Blob(["PDF simulado del historial de tratamientos"], {
-        type: "application/pdf",
-      });
-      saveAs(blob, "historial_tratamientos.pdf");
-      setExportMsg("¡PDF exportado correctamente!");
+    if (!pacienteId) {
+      setExportMsg("No hay paciente seleccionado.");
       setTimeout(() => setExportMsg(""), 2500);
-    }, 1500);
+      return;
+    }
+    setExportMsg("Generando PDF...");
+    try {
+      const res = await fetch(`/api/tratamientos/exportar-pdf/${pacienteId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+      if (!res.ok) throw new Error('No se pudo generar el PDF');
+      const blob = await res.blob();
+      saveAs(blob, `historial_tratamientos_${pacienteId}.pdf`);
+      setExportMsg("¡PDF exportado correctamente!");
+    } catch (err) {
+      setExportMsg("Error al exportar PDF");
+    }
+    setTimeout(() => setExportMsg(""), 2500);
   };
 
-  const tiposUnicos = Array.from(new Set(tratamientos.map((t) => t.tratamiento)));
-  const doctoresUnicos = Array.from(new Set(tratamientos.map((t) => t.doctor)));
+  const tiposUnicos = Array.from(new Set(tratamientos.map((t) => t.tipo).filter(Boolean)));
+
+  const doctoresUnicos = Array.from(
+    new Set(
+      tratamientos
+        .map((t) => t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos || ''}`.trim() : null)
+        .filter(Boolean)
+    )
+  );
 
   const tratamientosFiltrados = tratamientos.filter((t) => {
-    const cumpleTipo = !filtroTipo || t.tratamiento === filtroTipo;
-    const cumpleDoctor = !filtroDoctor || t.doctor === filtroDoctor;
+    const cumpleTipo = !filtroTipo || t.tipo === filtroTipo;
+    const nombreDoctor = t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos || ''}`.trim() : '';
+    const cumpleDoctor = !filtroDoctor || nombreDoctor === filtroDoctor;
     const cumpleDesde = !filtroDesde || new Date(t.fecha) >= new Date(filtroDesde);
     const cumpleHasta = !filtroHasta || new Date(t.fecha) <= new Date(filtroHasta);
     return cumpleTipo && cumpleDoctor && cumpleDesde && cumpleHasta;
@@ -160,211 +127,171 @@ const TreatmentHistory = ({ pacienteId }) => {
   };
 
   return (
-    <div className="treatment-history">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h2>Historial de Tratamientos</h2>
-        <button
-          className="treatment-export-btn"
-          onClick={handleExportPDF}
-          style={{
-            padding: "8px 18px",
-            borderRadius: 6,
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          <i className="fas fa-file-pdf" style={{ marginRight: 6 }}></i>
-          Exportar a PDF
-        </button>
-      </div>
-
-      {exportMsg && (
-        <div style={{ margin: "10px 0", color: "#2563eb", fontWeight: "bold" }}>
-          {exportMsg}
-        </div>
-      )}
-
-      <div className="treatment-filters">
-        <label>
-          Tipo:
-          <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
-            <option value="">Todos</option>
-            {tiposUnicos.map((tipo, i) => (
-              <option key={i} value={tipo}>
-                {tipo}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Doctor:
-          <select value={filtroDoctor} onChange={(e) => setFiltroDoctor(e.target.value)}>
-            <option value="">Todos</option>
-            {doctoresUnicos.map((doc, i) => (
-              <option key={i} value={doc}>
-                {doc}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Desde:
-          <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
-        </label>
-
-        <label>
-          Hasta:
-          <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
-        </label>
-
-        <button
-          onClick={() => {
-            setFiltroTipo("");
-            setFiltroDoctor("");
-            setFiltroDesde("");
-            setFiltroHasta("");
-          }}
-        >
-          Limpiar filtros
-        </button>
-      </div>
-
-      <table className="treatment-table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Tratamiento</th>
-            <th>Diente(s)</th>
-            <th>Doctor</th>
-            <th>Costo</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {tratamientosOrdenados.map((t) => (
-            <React.Fragment key={t.id}>
-              <tr>
-                <td>{new Date(t.fecha).toLocaleDateString()}</td>
-                <td>{t.tratamiento}</td>
-                <td>{t.dientes}</td>
-                <td>{t.doctor}</td>
-                <td>${t.costo}</td>
-                <td>
-                  <button className="treatment-expand-btn" onClick={() => handleExpand(t.id)}>
-                    {expandedId === t.id ? "Ocultar" : "Ver detalles"}
-                  </button>
-                </td>
-              </tr>
-
-              {expandedId === t.id && (
-                <tr className="treatment-details-row">
-                  <td colSpan={6}>
-                    <div className="treatment-details">
-                      <strong>Diagnóstico:</strong> {t.diagnostico}
-                      <br />
-                      <strong>Observaciones:</strong> {t.observaciones}
-                      <br />
-                      <strong>Materiales usados:</strong>
-                      <ul>
-                        {t.materiales.map((m, i) => (
-                          <li key={i}>{m}</li>
-                        ))}
-                      </ul>
-
-                      <div className="treatment-xrays-section">
-                        <strong>Radiografías:</strong>
-                        {t.radiografias && t.radiografias.length > 0 ? (
-                          <div className="treatment-xrays-list">
-                            {t.radiografias.map((rx) => (
-                              <img
-                                key={rx.id}
-                                src={rx.url}
-                                alt={rx.nombre}
-                                title={rx.nombre}
-                                className="treatment-xray-thumb"
-                                style={{
-                                  cursor: "pointer",
-                                  marginRight: 8,
-                                  border: "1px solid #aaa",
-                                  borderRadius: 4,
-                                }}
-                                onClick={() => setModalRx(rx)}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <span> No hay radiografías.</span>
-                        )}
-                      </div>
-
-                      {t.sesiones && t.sesiones.length > 0 && (
-                        <MultiSesionViewer sesiones={t.sesiones} />
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-
-      {modalRx && (
-        <div
-          className="treatment-xray-modal"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
+    <div className="dm20-page">
+      <div className="dm20-card">
+        <div className="dm20-header">
+          <div>
+            <h2>Historial de Tratamientos</h2>
+            <p>Consulta y filtra todos los tratamientos registrados en el sistema.</p>
+          </div>
+          <button
+            className="treatment-export-btn"
+            onClick={handleExportPDF}
             style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              position: "relative",
-              maxWidth: 500,
+              padding: "10px 22px",
+              borderRadius: 12,
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              fontWeight: "bold",
+              fontSize: 16,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(37,99,235,0.08)"
             }}
           >
-            <button
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                fontSize: 18,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={() => setModalRx(null)}
-            >
-              &times;
-            </button>
-
-            <h3 style={{ marginTop: 0 }}>{modalRx.nombre}</h3>
-            {/* Cuando DM24 esté listo, reemplazar el <img> por el componente VisualizadorDocumentos */}
-            {/* <VisualizadorDocumentos documento={modalRx} onClose={() => setModalRx(null)} /> */}
-            <img src={modalRx.url} alt={modalRx.nombre} style={{ maxWidth: '100%', maxHeight: 350, display: 'block', margin: '0 auto' }} />
-            <p style={{ textAlign: 'center', marginTop: 12, color: '#888' }}>(Aquí se integrará el VisualizadorDocumentos de DM24)</p>
-          </div>
+            <i className="fas fa-file-pdf" style={{ marginRight: 8 }}></i>
+            Exportar a PDF
+          </button>
         </div>
-      )}
+
+        {exportMsg && (
+          <div style={{ margin: "10px 0", color: "#2563eb", fontWeight: "bold" }}>{exportMsg}</div>
+        )}
+
+        <div className="dm20-filters">
+          <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+            <option value="">Tipo</option>
+            {tiposUnicos.map((tipo, i) => (
+              <option key={i} value={tipo}>{tipo}</option>
+            ))}
+          </select>
+
+          <select value={filtroDoctor} onChange={(e) => setFiltroDoctor(e.target.value)}>
+            <option value="">Doctor</option>
+            {doctoresUnicos.map((doc, i) => (
+              <option key={i} value={doc}>{doc}</option>
+            ))}
+          </select>
+
+          <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
+          <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
+
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroTipo("");
+              setFiltroDoctor("");
+              setFiltroDesde("");
+              setFiltroHasta("");
+            }}
+          >
+            Limpiar filtros
+          </button>
+        </div>
+
+        <div className="dm20-results">
+          {tratamientosOrdenados.length === 0 ? (
+            <div className="dm20-empty">No hay tratamientos registrados.</div>
+          ) : (
+            <table className="dm20-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tratamiento</th>
+                  <th>Diente(s)</th>
+                  <th>Doctor</th>
+                  <th>Costo</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {tratamientosOrdenados.map((t) => (
+                  <React.Fragment key={t.id}>
+                    <tr>
+                      <td>{t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}</td>
+                      <td>{t.tipo || '-'}</td>
+                      <td>{t.diente || '-'}</td>
+                      <td>{t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos || ''}` : '-'}</td>
+                      <td>${t.costo || '-'}</td>
+                      <td>
+                        <button
+                          className="dm20-btn-details"
+                          onClick={() => handleExpand(t.id)}
+                        >
+                          {expandedId === t.id ? "Ocultar" : "Ver detalles"}
+                        </button>
+                      </td>
+                    </tr>
+
+                    {expandedId === t.id && (
+                      <tr className="treatment-details-row">
+                        <td colSpan={6}>
+                          <div className="treatment-details" style={{
+                            background: '#f7f7f7',
+                            borderRadius: 8,
+                            padding: 18,
+                            marginTop: 8,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                          }}>
+                            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#2563eb' }}>
+                              Detalles del tratamiento
+                            </div>
+
+                            <div style={{ fontSize: 15, color: '#1a2c3e', marginBottom: 6 }}>
+                              <strong>Tipo:</strong> {t.tipo || '-'}<br />
+                              <strong>Fecha:</strong> {t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}<br />
+                              <strong>Diente:</strong> {t.diente || '-'}<br />
+                              <strong>Doctor:</strong> {t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos || ''}` : '-'}<br />
+                              <strong>Costo:</strong> ${t.costo || '-'}<br />
+                              <strong>Descripción:</strong> {t.descripcion || '-'}<br />
+
+                              {t.diagnostico && (<><strong>Diagnóstico:</strong> {t.diagnostico}<br /></>)}
+                              {t.observaciones && (<><strong>Observaciones:</strong> {t.observaciones}<br /></>)}
+
+                              {t.materiales && Array.isArray(t.materiales) && t.materiales.length > 0 && (
+                                <>
+                                  <strong>Materiales usados:</strong>
+                                  <ul style={{ margin: '4px 0 0 18px' }}>
+                                    {t.materiales.map((m, i) => <li key={i}>{m}</li>)}
+                                  </ul>
+                                </>
+                              )}
+
+                              {t.radiografias && Array.isArray(t.radiografias) && t.radiografias.length > 0 && (
+                                <div style={{ marginTop: 10 }}>
+                                  <strong>Radiografías:</strong>
+                                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
+                                    {t.radiografias.map((rx, i) => (
+                                      rx.url ? (
+                                        <img
+                                          key={i}
+                                          src={rx.url}
+                                          alt={rx.nombre || `Radiografía ${i+1}`}
+                                          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: '1px solid #e9ecef' }}
+                                          onClick={() => setModalRx(rx)}
+                                        />
+                                      ) : null
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default TreatmentHistory;

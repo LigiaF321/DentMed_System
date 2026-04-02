@@ -1,7 +1,10 @@
+
 const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middlewares/auth.middleware");
 const tratamientosController = require("../controllers/tratamientos.controller");
+// Ruta global: listar todos los tratamientos del sistema
+router.get("/tratamientos", verifyToken, tratamientosController.listarTodos);
 
 // B1: Listar tratamientos de un paciente con filtros y paginación
 router.get("/pacientes/:id/tratamientos", verifyToken, tratamientosController.listarTratamientosPaciente);
