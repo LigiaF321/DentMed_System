@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import TreatmentHistory from './TreatmentHistory';
+import DocumentosTab from './DocumentosTab';
 import './PatientTabs.css';
 
 const PatientTabs = ({ paciente }) => {
@@ -15,9 +16,6 @@ const PatientTabs = ({ paciente }) => {
       </div>
     );
   }
-
-  // Datos de ejemplo (esto vendrá del backend)
-  // El historial real se muestra con el componente TreatmentHistory
 
   const planTratamientosData = [
     { prioridad: 'Alta', tratamiento: 'Endodoncia muela #16', fechaPropuesta: '05/04/2026' },
@@ -34,33 +32,42 @@ const PatientTabs = ({ paciente }) => {
   return (
     <div className="patient-tabs">
       <div className="tabs-header">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'historia' ? 'active' : ''}`}
           onClick={() => setActiveTab('historia')}
         >
           <i className="fas fa-history"></i> Historia
         </button>
-        <button 
+
+        <button
           className={`tab-btn ${activeTab === 'plan' ? 'active' : ''}`}
           onClick={() => setActiveTab('plan')}
         >
           <i className="fas fa-clipboard-list"></i> Plan de Tratamientos
         </button>
-        <button 
+
+        <button
           className={`tab-btn ${activeTab === 'notas' ? 'active' : ''}`}
           onClick={() => setActiveTab('notas')}
         >
           <i className="fas fa-sticky-note"></i> Notas
         </button>
+
+        <button
+          className={`tab-btn ${activeTab === 'documentos' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documentos')}
+        >
+          <i className="fas fa-file-image"></i> Documentos
+        </button>
       </div>
-      
+
       <div className="tabs-content">
         {activeTab === 'historia' && (
           <div className="tab-pane">
             <TreatmentHistory pacienteId={paciente?.id} />
           </div>
         )}
-        
+
         {activeTab === 'plan' && (
           <div className="tab-pane">
             <div className="plan-header">
@@ -79,7 +86,7 @@ const PatientTabs = ({ paciente }) => {
             ))}
           </div>
         )}
-        
+
         {activeTab === 'notas' && (
           <div className="tab-pane">
             {notasData.map((item, index) => (
@@ -93,6 +100,12 @@ const PatientTabs = ({ paciente }) => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'documentos' && (
+          <div className="tab-pane">
+            <DocumentosTab paciente={paciente} />
           </div>
         )}
       </div>

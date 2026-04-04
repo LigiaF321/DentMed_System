@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const path = require("path");
 
 app.use(
   cors({
@@ -27,12 +28,14 @@ const pacientesRoutes = require("./routes/pacientes.routes");
 const tratamientosRoutes = require("./routes/tratamientos.routes");
 const citasRoutes = require("./routes/citas.routes");
 const consultoriosRoutes = require("./routes/consultorios.routes");
-// --- INTEGRACIÓN DM19: Importación de la nueva ruta ---
-const bloquesRoutes = require("./routes/bloques.routes"); 
+const documentosRoutes = require("./routes/documentos.routes");
+const bloquesRoutes = require("./routes/bloques.routes");
 const auditoriaRoutes = require("./routes/auditoria.routes");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminPanelRoutes);
@@ -44,8 +47,6 @@ app.use("/api/admin/alertas", alertasInventarioRoutes);
 app.use("/api/admin/seguridad", alertasSeguridadRoutes);
 app.use("/api/admin/kardex", kardexRoutes);
 app.use("/api/admin/reportes", reportesConsumoRoutes);
-
-// --- INTEGRACIÓN AUDITORÍA: Registro de rutas ---
 app.use("/api/auditoria", auditoriaRoutes);
 
 app.use("/api/restauracion", restauracionRoutes);
@@ -54,8 +55,8 @@ app.use("/api/pacientes", pacientesRoutes);
 app.use("/api", tratamientosRoutes);
 app.use("/api/citas", citasRoutes);
 app.use("/api/consultorios", consultoriosRoutes);
-// --- INTEGRACIÓN DM19: Registro del endpoint ---
-app.use("/api/bloques", bloquesRoutes); 
+app.use("/api", documentosRoutes);
+app.use("/api/bloques", bloquesRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -68,10 +69,12 @@ app.get("/", (req, res) => {
       "/api/admin/seguridad",
       "/api/admin/kardex",
       "/api/admin/reportes",
-      "/api/bloques", // Integrado en la lista informativa
-      "/api/auditoria", // Añadido a la lista de endpoints
+      "/api/bloques",
+      "/api/auditoria",
       "/api/citas",
-      "/api/consultorios"
+      "/api/consultorios",
+      "/api/pacientes/:id/documentos",
+      "/api/documentos/:id/descargar"
     ],
   });
 });
