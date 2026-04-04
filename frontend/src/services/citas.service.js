@@ -37,7 +37,7 @@ const parseResponse = async (response) => {
 export const verificarDisponibilidad = async (params) => {
   const searchParams = new URLSearchParams();
 
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(params || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       searchParams.append(key, value);
     }
@@ -64,11 +64,43 @@ export const crearCita = async (payload) => {
   return parseResponse(response);
 };
 
+export const cancelarCita = async (idCita) => {
+  const response = await fetch(`${API_URL}/citas/${idCita}/cancelar`, {
+    method: "PATCH",
+    headers: getHeaders(),
+  });
+
+  return parseResponse(response);
+};
+
 export const actualizarConsultorioCita = async (idCita, idConsultorio) => {
   const response = await fetch(`${API_URL}/citas/${idCita}/consultorio`, {
-    method: "PATCH",
+    method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify({ id_consultorio: idConsultorio }),
   });
+
+  return parseResponse(response);
+};
+
+export const crearPreReservaCita = async (idCita, idConsultorio) => {
+  const response = await fetch(`${API_URL}/citas/pre-reserva`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      id_cita: idCita,
+      id_consultorio: idConsultorio,
+    }),
+  });
+
+  return parseResponse(response);
+};
+
+export const eliminarPreReservaCita = async (idPreReserva) => {
+  const response = await fetch(`${API_URL}/citas/pre-reserva/${idPreReserva}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+
   return parseResponse(response);
 };

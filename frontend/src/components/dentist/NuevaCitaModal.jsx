@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ConsultorioSugerido from "./ConsultorioSugerido";
 import {
   buscarPacientes,
@@ -9,8 +9,11 @@ import {
   crearCita,
 } from "../../services/citas.service";
 import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
-import bloquesService from "../../services/bloques.service";
-import { sugerirConsultorios } from "../../services/consultorios.service";
+import {
+  obtenerConsultorios,
+  obtenerDisponibilidadConsultorios,
+  sugerirConsultorios,
+} from "../../services/consultorios.service";
 import "./NuevaCitaModal.css";
 
 const DURACIONES = [30, 45, 60];
@@ -18,6 +21,32 @@ const DURACIONES = [30, 45, 60];
 const getToday = () => {
   const now = new Date();
   return now.toISOString().split("T")[0];
+};
+
+const normalizarEstado = (estado) => String(estado || "").trim().toLowerCase();
+
+const esConsultorioBloqueado = (consultorio) => {
+  const estadoOperativo = normalizarEstado(
+    consultorio?.estado_operativo || consultorio?.estado
+  );
+
+  return (
+    estadoOperativo === "mantenimiento" ||
+    estadoOperativo === "limpieza" ||
+    consultorio?.disponible === false
+  );
+};
+
+const obtenerTextoEstadoConsultorio = (consultorio) => {
+  const estadoVisual = normalizarEstado(consultorio?.estado_visual);
+  const estadoOperativo = normalizarEstado(
+    consultorio?.estado_operativo || consultorio?.estado
+  );
+
+  if (estadoOperativo === "mantenimiento") return "Mantenimiento";
+  if (estadoOperativo === "limpieza") return "Limpieza";
+  if (estadoVisual === "ocupado") return "Ocupado";
+  return "Libre";
 };
 
 function CrearPacienteRapidoModal({
@@ -158,7 +187,7 @@ export default function NuevaCitaModal({
   onClose,
   onCreated,
   consultorios = [],
-  citasDentista = [], // <-- Recibe citas del dentista
+  citasDentista = [],
 }) {
   const [form, setForm] = useState({
     paciente: null,
@@ -168,22 +197,8 @@ export default function NuevaCitaModal({
     duracion: 30,
     id_consultorio: "",
     motivo: "",
-    preReserva: false, // flag para pre-reserva
+    preReserva: false,
   });
-  // Determinar si la cita es pre-reserva automáticamente
-  useEffect(() => {
-    if (!form.fecha || !form.hora) {
-      setForm((prev) => ({ ...prev, preReserva: false }));
-      return;
-    }
-    const now = new Date();
-    const citaDate = new Date(`${form.fecha}T${form.hora}`);
-    const diffMs = citaDate - now;
-    const diffHrs = diffMs / (1000 * 60 * 60);
-    // Pre-reserva si es más de 24h y menos de 7 días
-    const isPreReserva = diffHrs > 24 && diffHrs <= 24 * 7;
-    setForm((prev) => ({ ...prev, preReserva: isPreReserva }));
-  }, [form.fecha, form.hora]);
 
   const [resultados, setResultados] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -195,148 +210,206 @@ export default function NuevaCitaModal({
     disponible: true,
     message: "",
   });
-  // Consultorios sugeridos por procedimiento
+
   const [consultoriosSugeridos, setConsultoriosSugeridos] = useState([]);
   const [sugiriendo, setSugiriendo] = useState(false);
-  // Estado para polling de disponibilidad
-  const [consultoriosDisponibles, setConsultoriosDisponibles] = useState(consultorios);
-  const pollingRef = useRef(null);
-    // Polling para sincronización en tiempo real de consultorios
-    useEffect(() => {
-      if (!open) return;
-      // Si no hay consultorios, no hacer polling
-      if (!consultorios.length) return;
-      // Limpiar polling anterior
-      if (pollingRef.current) clearInterval(pollingRef.current);
 
-      // Función para actualizar disponibilidad
-      const fetchDisponibilidad = async () => {
-        try {
-          // Se asume que obtenerConsultorios retorna el estado actualizado
-          const { data } = await import("../../services/consultorios.service").then(m => m.obtenerConsultorios());
-          if (Array.isArray(data)) {
-            setConsultoriosDisponibles(data);
-          }
-        } catch (err) {
-          // No hacer nada, mantener el estado anterior
-        }
-      };
-      // Llamada inicial
-      fetchDisponibilidad();
-      // Polling cada 10 segundos
-      pollingRef.current = setInterval(fetchDisponibilidad, 10000);
-      return () => {
-        if (pollingRef.current) clearInterval(pollingRef.current);
-      };
-    }, [open, consultorios.length]);
-  // Conflicto de citas simultáneas
+  const [consultoriosDisponibles, setConsultoriosDisponibles] = useState([]);
   const [conflictoSimultaneo, setConflictoSimultaneo] = useState(null);
-    // Validación en tiempo real de conflicto de citas simultáneas
-    useEffect(() => {
-      if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) {
-        setConflictoSimultaneo(null);
+
+  const pollingRef = useRef(null);
+
+  const consultorioSeleccionado = useMemo(() => {
+    return consultoriosDisponibles.find(
+      (c) => String(c.id) === String(form.id_consultorio)
+    );
+  }, [consultoriosDisponibles, form.id_consultorio]);
+
+  useEffect(() => {
+    if (!form.fecha || !form.hora) {
+      setForm((prev) => ({ ...prev, preReserva: false }));
+      return;
+    }
+
+    const now = new Date();
+    const citaDate = new Date(`${form.fecha}T${form.hora}`);
+    const diffMs = citaDate - now;
+    const diffHrs = diffMs / (1000 * 60 * 60);
+
+    const isPreReserva = diffHrs > 24 && diffHrs <= 24 * 7;
+
+    setForm((prev) => ({
+      ...prev,
+      preReserva: isPreReserva,
+    }));
+  }, [form.fecha, form.hora]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setForm({
+      paciente: null,
+      queryPaciente: "",
+      fecha: getToday(),
+      hora: "",
+      duracion: 30,
+      id_consultorio: "",
+      motivo: "",
+      preReserva: false,
+    });
+
+    setResultados([]);
+    setSearching(false);
+    setChecking(false);
+    setSaving(false);
+    setShowCrearPaciente(false);
+    setError("");
+    setDisponibilidad({
+      disponible: true,
+      message: "",
+    });
+    setConsultoriosSugeridos([]);
+    setSugiriendo(false);
+    setConflictoSimultaneo(null);
+    setConsultoriosDisponibles(Array.isArray(consultorios) ? consultorios : []);
+  }, [open, consultorios]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelado = false;
+
+    const cargarConsultorios = async () => {
+      try {
+        let lista = [];
+
+        if (form.fecha && form.hora && form.duracion) {
+          const response = await obtenerDisponibilidadConsultorios({
+            fecha: form.fecha,
+            hora: form.hora,
+            duracion: form.duracion,
+          });
+
+          lista = Array.isArray(response?.data) ? response.data : [];
+        } else {
+          const response = await obtenerConsultorios();
+
+          lista = Array.isArray(response?.data)
+            ? response.data.map((consultorioItem) => {
+                const estadoOperativo = normalizarEstado(consultorioItem.estado);
+                const bloqueado =
+                  estadoOperativo === "mantenimiento" ||
+                  estadoOperativo === "limpieza";
+
+                return {
+                  ...consultorioItem,
+                  estado_operativo: estadoOperativo,
+                  estado_visual: bloqueado ? estadoOperativo : "libre",
+                  disponible: !bloqueado,
+                };
+              })
+            : [];
+        }
+
+        if (cancelado) return;
+
+        setConsultoriosDisponibles(lista);
+
+        setForm((prev) => {
+          if (prev.id_consultorio) {
+            const actual = lista.find(
+              (c) => String(c.id) === String(prev.id_consultorio)
+            );
+
+            if (actual && !esConsultorioBloqueado(actual)) {
+              return prev;
+            }
+          }
+
+          const primerLibre = lista.find((c) => !esConsultorioBloqueado(c));
+
+          return {
+            ...prev,
+            id_consultorio: primerLibre ? String(primerLibre.id) : "",
+          };
+        });
+      } catch (err) {
+        if (!cancelado) {
+          console.error("Error cargando disponibilidad de consultorios:", err);
+          setConsultoriosDisponibles([]);
+        }
+      }
+    };
+
+    cargarConsultorios();
+
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    pollingRef.current = setInterval(cargarConsultorios, 10000);
+
+    return () => {
+      cancelado = true;
+
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [open, form.fecha, form.hora, form.duracion]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!form.paciente) {
+      const query = form.queryPaciente.trim();
+
+      if (query.length < 2) {
+        setResultados([]);
         return;
       }
-      // Calcular inicio y fin de la cita actual
-      const inicio = new Date(`${form.fecha}T${form.hora}`);
-      const fin = new Date(inicio.getTime() + Number(form.duracion) * 60000);
-      // Buscar si hay otra cita del dentista en ese rango, en otro consultorio
-      const conflicto = (citasDentista || []).find((c) => {
-        if (!c.fecha_hora || !c.duracion_estimada) return false;
-        const inicioC = new Date(c.fecha_hora);
-        const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada) * 60000);
-        // Se traslapan y no es el mismo consultorio
-        return (
-          c.id_consultorio && String(c.id_consultorio) !== String(form.id_consultorio) &&
-          ((inicio < finC && fin > inicioC))
-        );
-      });
-      setConflictoSimultaneo(conflicto || null);
-    }, [form.fecha, form.hora, form.duracion, form.id_consultorio, citasDentista]);
-  // Sugerir consultorios cuando cambia el motivo (procedimiento)
-  useEffect(() => {
-    if (!form.motivo || form.motivo.trim().length < 3) {
-      setConsultoriosSugeridos([]);
-      return;
+
+      const timer = setTimeout(async () => {
+        try {
+          setSearching(true);
+          const response = await buscarPacientes(query);
+          setResultados(response?.data || []);
+        } catch (err) {
+          console.error("Error buscando pacientes:", err);
+          setResultados([]);
+        } finally {
+          setSearching(false);
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
     }
-    let cancelado = false;
-    setSugiriendo(true);
-    sugerirConsultorios(form.motivo.trim())
-      .then((res) => {
-        if (!cancelado) setConsultoriosSugeridos(res.data || []);
-      })
-      .catch(() => {
-        if (!cancelado) setConsultoriosSugeridos([]);
-      })
-      .finally(() => {
-        if (!cancelado) setSugiriendo(false);
-      });
-    return () => { cancelado = true; };
-  }, [form.motivo]);
-
-  useEffect(() => {
-    if (open) {
-      setForm({
-        paciente: null,
-        queryPaciente: "",
-        fecha: getToday(),
-        hora: "",
-        duracion: 30,
-        id_consultorio: "",
-        motivo: "",
-      });
-      setResultados([]);
-      setSearching(false);
-      setChecking(false);
-      setSaving(false);
-      setShowCrearPaciente(false);
-      setError("");
-      setDisponibilidad({
-        disponible: true,
-        message: "",
-      });
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    if (!consultoriosDisponibles.length) return;
-
-    setForm((prev) => {
-      if (prev.id_consultorio) return prev;
-      return {
-        ...prev,
-        id_consultorio: String(consultoriosDisponibles[0].id),
-      };
-    });
-  }, [open, consultoriosDisponibles]);
-
-  useEffect(() => {
-    if (!open) return;
-    if (form.paciente) return;
-
-    const query = form.queryPaciente.trim();
-
-    if (query.length < 2) {
-      setResultados([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        setSearching(true);
-        const response = await buscarPacientes(query);
-        setResultados(response?.data || []);
-      } catch (err) {
-        console.error("Error buscando pacientes:", err);
-        setResultados([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
   }, [form.queryPaciente, form.paciente, open]);
+
+  useEffect(() => {
+    if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) {
+      setConflictoSimultaneo(null);
+      return;
+    }
+
+    const inicio = new Date(`${form.fecha}T${form.hora}`);
+    const fin = new Date(inicio.getTime() + Number(form.duracion) * 60000);
+
+    const conflicto = (citasDentista || []).find((c) => {
+      if (!c.fecha_hora || !c.duracion_estimada) return false;
+
+      const inicioC = new Date(c.fecha_hora);
+      const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada) * 60000);
+
+      return (
+        c.id_consultorio &&
+        String(c.id_consultorio) !== String(form.id_consultorio) &&
+        inicio < finC &&
+        fin > inicioC
+      );
+    });
+
+    setConflictoSimultaneo(conflicto || null);
+  }, [form.fecha, form.hora, form.duracion, form.id_consultorio, citasDentista]);
 
   useEffect(() => {
     if (!open) return;
@@ -377,6 +450,42 @@ export default function NuevaCitaModal({
     return () => clearTimeout(timer);
   }, [form.fecha, form.hora, form.duracion, form.id_consultorio, open]);
 
+  useEffect(() => {
+    if (!form.motivo || form.motivo.trim().length < 3) {
+      setConsultoriosSugeridos([]);
+      return;
+    }
+
+    let cancelado = false;
+    setSugiriendo(true);
+
+    sugerirConsultorios({
+      procedimiento: form.motivo.trim(),
+      fecha: form.fecha,
+      hora: form.hora,
+      duracion: form.duracion,
+    })
+      .then((res) => {
+        if (!cancelado) {
+          setConsultoriosSugeridos(res?.data || []);
+        }
+      })
+      .catch(() => {
+        if (!cancelado) {
+          setConsultoriosSugeridos([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelado) {
+          setSugiriendo(false);
+        }
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [form.motivo, form.fecha, form.hora, form.duracion]);
+
   const canSave = useMemo(() => {
     return (
       !!form.paciente &&
@@ -384,15 +493,24 @@ export default function NuevaCitaModal({
       !!form.hora &&
       !!form.duracion &&
       !!form.id_consultorio &&
+      !!consultorioSeleccionado &&
+      !esConsultorioBloqueado(consultorioSeleccionado) &&
       disponibilidad.disponible &&
       !conflictoSimultaneo &&
       !saving
     );
-  }, [form, disponibilidad.disponible, saving, conflictoSimultaneo]);
+  }, [
+    form,
+    consultorioSeleccionado,
+    disponibilidad.disponible,
+    conflictoSimultaneo,
+    saving,
+  ]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setError("");
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -426,11 +544,18 @@ export default function NuevaCitaModal({
     e.preventDefault();
     setError("");
 
-    // Validación de conflicto antes de guardar
     if (conflictoSimultaneo) {
-      setError("Conflicto: Ya tienes una cita en otro consultorio en este horario.");
+      setError(
+        "Conflicto: Ya tienes una cita en otro consultorio en este horario."
+      );
       return;
     }
+
+    if (!consultorioSeleccionado || esConsultorioBloqueado(consultorioSeleccionado)) {
+      setError("El consultorio seleccionado no está disponible.");
+      return;
+    }
+
     if (!canSave) return;
 
     try {
@@ -441,14 +566,11 @@ export default function NuevaCitaModal({
         fecha: form.fecha,
         hora: form.hora,
         duracion: Number(form.duracion),
-        id_consultorio: form.id_consultorio
-          ? Number(form.id_consultorio)
-          : null,
+        id_consultorio: Number(form.id_consultorio),
         motivo: form.motivo.trim(),
         preReserva: form.preReserva,
       });
 
-      // Registrar auditoría de creación de cita
       try {
         await registrarAuditoriaConsultorio({
           accion: "crear_cita",
@@ -467,7 +589,6 @@ export default function NuevaCitaModal({
           },
         });
       } catch (err) {
-        // No bloquear la creación si falla la auditoría
         console.warn("No se pudo registrar auditoría de consultorio", err);
       }
 
@@ -482,7 +603,6 @@ export default function NuevaCitaModal({
       setSaving(false);
     }
   };
-
 
   if (!open) return null;
 
@@ -614,12 +734,30 @@ export default function NuevaCitaModal({
                       ? "Seleccione"
                       : "No hay consultorios disponibles"}
                   </option>
-                  {consultoriosDisponibles.map((consultorio) => (
-                    <option key={consultorio.id} value={String(consultorio.id)}>
-                      {consultorio.nombre}
+
+                  {consultoriosDisponibles.map((consultorioItem) => (
+                    <option
+                      key={consultorioItem.id}
+                      value={String(consultorioItem.id)}
+                      disabled={esConsultorioBloqueado(consultorioItem)}
+                    >
+                      {consultorioItem.nombre} -{" "}
+                      {obtenerTextoEstadoConsultorio(consultorioItem)}
                     </option>
                   ))}
                 </select>
+
+                {consultorioSeleccionado ? (
+                  <div className="dm17-help" style={{ marginTop: 8 }}>
+                    <strong>Estado:</strong>{" "}
+                    {obtenerTextoEstadoConsultorio(consultorioSeleccionado)}
+                    <br />
+                    <strong>Equipamiento:</strong>{" "}
+                    {consultorioSeleccionado.equipamiento?.length
+                      ? consultorioSeleccionado.equipamiento.join(", ")
+                      : "Sin equipamiento registrado"}
+                  </div>
+                ) : null}
               </div>
 
               <div className="dm17-field dm17-field-full">
@@ -632,16 +770,20 @@ export default function NuevaCitaModal({
                   placeholder="Ej. Limpieza, revisión, extracción"
                   autoComplete="off"
                 />
-                {/* Sugerencias de consultorios con componente modularizado */}
+
                 <ConsultorioSugerido
                   procedimiento={form.motivo}
                   consultorios={consultoriosSugeridos}
                   loading={sugiriendo}
-                  onSelectConsultorio={(c) => setForm((prev) => ({ ...prev, id_consultorio: String(c.id) }))}
+                  onSelectConsultorio={(c) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      id_consultorio: String(c.id),
+                    }))
+                  }
                 />
               </div>
             </div>
-
 
             {!consultoriosDisponibles.length ? (
               <div className="dm17-error">
@@ -653,59 +795,113 @@ export default function NuevaCitaModal({
               <div className="dm17-help">Verificando disponibilidad...</div>
             ) : null}
 
-            {/* Notificación por mantenimiento */}
-            {consultoriosDisponibles.length > 0 && form.id_consultorio && (() => {
-              const consultorioSel = consultoriosDisponibles.find(c => String(c.id) === String(form.id_consultorio));
-              if (consultorioSel && consultorioSel.estado === 'Mantenimiento') {
+            {consultoriosDisponibles.length > 0 &&
+            form.id_consultorio &&
+            (() => {
+              const consultorioSel = consultoriosDisponibles.find(
+                (c) => String(c.id) === String(form.id_consultorio)
+              );
+
+              if (
+                consultorioSel &&
+                ["mantenimiento", "limpieza"].includes(
+                  normalizarEstado(
+                    consultorioSel.estado_operativo || consultorioSel.estado
+                  )
+                )
+              ) {
                 return (
-                  <div className="dm17-error" style={{ fontWeight: 'bold', background: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>
-                    El consultorio seleccionado está en <b>mantenimiento</b>.
+                  <div
+                    className="dm17-error"
+                    style={{
+                      fontWeight: "bold",
+                      background: "#fff3cd",
+                      color: "#856404",
+                      border: "1px solid #ffeeba",
+                    }}
+                  >
+                    El consultorio seleccionado está en{" "}
+                    <b>
+                      {obtenerTextoEstadoConsultorio(
+                        consultorioSel
+                      ).toLowerCase()}
+                    </b>
+                    .
                   </div>
                 );
               }
+
               return null;
             })()}
 
-            {/* Notificación por conflicto */}
             {!checking && !disponibilidad.disponible ? (
-              <div className="dm17-error" style={{ fontWeight: 'bold' }}>
+              <div className="dm17-error" style={{ fontWeight: "bold" }}>
                 {disponibilidad.message}
               </div>
             ) : null}
 
-            {/* Notificación por conflicto simultáneo */}
             {conflictoSimultaneo ? (
-              <div className="dm17-error" style={{ fontWeight: 'bold' }}>
-                Conflicto: Ya tienes una cita en otro consultorio en este horario.
+              <div className="dm17-error" style={{ fontWeight: "bold" }}>
+                Conflicto: Ya tienes una cita en otro consultorio en este
+                horario.
               </div>
             ) : null}
 
-            {/* Sugerir consultorios alternativos si hay conflicto o mantenimiento */}
-            {((consultoriosDisponibles.length > 0 && form.id_consultorio && consultoriosDisponibles.find(c => String(c.id) === String(form.id_consultorio) && c.estado === 'Mantenimiento')) || (!disponibilidad.disponible)) && (
+            {((consultorioSeleccionado &&
+              esConsultorioBloqueado(consultorioSeleccionado)) ||
+              !disponibilidad.disponible) && (
               <div className="dm17-sugeridos-list" style={{ marginTop: 12 }}>
-                <div className="dm17-sugeridos-title">Alternativas disponibles:</div>
-                {consultoriosDisponibles.filter(c => c.estado !== 'Mantenimiento' && String(c.id) !== String(form.id_consultorio)).map(c => (
-                  <button
-                    type="button"
-                    key={c.id}
-                    className="dm17-sugerido-item"
-                    onClick={() => setForm(prev => ({ ...prev, id_consultorio: String(c.id) }))}
-                  >
-                    <div className="dm17-sugerido-nombre">{c.nombre}</div>
-                    <div className="dm17-sugerido-equipamiento">{c.equipamiento?.join(', ') || 'Sin equipamiento registrado'}</div>
-                    <div className={`dm17-sugerido-disponibilidad ${c.estado === 'Disponible' ? 'disponible' : 'no-disponible'}`}>{c.estado === 'Disponible' ? 'Disponible' : c.estado}</div>
-                  </button>
-                ))}
+                <div className="dm17-sugeridos-title">
+                  Alternativas disponibles:
+                </div>
+
+                {consultoriosDisponibles
+                  .filter(
+                    (c) =>
+                      String(c.id) !== String(form.id_consultorio) &&
+                      !esConsultorioBloqueado(c)
+                  )
+                  .map((c) => (
+                    <button
+                      type="button"
+                      key={c.id}
+                      className="dm17-sugerido-item"
+                      onClick={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          id_consultorio: String(c.id),
+                        }))
+                      }
+                    >
+                      <div className="dm17-sugerido-nombre">{c.nombre}</div>
+                      <div className="dm17-sugerido-equipamiento">
+                        {c.equipamiento?.join(", ") ||
+                          "Sin equipamiento registrado"}
+                      </div>
+                      <div className="dm17-sugerido-disponibilidad disponible">
+                        {obtenerTextoEstadoConsultorio(c)}
+                      </div>
+                    </button>
+                  ))}
               </div>
             )}
 
             {error ? <div className="dm17-error">{error}</div> : null}
 
-            {form.preReserva && (
-              <div className="dm17-help" style={{ background: '#fffbe6', color: '#b26a00', border: '1px solid #ffe58f', marginBottom: 10 }}>
-                Esta cita será registrada como <b>pre-reserva provisional</b> (puede requerir confirmación).
+            {form.preReserva ? (
+              <div
+                className="dm17-help"
+                style={{
+                  background: "#fffbe6",
+                  color: "#b26a00",
+                  border: "1px solid #ffe58f",
+                  marginBottom: 10,
+                }}
+              >
+                Esta cita será registrada como <b>pre-reserva provisional</b>.
               </div>
-            )}
+            ) : null}
+
             <div className="dm17-actions">
               <button
                 type="button"

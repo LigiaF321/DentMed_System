@@ -137,4 +137,76 @@
   .appointment-status {
     align-self: flex-start;
   }
+
+  .dm17-btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+}
+
+.dm17-btn-danger:hover {
+  background: #bb2d3b;
+}
+
+.appointment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.appointment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.appointment-actions .appointment-action-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.appointment-actions .appointment-action-btn i {
+  font-size: 12px;
+}
+
+.appointment-actions .appointment-action-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.appointment-actions .appointment-action-btn-edit {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.appointment-actions .appointment-action-btn-edit:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.appointment-actions .appointment-action-btn-cancel {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.appointment-actions .appointment-action-btn-cancel:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+}
 }
