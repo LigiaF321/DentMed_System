@@ -1,136 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
-import ResetPasswordScreen from "./components/ResetPasswordScreen";
-import ForceChangeCredentials from "./components/ForceChangeCredentials";
+import ClinicHoursScreen from "./components/config/ClinicHoursScreen";
 import "./App.css";
 
 function App() {
-  // Restore session on mount if exists, clear only on logout
-  const [screen, setScreen] = useState(() => {
-    try {
-      return localStorage.getItem("screen") || "login";
-    } catch {
-      return "login";
-    }
-  });
-  
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem("currentUser");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [screen, setScreen] = useState("welcome"); // welcome | login | forgot | dashboard | hours
 
-  // Tokens reset (no persist)
-  const [resetToken, setResetToken] = useState(null);
-  const [resetEmail, setResetEmail] = useState(null);
-
-  // Sincronizar estado con localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem("screen", screen);
-      if (currentUser) {
-        localStorage.setItem("currentUser", JSON.stringify(currentUser));
-      }
-    } catch (e) {
-      console.warn("localStorage no disponible:", e);
-    }
-  }, [screen, currentUser]);
+    const readHash = () => {
+      const hash = window.location.hash.replace("#", "").trim();
+      if (hash) setScreen(hash);
+    };
 
-  const goTo = (next) => setScreen(next);
+    readHash(); 
+    window.addEventListener("hashchange", readHash);
 
-  const handleLoginSuccess = (userData) => {
-    if (!userData) {
-      limpiarSesion();
-      return;
-    }
+    return () => window.removeEventListener("hashchange", readHash);
+  }, []);
 
-    setCurrentUser(userData);
-    setScreen("loading"); // Sync inmediato
-  };
-
-  const handleLogout = () => {
-    limpiarSesion();
-  };
-
-  const limpiarSesion = () => {
-    setCurrentUser(null);
-    setResetToken(null);
-    setResetEmail(null);
-    setScreen("login");
-    try {
-      localStorage.removeItem("screen");
-      localStorage.removeItem("currentUser");
-    } catch {}
-  };
-
-  const handleVerifiedCode = ({ token, email }) => {
-    setResetToken(token);
-    setResetEmail(email);
-    goTo("resetPassword");
-  };
-
-  const handleResetDone = () => {
-    setResetToken(null);
-    setResetEmail(null);
-    goTo("login");
-  };
-
-  const handleLoadingComplete = () => {
-    const mustChange = currentUser?.mustChangePassword === true ||
-      currentUser?.forcePasswordChange === true ||
-      currentUser?.firstLogin === true ||
-      currentUser?.requiresPasswordChange === true;
-
-    goTo(mustChange ? "forceChange" : "dashboard");
-  };
-
-  const handleBackToLogin = () => {
-    limpiarSesion();
+  const go = (to) => {
+    setScreen(to);
+    window.location.hash = to;
   };
 
   return (
     <div className="App">
-      {screen === "loading" && <WelcomeScreen onEnter={handleLoadingComplete} />}
+      {screen === "welcome" && <WelcomeScreen onEnter={() => go("login")} />}
 
       {screen === "login" && (
         <LoginScreen
-          onLoginSuccess={handleLoginSuccess}
-          onForgotPassword={() => goTo("forgot")}
+          onBack={() => go("welcome")}
+          onLoginSuccess={() => go("dashboard")}
+          onForgotPassword={() => go("forgot")}
         />
       )}
 
-      {screen === "forgot" && (
-        <ForgotPasswordScreen
-          onBack={() => goTo("login")}
-          onVerified={handleVerifiedCode}
-        />
-      )}
+      {screen === "forgot" && <ForgotPasswordScreen onBack={() => go("login")} />}
 
-      {screen === "resetPassword" && (
-        <ResetPasswordScreen
-          token={resetToken}
-          email={resetEmail}
-          onBack={() => goTo("login")}
-          onSuccess={handleResetDone}
-        />
-      )}
+      {screen === "dashboard" && <DashboardScreen />}
 
-      {screen === "forceChange" && (
-        <ForceChangeCredentials
-          userData={currentUser}
-          onSuccess={() => goTo("dashboard")}
-          onBack={handleBackToLogin}
-        />
-      )}
+      {screen === "hours" && <ClinicHoursScreen onBack={() => go("dashboard")} />}
 
-      {screen === "dashboard" && (
-        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
+      {/* fallback si alguien pone un hash raro */}
+      {["welcome", "login", "forgot", "dashboard", "hours"].includes(screen) === false && (
+        <WelcomeScreen onEnter={() => go("login")} />
       )}
     </div>
   );

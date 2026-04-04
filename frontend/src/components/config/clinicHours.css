@@ -1,0 +1,416 @@
+.ch-page{
+  min-height: 100vh;
+  background: #F3F4F6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.ch-topbar{
+  background: linear-gradient(135deg, #03011d 0%, #db2777 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.ch-topbar-inner{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display: grid;
+  grid-template-columns: 260px 1fr 360px;
+  align-items: center;
+  gap: 14px;
+}
+
+.ch-brand img{
+  height: 34px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,.25));
+}
+
+.ch-center{
+  text-align: center;
+}
+.ch-title{
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.ch-subtitle{
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: .9;
+  font-style: italic;
+}
+
+.ch-right{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ch-btn{
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(90deg, #4f46e5, #d42674);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(9,2,32,.18);
+  transition: transform .15s ease, opacity .15s ease;
+}
+.ch-btn:hover{ transform: translateY(-1px); opacity: .95; }
+.ch-btn:active{ transform: translateY(0); }
+
+.ch-btn-ghost{
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow: none;
+}
+.ch-btn-secondary{
+  background: rgba(11,16,32,.08);
+  border: 1px solid rgba(11,16,32,.12);
+  color: #1e3a8a;
+  box-shadow: none;
+}
+
+.ch-main{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 18px 26px;
+}
+
+.ch-meta{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 14px;
+}
+.ch-meta-pill{
+  background: rgba(79,70,229,.08);
+  border: 1px solid rgba(79,70,229,.16);
+  color: rgba(11,16,32,.75);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-grid{
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 14px;
+}
+
+.ch-card{
+  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(79,70,229,.14);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(9,2,32,.10);
+  padding: 16px;
+}
+
+.ch-span-2{
+  grid-column: 1 / -1;
+}
+
+.ch-card-title{
+  font-weight: 900;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ch-divider{
+  height: 1px;
+  background: rgba(11,16,32,.10);
+  margin: 14px 0;
+}
+
+.ch-daylist{
+  display: grid;
+  gap: 10px;
+}
+
+.ch-day{
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid rgba(11,16,32,.10);
+  background: rgba(255,255,255,.9);
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.ch-day:hover{
+  transform: translateY(-1px);
+  border-color: rgba(79,70,229,.28);
+}
+.ch-day.is-active{
+  border-color: rgba(219,39,119,.45);
+  box-shadow: 0 10px 30px rgba(219,39,119,.10);
+}
+.ch-day-name{
+  font-weight: 900;
+  color: rgba(11,16,32,.85);
+}
+.ch-day-badge{
+  font-weight: 900;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(11,16,32,.10);
+}
+.ch-day-badge.ok{
+  background: rgba(34,197,94,.10);
+  color: rgba(22,163,74,1);
+  border-color: rgba(34,197,94,.18);
+}
+.ch-day-badge.off{
+  background: rgba(239,68,68,.08);
+  color: rgba(220,38,38,1);
+  border-color: rgba(239,68,68,.18);
+}
+
+.ch-copy-title{
+  font-weight: 900;
+  color: rgba(11,16,32,.80);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ch-copy-sub{
+  margin: 10px 0 8px;
+  color: rgba(11,16,32,.65);
+  font-weight: 700;
+  font-size: 13px;
+}
+.ch-copy-targets{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ch-check{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: rgba(11,16,32,.75);
+}
+.ch-check input{ accent-color: #4f46e5; }
+
+.ch-row{ margin-bottom: 10px; }
+
+.ch-switch{
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  color: rgba(11,16,32,.80);
+}
+.ch-switch input{ display: none; }
+.ch-switch-ui{
+  width: 44px;
+  height: 26px;
+  background: rgba(11,16,32,.18);
+  border-radius: 999px;
+  position: relative;
+  transition: background .15s ease;
+}
+.ch-switch-ui::after{
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform .15s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,.18);
+}
+.ch-switch input:checked + .ch-switch-ui{
+  background: rgba(79,70,229,.85);
+}
+.ch-switch input:checked + .ch-switch-ui::after{
+  transform: translateX(18px);
+}
+.ch-switch-text{ user-select: none; }
+
+.ch-times{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ch-field label{
+  display: block;
+  font-weight: 800;
+  color: rgba(11,16,32,.75);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.ch-field input,
+.ch-field select{
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid #E5E7EB;
+  padding: 0 12px;
+  outline: none;
+  background: #fff;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+.ch-field input:focus,
+.ch-field select:focus{
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.ch-grow{ grid-column: span 2; }
+
+.ch-error{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.18);
+  color: rgba(220,38,38,1);
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-hint{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(79,70,229,.08);
+  border: 1px solid rgba(79,70,229,.18);
+  color: rgba(11,16,32,.75);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-exc-grid{
+  display: grid;
+  grid-template-columns: 220px 220px 1fr 160px;
+  gap: 12px;
+  align-items: end;
+}
+
+.ch-empty{
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px dashed rgba(11,16,32,.18);
+  color: rgba(11,16,32,.55);
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-exc-list{
+  display: grid;
+  gap: 10px;
+}
+
+.ch-exc-item{
+  display: grid;
+  grid-template-columns: 220px 1fr 44px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(11,16,32,.10);
+  background: rgba(255,255,255,.85);
+}
+
+.ch-exc-date{
+  font-weight: 900;
+  color: rgba(11,16,32,.80);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-exc-type{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ch-pill{
+  font-weight: 900;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(11,16,32,.10);
+}
+.ch-pill.ok{
+  background: rgba(34,197,94,.10);
+  color: rgba(22,163,74,1);
+  border-color: rgba(34,197,94,.18);
+}
+.ch-pill.danger{
+  background: rgba(239,68,68,.08);
+  color: rgba(220,38,38,1);
+  border-color: rgba(239,68,68,.18);
+}
+.ch-note{
+  font-weight: 800;
+  color: rgba(11,16,32,.55);
+}
+
+.ch-iconbtn{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(11,16,32,.12);
+  background: rgba(11,16,32,.06);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: rgba(11,16,32,.70);
+}
+.ch-iconbtn:hover{ background: rgba(239,68,68,.10); color: rgba(220,38,38,1); }
+
+.ch-footer{
+  margin-top: 16px;
+  text-align: center;
+  color: rgba(11,16,32,.55);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+@media (max-width: 980px){
+  .ch-topbar-inner{
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .ch-right{ justify-content: center; }
+  .ch-grid{ grid-template-columns: 1fr; }
+  .ch-exc-grid{
+    grid-template-columns: 1fr;
+  }
+  .ch-grow{ grid-column: auto; }
+  .ch-exc-item{
+    grid-template-columns: 1fr;
+  }
+}
