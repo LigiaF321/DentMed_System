@@ -295,12 +295,6 @@ export default function DashboardScreen({ userData, onLogout }) {
             </div>
             <div className="dm2-muted">Actualización automática cada 5 minutos</div>
           </CardSection>
-          <CardSection title="Accesos rápidos" rightAction={<span style={{fontSize:'12px'}}>Ahora disponible en barra superior</span>}>
-            <div className="dm2-quickbar">
-              {isAdmin ? <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-seguridad')}><i className="fa-solid fa-shield-alt" /><span>ALERTAS DE SEGURIDAD</span></button> : null}
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-inventario')}><i className="fa-solid fa-boxes-stacked" /><span>ALERTAS DE INVENTARIO</span></button>
-            </div>
-          </CardSection>
         </div>
         <div className="dm2-colRight">
           <AlertasInventarioWidget onViewAll={() => setAdminView('alertas-inventario')} />
