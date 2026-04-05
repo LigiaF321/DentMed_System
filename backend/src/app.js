@@ -25,6 +25,7 @@ const alertasInventarioRoutes = require("./routes/alertasInventario.routes");
 const kardexRoutes = require("./routes/kardex.routes");
 const reportesConsumoRoutes = require("./routes/reportesConsumo.routes");
 const alertasSeguridadRoutes = require("./routes/alertasSeguridad.routes");
+const materialesRoutes = require("./routes/materiales.routes");
 const pacientesRoutes = require("./routes/pacientes.routes");
 const tratamientosRoutes = require("./routes/tratamientos.routes");
 const citasRoutes = require("./routes/citas.routes");
@@ -49,6 +50,7 @@ app.use("/api/admin/monitoring", monitoringRoutes);
 app.use("/api/admin/alertas", alertasInventarioRoutes);
 app.use("/api/admin/seguridad", alertasSeguridadRoutes);
 app.use("/api/admin/kardex", kardexRoutes);
+app.use("/api/admin/materiales", materialesRoutes);
 app.use("/api/admin/reportes", reportesConsumoRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
 
@@ -71,6 +73,7 @@ app.get("/", (req, res) => {
       "/api/admin/alertas",
       "/api/admin/seguridad",
       "/api/admin/kardex",
+      "/api/admin/materiales",
       "/api/admin/reportes",
       "/api/bloques",
       "/api/auditoria",

@@ -4,7 +4,13 @@
 }
 
 .registro-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
   margin-bottom: 32px;
+  min-height: 52px;
 }
 
 .btn-volver {
@@ -21,6 +27,15 @@
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  z-index: 2;
+}
+
+.registro-titulo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  white-space: nowrap;
 }
 
 .btn-volver:hover {
@@ -183,6 +198,13 @@
   font-size: 14px;
   font-weight: 600;
   margin-top: 16px;
+}
+
+.form-botones-wrapper {
+  grid-column: 2 / -1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
 /* Botones */

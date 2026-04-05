@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./CatalogoInsumosScreen.css";
 import RegistroInsumoScreen from "./RegistroInsumoScreen";
 import EditarInsumoScreen from "./EditarInsumoScreen";
-// Asegúrate de que esta ruta sea correcta según tu estructura
-// import materialService from "../../services/material.service"; // Removido para mock
+import materialService from "../../services/material.service";
 
 export default function CatalogoInsumosScreen() {
   const [loading, setLoading] = useState(true);

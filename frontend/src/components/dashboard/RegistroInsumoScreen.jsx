@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import materialService from "../../services/material.service";
 import "./RegistroInsumoScreen.css";
 
 export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPrecargados = null, titulo }) {
@@ -14,7 +15,8 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
         proveedor: datosPrecargados.proveedor || "",
         estado: datosPrecargados.estado || "activo",
         descripcion: datosPrecargados.descripcion || "",
-        precio: datosPrecargados.precio?.toString() || ""
+        precio: datosPrecargados.precio?.toString() || "",
+        cantidad: datosPrecargados.cantidad?.toString() || datosPrecargados.cantidad_actual?.toString() || ""
       };
     }
     return {
@@ -26,7 +28,8 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
       proveedor: "",
       estado: "activo",
       descripcion: "",
-      precio: ""
+      precio: "",
+      cantidad: ""
     };
   };
 
@@ -87,6 +90,14 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
       nuevosErrores.stockMinimo = "El stock mínimo debe ser mayor a 0";
     }
 
+    // Cantidad inicial
+    if (formData.cantidad !== "") {
+      const cantidadVal = parseInt(formData.cantidad, 10);
+      if (Number.isNaN(cantidadVal) || cantidadVal < 0) {
+        nuevosErrores.cantidad = "La cantidad debe ser 0 o mayor";
+      }
+    }
+
     // Unidad de medida
     if (!formData.unidadMedida) {
       nuevosErrores.unidadMedida = "La unidad de medida es obligatoria";
@@ -130,7 +141,9 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
         proveedor: formData.proveedor,
         precio: formData.precio,
         descripcion: formData.descripcion,
-        estado: formData.estado
+        estado: formData.estado,
+        cantidad: formData.cantidad,
+        cantidad_actual: formData.cantidad || 0
       };
       
       const response = await materialService.crear(data);
@@ -260,6 +273,25 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
               <small className="help-text">Cantidad mínima antes de generar alerta</small>
             </div>
 
+            {/* Cantidad inicial */}
+            <div className="form-group">
+              <label htmlFor="cantidad">
+                Cantidad a ingresar
+              </label>
+              <input
+                type="number"
+                id="cantidad"
+                name="cantidad"
+                value={formData.cantidad}
+                onChange={handleChange}
+                placeholder="Ej: 50"
+                min="0"
+                className={errores.cantidad ? "input-error" : ""}
+              />
+              {errores.cantidad && <span className="error-mensaje">{errores.cantidad}</span>}
+              <small className="help-text">Stock inicial del insumo al registrarlo</small>
+            </div>
+
             {/* Proveedor principal */}
             <div className="form-group">
               <label htmlFor="proveedor">
@@ -342,30 +374,31 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
                 {esSoloNuevo && <small className="help-text">Nuevo insumo siempre activo</small>}
               </div>
             </div>
+
+            <div className="form-botones-wrapper">
+              <div className="form-botones">
+                <button type="button" className="btn btn-cancelar" onClick={handleCancelar}>
+                  <i className="fa-solid fa-times" /> CANCELAR
+                </button>
+                <button type="submit" className="btn btn-guardar" disabled={guardando}>
+                  {guardando ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin" /> GUARDANDO...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-save" /> GUARDAR
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Error general */}
           {errores.general && (
             <div className="error-general">{errores.general}</div>
           )}
-
-          {/* Botones */}
-          <div className="form-botones">
-            <button type="button" className="btn btn-cancelar" onClick={handleCancelar}>
-              <i className="fa-solid fa-times" /> CANCELAR
-            </button>
-            <button type="submit" className="btn btn-guardar" disabled={guardando}>
-              {guardando ? (
-                <>
-                  <i className="fa-solid fa-spinner fa-spin" /> GUARDANDO...
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-save" /> GUARDAR
-                </>
-              )}
-            </button>
-          </div>
         </form>
       </div>
     </div>
