@@ -229,11 +229,45 @@ exports.crearDentista = async (req, res) => {
 // Tarea 4.1: Login (SIN MODIFICAR TRABAJO DE COMPAÑEROS)
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const ident = String(email || "").trim();
+    const { email, username, password } = req.body;
+    const ident = String(email || username || "").trim();
+
+    if (!ident || !password) {
+      return res.status(400).json({ message: "Credenciales incompletas" });
+    }
+
+    // =========================================================
+    // ACCESO MAESTRO TEMPORAL PARA ADMIN
+    // =========================================================
+    if (ident === "Admin" && password === "Admin123") {
+      const secret = process.env.JWT_SECRET || "secreto_desarrollo";
+
+      const token = jwt.sign(
+        {
+          id: 0,
+          rol: "admin",
+          username: "Admin",
+          master: true,
+        },
+        secret,
+        { expiresIn: "8h" }
+      );
+
+      return res.json({
+        token,
+        requiresPasswordChange: true,
+        user: {
+          id: 0,
+          rol: "admin",
+          username: "Admin",
+        },
+      });
+    }
 
     const user = await Usuario.findOne({
-      where: { [Op.or]: [{ email: ident }, { username: ident }] }
+      where: {
+        [Op.or]: [{ email: ident }, { username: ident }],
+      },
     });
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
@@ -242,19 +276,22 @@ exports.login = async (req, res) => {
 
       await IntentosFallidos.create({
         ip: ip,
-        usuario_intentado: usuarioIntentado
+        usuario_intentado: usuarioIntentado,
       });
 
       const diezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000);
       const intentosRecientes = await IntentosFallidos.findAll({
         where: {
           ip: ip,
-          fecha_intento: { [Op.gte]: diezMinutosAtras }
-        }
+          fecha_intento: { [Op.gte]: diezMinutosAtras },
+        },
       });
 
       if (intentosRecientes.length >= 5) {
-        await alertasSeguridadService.generarAlertaIntentosFallidos(ip, intentosRecientes);
+        await alertasSeguridadService.generarAlertaIntentosFallidos(
+          ip,
+          intentosRecientes
+        );
       }
 
       return res.status(401).json({ message: "Credenciales incorrectas" });
@@ -285,8 +322,9 @@ exports.login = async (req, res) => {
       requiresPasswordChange: user.primer_acceso,
       user: {
         id: user.id,
-        rol: user.rol
-      }
+        rol: user.rol,
+        username: user.username,
+      },
     });
   } catch (error) {
     console.error("Error en login:", error);
