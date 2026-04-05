@@ -11,9 +11,11 @@ const Paciente = require("./Paciente");
 const Consultorio = require("./Consultorio");
 const Material = require("./Material");
 const Cita = require("./Cita");
+const PreReserva = require("./PreReserva");
 const Tratamiento = require("./Tratamiento");
 const Bloque = require("./Bloque");
 const DocumentoPaciente = require("./DocumentoPaciente");
+const EquipoConsultorio = require("./EquipoConsultorio");
 
 // Alertas
 const AlertaInventario = require("./AlertaInventario");
@@ -64,6 +66,46 @@ Cita.belongsTo(Dentista, { foreignKey: "id_dentista" });
 
 Consultorio.hasMany(Cita, { foreignKey: "id_consultorio" });
 Cita.belongsTo(Consultorio, { foreignKey: "id_consultorio" });
+
+// ===============================
+// CITA / CONSULTORIO -> PRE RESERVA
+// ===============================
+Cita.hasMany(PreReserva, {
+  foreignKey: "id_cita",
+  sourceKey: "id",
+  as: "preReservas",
+});
+PreReserva.belongsTo(Cita, {
+  foreignKey: "id_cita",
+  targetKey: "id",
+  as: "cita",
+});
+
+Consultorio.hasMany(PreReserva, {
+  foreignKey: "id_consultorio",
+  sourceKey: "id",
+  as: "preReservas",
+});
+PreReserva.belongsTo(Consultorio, {
+  foreignKey: "id_consultorio",
+  targetKey: "id",
+  as: "consultorio",
+});
+
+// ===============================
+// CONSULTORIO -> EQUIPOS
+// ===============================
+Consultorio.hasMany(EquipoConsultorio, {
+  foreignKey: "id_consultorio",
+  sourceKey: "id",
+  as: "equipos",
+});
+
+EquipoConsultorio.belongsTo(Consultorio, {
+  foreignKey: "id_consultorio",
+  targetKey: "id",
+  as: "consultorio",
+});
 
 // ===============================
 // PACIENTE / DENTISTA -> TRATAMIENTO
@@ -247,8 +289,10 @@ module.exports = {
   TokenRecuperacion,
   Paciente,
   Consultorio,
+  EquipoConsultorio,
   Material,
   Cita,
+  PreReserva,
   Tratamiento,
   Bloque,
   DocumentoPaciente,
