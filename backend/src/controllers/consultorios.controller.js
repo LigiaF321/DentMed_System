@@ -1,5 +1,11 @@
 const { Op } = require("sequelize");
-const { Consultorio, Cita, PreReserva } = require("../models");
+const {
+  Consultorio,
+  Cita,
+  PreReserva,
+  EquipoConsultorio,
+  sequelize,
+} = require("../models");
 
 const ESTADOS_CANCELADOS = ["cancelada", "cancelado"];
 const MINUTOS_EXPIRACION_PRE_RESERVA = 10;
@@ -56,6 +62,28 @@ const formatearConsultorioBase = (consultorio) => ({
   equipamiento: parsearEquipamiento(consultorio),
   estado: consultorio.estado,
 });
+
+const formatearEquipo = (equipo) => ({
+  id: equipo.id,
+  id_consultorio: equipo.id_consultorio,
+  nombre_equipo: equipo.nombre_equipo,
+  estado: equipo.estado,
+});
+
+const agruparEquiposPorConsultorio = (consultorios, equipos) => {
+  return consultorios.map((consultorio) => {
+    const equiposConsultorio = equipos
+      .filter(
+        (equipo) => Number(equipo.id_consultorio) === Number(consultorio.id)
+      )
+      .map(formatearEquipo);
+
+    return {
+      ...formatearConsultorioBase(consultorio),
+      equipos: equiposConsultorio,
+    };
+  });
+};
 
 const convertirFechaHoraCitaAParametros = (fechaHora) => {
   const fecha = new Date(fechaHora);
@@ -928,6 +956,208 @@ const eliminarPreReserva = async (req, res) => {
   }
 };
 
+const listarEquipamientoConsultorios = async (req, res) => {
+  try {
+    const { id_consultorio } = req.query;
+
+    const whereConsultorio = {};
+    const whereEquipos = {};
+
+    if (id_consultorio) {
+      whereConsultorio.id = Number(id_consultorio);
+      whereEquipos.id_consultorio = Number(id_consultorio);
+    }
+
+    const consultorios = await Consultorio.findAll({
+      where: whereConsultorio,
+      order: [["nombre", "ASC"]],
+    });
+
+    const equipos = await EquipoConsultorio.findAll({
+      where: whereEquipos,
+      order: [
+        ["id_consultorio", "ASC"],
+        ["nombre_equipo", "ASC"],
+      ],
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: agruparEquiposPorConsultorio(consultorios, equipos),
+    });
+  } catch (error) {
+    console.error("Error en listarEquipamientoConsultorios:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al listar el equipamiento de consultorios",
+    });
+  }
+};
+
+const actualizarEquiposConsultorio = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { equipos } = req.body;
+
+    const consultorio = await Consultorio.findByPk(id, { transaction });
+
+    if (!consultorio) {
+      await transaction.rollback();
+      return res.status(404).json({
+        ok: false,
+        message: "Consultorio no encontrado",
+      });
+    }
+
+    if (!Array.isArray(equipos)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        ok: false,
+        message: "El campo equipos debe ser un arreglo",
+      });
+    }
+
+    const equiposNormalizados = equipos
+      .map((equipo) => ({
+        nombre_equipo: String(equipo?.nombre_equipo || "").trim(),
+        estado: normalizarEstado(equipo?.estado || "disponible"),
+      }))
+      .filter((equipo) => equipo.nombre_equipo.length > 0)
+      .map((equipo) => ({
+        ...equipo,
+        estado: ["disponible", "mantenimiento", "dañado"].includes(equipo.estado)
+          ? equipo.estado
+          : "disponible",
+      }));
+
+    await EquipoConsultorio.destroy({
+      where: { id_consultorio: Number(id) },
+      transaction,
+    });
+
+    if (equiposNormalizados.length > 0) {
+      await EquipoConsultorio.bulkCreate(
+        equiposNormalizados.map((equipo) => ({
+          id_consultorio: Number(id),
+          nombre_equipo: equipo.nombre_equipo,
+          estado: equipo.estado,
+        })),
+        { transaction }
+      );
+    }
+
+    const equiposActualizados = await EquipoConsultorio.findAll({
+      where: { id_consultorio: Number(id) },
+      order: [["nombre_equipo", "ASC"]],
+      transaction,
+    });
+
+    await transaction.commit();
+
+    return res.status(200).json({
+      ok: true,
+      message: "Equipamiento actualizado correctamente",
+      data: {
+        consultorio: formatearConsultorioBase(consultorio),
+        equipos: equiposActualizados.map(formatearEquipo),
+      },
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error en actualizarEquiposConsultorio:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al actualizar el equipamiento del consultorio",
+    });
+  }
+};
+
+const filtrarConsultoriosPorEquipamiento = async (req, res) => {
+  try {
+    const { equipo_requerido } = req.query;
+
+    if (!equipo_requerido || !String(equipo_requerido).trim()) {
+      return res.status(400).json({
+        ok: false,
+        message: "El parámetro equipo_requerido es obligatorio",
+      });
+    }
+
+    const equipoBuscado = String(equipo_requerido).trim().toLowerCase();
+
+    const equipos = await EquipoConsultorio.findAll({
+      where: sequelize.where(
+        sequelize.fn("LOWER", sequelize.col("nombre_equipo")),
+        equipoBuscado
+      ),
+      order: [["nombre_equipo", "ASC"]],
+    });
+
+    const idsConsultorios = [
+      ...new Set(equipos.map((equipo) => Number(equipo.id_consultorio))),
+    ];
+
+    if (!idsConsultorios.length) {
+      return res.status(200).json({
+        ok: true,
+        data: [],
+      });
+    }
+
+    const consultorios = await Consultorio.findAll({
+      where: {
+        id: idsConsultorios,
+      },
+      order: [["nombre", "ASC"]],
+    });
+
+    const equiposTodos = await EquipoConsultorio.findAll({
+      where: {
+        id_consultorio: idsConsultorios,
+      },
+      order: [
+        ["id_consultorio", "ASC"],
+        ["nombre_equipo", "ASC"],
+      ],
+    });
+
+    const data = consultorios.map((consultorio) => {
+      const equiposConsultorio = equiposTodos
+        .filter(
+          (equipo) => Number(equipo.id_consultorio) === Number(consultorio.id)
+        )
+        .map(formatearEquipo);
+
+      const tieneEquipoDisponible = equiposConsultorio.some(
+        (equipo) =>
+          String(equipo.nombre_equipo).trim().toLowerCase() === equipoBuscado &&
+          normalizarEstado(equipo.estado) === "disponible"
+      );
+
+      return {
+        ...formatearConsultorioBase(consultorio),
+        equipos: equiposConsultorio,
+        cumple_requerimiento: true,
+        equipo_requerido: equipo_requerido,
+        equipo_disponible: tieneEquipoDisponible,
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Error en filtrarConsultoriosPorEquipamiento:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al filtrar consultorios por equipamiento",
+    });
+  }
+};
+
 module.exports = {
   listarConsultorios,
   obtenerDisponibilidadConsultorios,
@@ -936,4 +1166,7 @@ module.exports = {
   crearPreReserva,
   actualizarConsultorioCita,
   eliminarPreReserva,
+  listarEquipamientoConsultorios,
+  actualizarEquiposConsultorio,
+  filtrarConsultoriosPorEquipamiento,
 };
