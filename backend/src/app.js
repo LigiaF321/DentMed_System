@@ -16,6 +16,7 @@ const dentistaRoutes = require("./routes/dentistaRoutes");
 const authRoutes = require("./routes/auth.routes");
 const adminPanelRoutes = require("./routes/adminPanel.routes");
 const adminDentistsRoutes = require("./routes/adminDentists.routes");
+const adminConsultoriosRoutes = require("./routes/adminConsultorios.routes");
 const horariosRoutes = require("./routes/horarios.routes");
 const parametrosRoutes = require("./routes/parametros.routes");
 const monitoringRoutes = require("./routes/monitoring.routes");
@@ -32,6 +33,7 @@ const documentosRoutes = require("./routes/documentos.routes");
 const bloquesRoutes = require("./routes/bloques.routes");
 const auditoriaRoutes = require("./routes/auditoria.routes");
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,6 +42,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminPanelRoutes);
 app.use("/api/admin", adminDentistsRoutes);
+app.use("/api/admin/consultorios", adminConsultoriosRoutes);
 app.use("/api/admin/horarios", horariosRoutes);
 app.use("/api/admin/parametros", parametrosRoutes);
 app.use("/api/admin/monitoring", monitoringRoutes);
