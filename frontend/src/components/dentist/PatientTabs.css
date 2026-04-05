@@ -1,5 +1,3 @@
-/* frontend/src/components/dentist/PatientTabs.css */
-
 * {
   box-sizing: border-box;
 }
@@ -31,13 +29,36 @@
   display: block;
 }
 
-.patient-tabs-empty p,
-.patient-tabs-empty span,
-.patient-tabs-empty h3 {
-  margin: 0;
+.patient-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf2f7;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
 }
 
-/* Header de tabs */
+.patient-summary-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #184269;
+}
+
+.patient-summary-header p {
+  margin: 4px 0 0;
+  color: #2f4f67;
+  font-weight: 600;
+}
+
+.patient-last-update {
+  font-size: 12px;
+  color: #3f6d8e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .tabs-header {
   display: flex;
   align-items: stretch;
@@ -50,7 +71,7 @@
 
 .tab-btn {
   flex: 1;
-  min-width: 120px;
+  min-width: 130px;
   padding: 14px 16px;
   background: transparent;
   border: none;
@@ -69,16 +90,10 @@
 .tab-btn i {
   font-size: 14px;
   color: #7b8a97;
-  transition: color 0.2s ease;
 }
 
 .tab-btn:hover {
   background: #eef4f8;
-  color: #0088cc;
-  transform: translateY(-1px);
-}
-
-.tab-btn:hover i {
   color: #0088cc;
 }
 
@@ -89,208 +104,245 @@
   border: 1px solid #dbeaf3;
 }
 
-.tab-btn.active i {
+.tab-btn.active i,
+.tab-btn:hover i {
   color: #0088cc;
 }
 
 .tabs-content {
-  padding: 24px;
-  max-height: 360px;
+  padding: 20px;
+  max-height: 620px;
   overflow-y: auto;
   background: #ffffff;
 }
 
-/* Scrollbar */
-.tabs-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.tabs-content::-webkit-scrollbar-track {
-  background: #f1f3f5;
-  border-radius: 10px;
-}
-
-.tabs-content::-webkit-scrollbar-thumb {
-  background: #c9d6df;
-  border-radius: 10px;
-}
-
-.tabs-content::-webkit-scrollbar-thumb:hover {
-  background: #aebdca;
-}
-
-/* =========================
-   HISTORIA
-========================= */
-.historia-item {
-  padding: 14px 0;
-  border-bottom: 1px solid #eef2f5;
-}
-
-.historia-item:last-child {
-  border-bottom: none;
-}
-
-.historia-fecha {
-  font-size: 12px;
-  color: #6c757d;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.historia-fecha i {
-  color: #0088cc;
-}
-
-.historia-tratamiento {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1a2c3e;
-  margin-bottom: 6px;
-  line-height: 1.35;
-}
-
-.historia-doctor {
-  font-size: 12px;
-  color: #ff69b4;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-}
-
-.historia-doctor i {
-  color: #ff69b4;
-}
-
-/* =========================
-   PLAN DE TRATAMIENTOS
-========================= */
-.plan-header {
-  display: grid;
-  grid-template-columns: 110px 1fr 120px;
-  gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 12px;
-  font-weight: 700;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.plan-item {
-  display: grid;
-  grid-template-columns: 110px 1fr 120px;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid #eef2f5;
+.tab-loading {
+  margin-bottom: 10px;
+  color: #60809a;
   font-size: 13px;
+}
+
+.tab-toolbar {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
 }
 
-.plan-item:last-child {
-  border-bottom: none;
+.tab-toolbar h4 {
+  margin: 0;
+  color: #173a58;
+  font-size: 15px;
 }
 
-.plan-prioridad {
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 11px;
+.tab-edit-btn {
+  border: 1px solid #bdd7eb;
+  background: #f4faff;
+  color: #005a8e;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-edit-btn:hover {
+  background: #e8f4ff;
+}
+
+.medical-alert-banner {
+  border: 1px solid #f5b8b8;
+  background: linear-gradient(135deg, #fff1f1 0%, #ffdede 100%);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.medical-alert-title {
+  color: #9f1c1c;
   font-weight: 700;
-  text-align: center;
-  width: fit-content;
-  min-width: 74px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.prioridad-alta {
-  background: #fdecea;
-  color: #c62828;
+.medical-alert-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.prioridad-media {
-  background: #fff4db;
-  color: #d68910;
+.medical-alert-items span {
+  background: #ffffff;
+  border: 1px solid #efb3b3;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #8a2525;
 }
 
-.prioridad-baja {
-  background: #e8f5e9;
-  color: #2e7d32;
+.medical-alert-empty {
+  margin-bottom: 14px;
+  border: 1px dashed #ecc9c9;
+  color: #915b5b;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12px;
 }
 
-.plan-tratamiento {
-  color: #1a2c3e;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.info-field {
+  border: 1px solid #e8eff4;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 10px 12px;
+  min-height: 72px;
+}
+
+.info-label {
+  display: block;
+  font-size: 12px;
+  color: #7b8a96;
+  margin-bottom: 6px;
+}
+
+.info-value {
+  color: #18384f;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
 }
 
-.plan-fecha {
-  color: #6c757d;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* =========================
-   NOTAS
-========================= */
-.nota-item {
-  padding: 14px 0;
-  border-bottom: 1px solid #eef2f5;
-}
-
-.nota-item:last-child {
-  border-bottom: none;
-}
-
-.nota-fecha {
-  font-size: 11px;
-  color: #adb5bd;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nota-fecha i {
-  color: #0088cc;
-}
-
-.nota-texto {
+.info-input {
+  width: 100%;
+  border: 1px solid #d5e3ef;
+  border-radius: 8px;
+  padding: 8px;
   font-size: 13px;
-  color: #1a2c3e;
-  margin-bottom: 8px;
-  line-height: 1.55;
 }
 
-.nota-autor {
-  font-size: 11px;
-  color: #0088cc;
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.history-card {
+  border: 1px solid #e7eef3;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 12px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  min-height: 120px;
 }
 
-.nota-autor i {
-  color: #0088cc;
+.history-card h5 {
+  width: 100%;
+  margin: 0 0 2px;
+  color: #355168;
+  font-size: 13px;
 }
 
-/* =========================
-   ESTADOS VACÍOS INTERNOS
-========================= */
-.tabs-content .empty-state,
-.tabs-content .no-data {
-  text-align: center;
-  color: #6c757d;
-  padding: 28px 16px;
+.history-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #c6dced;
+  background: #edf6ff;
+  color: #285375;
+  font-size: 12px;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+.history-chip.danger {
+  border-color: #f2bcbc;
+  background: #fff0f0;
+  color: #973434;
+}
+
+.history-input {
+  width: 100%;
+  min-height: 92px;
+  border: 1px solid #d4e1ed;
+  border-radius: 10px;
+  padding: 8px;
+  resize: vertical;
+  font-size: 13px;
+}
+
+.history-empty {
+  margin: 0;
+  color: #92a4b2;
+  font-size: 12px;
+}
+
+.tab-quick-edit {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #dbe7f1;
+  border-radius: 12px;
+  background: #f8fcff;
+}
+
+.tab-quick-edit label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #47657c;
+}
+
+.tab-quick-edit textarea {
+  width: 100%;
+  min-height: 86px;
+  border: 1px solid #d0deea;
+  border-radius: 10px;
+  padding: 9px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.tab-quick-preview {
+  margin-bottom: 14px;
+  padding: 10px;
+  border-left: 3px solid #4f84ab;
+  background: #f3f9fd;
+  border-radius: 8px;
+  color: #28506b;
+  font-size: 13px;
+}
+
+.documentos-embedded {
+  border-top: 1px solid #edf2f5;
+  padding-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
+  .patient-summary-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .tabs-header {
     flex-direction: column;
   }
@@ -303,44 +355,19 @@
   }
 
   .tabs-content {
-    padding: 18px;
+    padding: 16px;
     max-height: none;
-  }
-
-  .plan-header,
-  .plan-item {
-    grid-template-columns: 90px 1fr 90px;
-    gap: 10px;
   }
 }
 
 @media (max-width: 520px) {
   .patient-tabs,
   .patient-tabs-empty {
-    border-radius: 18px;
+    border-radius: 16px;
   }
 
-  .tabs-content {
-    padding: 16px;
-  }
-
-  .plan-header {
-    display: none;
-  }
-
-  .plan-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 14px 0;
-  }
-
-  .plan-prioridad,
-  .plan-fecha {
-    width: fit-content;
-  }
-
-  .historia-tratamiento,
-  .nota-texto {
-    font-size: 13px;
+  .tab-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
