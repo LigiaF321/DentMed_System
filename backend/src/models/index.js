@@ -15,6 +15,7 @@ const PreReserva = require("./PreReserva");
 const Tratamiento = require("./Tratamiento");
 const Bloque = require("./Bloque");
 const DocumentoPaciente = require("./DocumentoPaciente");
+const EquipoConsultorio = require("./EquipoConsultorio");
 
 // Alertas
 const AlertaInventario = require("./AlertaInventario");
@@ -86,6 +87,21 @@ Consultorio.hasMany(PreReserva, {
   as: "preReservas",
 });
 PreReserva.belongsTo(Consultorio, {
+  foreignKey: "id_consultorio",
+  targetKey: "id",
+  as: "consultorio",
+});
+
+// ===============================
+// CONSULTORIO -> EQUIPOS
+// ===============================
+Consultorio.hasMany(EquipoConsultorio, {
+  foreignKey: "id_consultorio",
+  sourceKey: "id",
+  as: "equipos",
+});
+
+EquipoConsultorio.belongsTo(Consultorio, {
   foreignKey: "id_consultorio",
   targetKey: "id",
   as: "consultorio",
@@ -273,6 +289,7 @@ module.exports = {
   TokenRecuperacion,
   Paciente,
   Consultorio,
+  EquipoConsultorio,
   Material,
   Cita,
   PreReserva,

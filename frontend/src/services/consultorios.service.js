@@ -88,7 +88,6 @@ export const obtenerCalendarioConsultorios = async ({
 };
 
 // Sugerir consultorios
-// Acepta string (procedimiento) o un objeto de params
 export const sugerirConsultorios = async (payload) => {
   let queryString = "";
 
@@ -108,20 +107,8 @@ export const sugerirConsultorios = async (payload) => {
     queryString = new URLSearchParams(params).toString();
   }
 
-  const response = await fetch(`${API_URL}/consultorios/sugerir?${queryString}`, {
-    method: "GET",
-    headers: getHeaders(),
-  });
-
-  return parseResponse(response);
-};
-
-// Variante de sugerencia
-export const sugerirConsultorio = async (params) => {
-  const queryString = new URLSearchParams(params).toString();
-
   const response = await fetch(
-    `${API_URL}/consultorios/sugerencia?${queryString}`,
+    `${API_URL}/consultorios/sugerir?${queryString}`,
     {
       method: "GET",
       headers: getHeaders(),
@@ -176,6 +163,56 @@ export const registrarAuditoriaConsultorio = async (datos) => {
     headers: getHeaders(),
     body: JSON.stringify(datos),
   });
+
+  return parseResponse(response);
+};
+
+// ===============================
+// DM26 - EQUIPAMIENTO
+// ===============================
+
+// Obtener equipamiento de todos los consultorios o de uno específico
+export const obtenerEquipamientoConsultorios = async (idConsultorio = null) => {
+  const query = idConsultorio
+    ? `?id_consultorio=${encodeURIComponent(idConsultorio)}`
+    : "";
+
+  const response = await fetch(
+    `${API_URL}/consultorios/equipamiento${query}`,
+    {
+      method: "GET",
+      headers: getHeaders(),
+    }
+  );
+
+  return parseResponse(response);
+};
+
+// Actualizar equipos de un consultorio
+export const actualizarEquiposConsultorio = async (idConsultorio, equipos) => {
+  const response = await fetch(
+    `${API_URL}/consultorios/${idConsultorio}/equipos`,
+    {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify({ equipos }),
+    }
+  );
+
+  return parseResponse(response);
+};
+
+// Filtrar consultorios por equipo requerido
+export const filtrarConsultoriosPorEquipamiento = async (equipoRequerido) => {
+  const response = await fetch(
+    `${API_URL}/consultorios/filtrar?equipo_requerido=${encodeURIComponent(
+      equipoRequerido
+    )}`,
+    {
+      method: "GET",
+      headers: getHeaders(),
+    }
+  );
 
   return parseResponse(response);
 };
