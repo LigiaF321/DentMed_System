@@ -10,6 +10,66 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const guardarSesion = (token, role, extra = {}) => {
+    clearAuthToken();
+    setAuthToken(token);
+
+    if (rememberMe) {
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("rememberMe");
+    }
+
+    onLoginSuccess?.({
+      role,
+      token,
+      username,
+      ...extra,
+    });
+  };
+
+  const hacerLoginBackend = async ({ loginType }) => {
+    const response = await fetch("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: username.trim(),
+        username: username.trim(),
+        password: password,
+        loginType,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.message || "Credenciales incorrectas. Intente nuevamente."
+      );
+    }
+
+    const token = data?.token || data?.data?.token || null;
+
+    if (!token || typeof token !== "string") {
+      throw new Error("El servidor no devolvió un token válido.");
+    }
+
+    const roleFromApi =
+      data?.role ||
+      data?.rol ||
+      data?.data?.role ||
+      data?.data?.rol ||
+      loginType;
+
+    return {
+      token,
+      role: roleFromApi,
+      data,
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -22,19 +82,20 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         return;
       }
 
+      if (!username.trim() || !password.trim()) {
+        setError("Por favor ingrese sus credenciales");
+        setIsLoading(false);
+        return;
+      }
+
       if (userType === "admin") {
-        if (username !== "Admin" || password !== "Admin123") {
-          setError("Credenciales de administrador incorrectas");
-          setIsLoading(false);
-          return;
-        }
+        const resultado = await hacerLoginBackend({ loginType: "admin" });
 
-        clearAuthToken();
-
-        onLoginSuccess?.({
-          role: "admin",
-          requiresPasswordChange: true,
-          username: username,
+        guardarSesion(resultado.token, "admin", {
+          requiresPasswordChange:
+            resultado?.data?.requiresPasswordChange ??
+            resultado?.data?.data?.requiresPasswordChange ??
+            true,
         });
 
         setIsLoading(false);
@@ -42,59 +103,23 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       }
 
       if (userType === "doctor") {
-        if (!username.trim() || !password.trim()) {
-          setError("Por favor ingrese sus credenciales asignadas");
-          setIsLoading(false);
-          return;
-        }
+        const resultado = await hacerLoginBackend({ loginType: "doctor" });
 
-        const response = await fetch("http://localhost:3000/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: username.trim(),
-            password: password,
-          }),
+        guardarSesion(resultado.token, "doctor", {
+          requiresPasswordChange:
+            resultado?.data?.requiresPasswordChange ??
+            resultado?.data?.data?.requiresPasswordChange ??
+            true,
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-          const token = data?.token || data?.data?.token || null;
-
-          if (!token || typeof token !== "string") {
-            setError("El servidor no devolvió un token válido.");
-            setIsLoading(false);
-            return;
-          }
-
-          clearAuthToken();
-          setAuthToken(token);
-
-          if (rememberMe) {
-            localStorage.setItem("rememberMe", "true");
-          } else {
-            localStorage.removeItem("rememberMe");
-          }
-
-          onLoginSuccess?.({
-            role: "doctor",
-            requiresPasswordChange: data?.requiresPasswordChange ?? true,
-            username: username,
-            token,
-          });
-        } else {
-          setError(
-            data.message || "Credenciales incorrectas. Contacte al administrador."
-          );
-        }
+        setIsLoading(false);
+        return;
       }
     } catch (err) {
       console.error("Error en login:", err);
       setError(
-        "Error de conexión con el servidor. Verifique que el backend esté corriendo."
+        err.message ||
+          "Error de conexión con el servidor. Verifique que el backend esté corriendo."
       );
     } finally {
       setIsLoading(false);
@@ -124,14 +149,14 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    if (error && error.includes("incorrect")) {
+    if (error) {
       setError("");
     }
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    if (error && error.includes("incorrect")) {
+    if (error) {
       setError("");
     }
   };
@@ -166,9 +191,15 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       <div className="login-main">
         <div className="login-visual">
           <div className="visual-content">
-            <div className={`visual-fade${userType === "doctor" || userType === "admin" ? " hide" : ""}`}>
+            <div
+              className={`visual-fade${
+                userType === "doctor" || userType === "admin" ? " hide" : ""
+              }`}
+            >
               <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-              <p className="visual-subtitle">Acceso exclusivo para personal autorizado</p>
+              <p className="visual-subtitle">
+                Acceso exclusivo para personal autorizado
+              </p>
               <div className="dental-icon">
                 <i className="fas fa-tooth"></i>
                 <i className="fas fa-stethoscope"></i>
@@ -176,13 +207,29 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             </div>
 
-            <div className={`doctor-instructions-visual${userType === "doctor" ? " show" : ""}`}>
+            <div
+              className={`doctor-instructions-visual${
+                userType === "doctor" ? " show" : ""
+              }`}
+            >
               {userType === "doctor" && (
                 <>
-                  <h2><i className="fas fa-user-md"></i> Instrucciones para Doctores</h2>
-                  <p><i className="fas fa-check-circle"></i> Use credenciales temporales asignadas</p>
-                  <p><i className="fas fa-check-circle"></i> Ejemplo: dra.garcia / TempPass123</p>
-                  <p><i className="fas fa-check-circle"></i> Cambie su contraseña en el primer acceso</p>
+                  <h2>
+                    <i className="fas fa-user-md"></i> Instrucciones para
+                    Doctores
+                  </h2>
+                  <p>
+                    <i className="fas fa-check-circle"></i> Use credenciales
+                    temporales asignadas
+                  </p>
+                  <p>
+                    <i className="fas fa-check-circle"></i> Ejemplo:
+                    dra.garcia / TempPass123
+                  </p>
+                  <p>
+                    <i className="fas fa-check-circle"></i> Cambie su contraseña
+                    en el primer acceso
+                  </p>
                   <p className="warning-text">
                     <i className="fas fa-exclamation-triangle"></i>
                     Si no tiene credenciales, contacte al administrador
@@ -191,10 +238,17 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               )}
             </div>
 
-            <div className={`admin-instructions-visual${userType === "admin" ? " show" : ""}`}>
+            <div
+              className={`admin-instructions-visual${
+                userType === "admin" ? " show" : ""
+              }`}
+            >
               {userType === "admin" && (
                 <>
-                  <h2><i className="fas fa-key"></i> Credenciales Maestras Iniciales</h2>
+                  <h2>
+                    <i className="fas fa-key"></i> Credenciales Maestras
+                    Iniciales
+                  </h2>
                   <div className="credentials-box">
                     <div className="credential-item">
                       <span className="credential-label">Usuario:</span>
@@ -207,7 +261,8 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                   </div>
                   <p className="warning-text">
                     <i className="fas fa-exclamation-triangle"></i>
-                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el primer acceso
+                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el
+                    primer acceso
                   </p>
                 </>
               )}
@@ -215,27 +270,36 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
             {userType === "admin" && (
               <div className="user-type-info admin-info">
-                <h3><i className="fas fa-user-shield"></i> Modo Administrador</h3>
+                <h3>
+                  <i className="fas fa-user-shield"></i> Modo Administrador
+                </h3>
                 <p>Acceso completo al sistema</p>
                 <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales maestras iniciales
+                  <i className="fas fa-key"></i> Use credenciales maestras
+                  registradas en el backend
                 </p>
               </div>
             )}
 
             {userType === "doctor" && (
               <div className="user-type-info doctor-info">
-                <h3><i className="fas fa-user-md"></i> Modo Doctor</h3>
+                <h3>
+                  <i className="fas fa-user-md"></i> Modo Doctor
+                </h3>
                 <p>Acceso a historiales y pacientes</p>
                 <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales temporales asignadas
+                  <i className="fas fa-key"></i> Use credenciales temporales
+                  asignadas
                 </p>
               </div>
             )}
 
             {!userType && (
               <div className="user-type-info default-info">
-                <h3><i className="fas fa-hand-pointer"></i> Seleccione tipo de usuario</h3>
+                <h3>
+                  <i className="fas fa-hand-pointer"></i> Seleccione tipo de
+                  usuario
+                </h3>
                 <p>Elija si es Administrador o Doctor</p>
               </div>
             )}
@@ -271,7 +335,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               <div className="user-type-options">
                 <button
                   type="button"
-                  className={`user-type-btn ${userType === "admin" ? "selected" : ""}`}
+                  className={`user-type-btn ${
+                    userType === "admin" ? "selected" : ""
+                  }`}
                   onClick={() => handleUserTypeSelect("admin")}
                 >
                   <i className="fas fa-user-shield"></i>
@@ -280,7 +346,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
                 <button
                   type="button"
-                  className={`user-type-btn ${userType === "doctor" ? "selected" : ""}`}
+                  className={`user-type-btn ${
+                    userType === "doctor" ? "selected" : ""
+                  }`}
                   onClick={() => handleUserTypeSelect("doctor")}
                 >
                   <i className="fas fa-user-md"></i>
@@ -300,7 +368,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 onChange={handleUsernameChange}
                 placeholder={
                   userType === "admin"
-                    ? "Ingrese: Admin"
+                    ? "Ingrese usuario admin"
                     : "Ej: dra.garcia"
                 }
                 required
@@ -310,8 +378,8 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               <div className="input-hint">
                 <i className="fas fa-info-circle"></i>
                 {userType === "admin"
-                  ? "Credenciales maestras: Admin / Admin123"
-                  : "Use usuario asignado (ej: dra.garcia)"}
+                  ? "Debe existir en el backend para generar token"
+                  : "Use usuario asignado"}
               </div>
             </div>
 
@@ -326,7 +394,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 onChange={handlePasswordChange}
                 placeholder={
                   userType === "admin"
-                    ? "Ingrese: Admin123"
+                    ? "Ingrese contraseña admin"
                     : "Contraseña temporal asignada"
                 }
                 required
@@ -386,7 +454,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
             <div className="security-note">
               <i className="fas fa-shield-alt"></i>
-              <span>Sistema seguro - Acceso restringido al personal autorizado</span>
+              <span>
+                Sistema seguro - Acceso restringido al personal autorizado
+              </span>
             </div>
           </form>
         </div>
@@ -404,6 +474,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       </footer>
     </div>
   );
-};
+}
 
 export default LoginScreen;
