@@ -171,29 +171,14 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
   return (
     <div className="login-screen">
-      <header className="login-header">
-        <div className="header-left">
-          <div
-            className="logo clickable-logo"
-            onClick={handleLogoClick}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="dent-text">Dent</span>
-            <span className="med-text">Med</span>
-          </div>
-        </div>
-        <div className="header-right">
-          <h1>Sistema de Gestión Dental DentMed</h1>
-          <p className="slogan">WORKSPACE BY MILLA&apos;S</p>
-        </div>
-      </header>
+
 
       <div className="login-main">
         <div className="login-visual">
           <div className="visual-content">
             <div
               className={`visual-fade${
-                userType === "doctor" || userType === "admin" ? " hide" : ""
+                userType === "doctor" ? " hide" : ""
               }`}
             >
               <h2>Bienvenido al Sistema de Gestión DentMed</h2>
@@ -238,83 +223,16 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               )}
             </div>
 
-            <div
-              className={`admin-instructions-visual${
-                userType === "admin" ? " show" : ""
-              }`}
-            >
-              {userType === "admin" && (
-                <>
-                  <h2>
-                    <i className="fas fa-key"></i> Credenciales Maestras
-                    Iniciales
-                  </h2>
-                  <div className="credentials-box">
-                    <div className="credential-item">
-                      <span className="credential-label">Usuario:</span>
-                      <span className="credential-value">Admin</span>
-                    </div>
-                    <div className="credential-item">
-                      <span className="credential-label">Contraseña:</span>
-                      <span className="credential-value">Admin123</span>
-                    </div>
-                  </div>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    <strong>IMPORTANTE:</strong> Cambie estas credenciales en el
-                    primer acceso
-                  </p>
-                </>
-              )}
-            </div>
 
-            {userType === "admin" && (
-              <div className="user-type-info admin-info">
-                <h3>
-                  <i className="fas fa-user-shield"></i> Modo Administrador
-                </h3>
-                <p>Acceso completo al sistema</p>
-                <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales maestras
-                  registradas en el backend
-                </p>
-              </div>
-            )}
 
-            {userType === "doctor" && (
-              <div className="user-type-info doctor-info">
-                <h3>
-                  <i className="fas fa-user-md"></i> Modo Doctor
-                </h3>
-                <p>Acceso a historiales y pacientes</p>
-                <p className="security-note">
-                  <i className="fas fa-key"></i> Use credenciales temporales
-                  asignadas
-                </p>
-              </div>
-            )}
+      
 
-            {!userType && (
-              <div className="user-type-info default-info">
-                <h3>
-                  <i className="fas fa-hand-pointer"></i> Seleccione tipo de
-                  usuario
-                </h3>
-                <p>Elija si es Administrador o Doctor</p>
-              </div>
-            )}
           </div>
         </div>
 
         <div className="login-form-container">
           <div className="form-header">
-            <button
-              className="back-button-desktop"
-              onClick={handleLogoClick}
-              type="button"
-            >
-              <i className="fas fa-arrow-left"></i> Volver
-            </button>
+            
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -401,12 +319,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 disabled={!userType}
                 className="form-input"
               />
-              {userType === "doctor" && (
-                <div className="input-hint">
-                  <i className="fas fa-exclamation-circle"></i>
-                  Si no tiene credenciales, contacte al administrador
-                </div>
-              )}
+              
             </div>
 
             <div className="form-options">
@@ -462,16 +375,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         </div>
       </div>
 
-      <footer className="login-footer">
-        <div className="footer-content">
-          <p>© 2024 DentMed - Sistema de Gestión Dental</p>
-          <p>Versión 1.0</p>
-          <p className="access-warning">
-            <i className="fas fa-exclamation-triangle"></i>
-            Acceso restringido al personal autorizado
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

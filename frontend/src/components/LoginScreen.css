@@ -13,46 +13,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* GLOBAL DENTMED LOGO - LOGIN ONLY */
-.dentmed-logo-global {
-  position: absolute;
-  top: 20px;
-  left: 40px;
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  cursor: pointer;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  transition: transform 0.3s ease;
-  padding: 10px;
-  border-radius: 8px;
-}
 
-.dentmed-logo-global:hover {
-  transform: scale(1.05);
-}
-
-.dentmed-logo-global .dent-text {
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 
-    0 2px 4px rgba(30, 58, 138, 0.4),
-    0 4px 8px rgba(30, 58, 138, 0.2);
-}
-
-.dentmed-logo-global .med-text {
-  background: linear-gradient(135deg, #be185d, #db2777);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 
-    0 2px 4px rgba(190, 24, 93, 0.4),
-    0 4px 8px rgba(190, 24, 93, 0.2);
-}
 
 /* CONTENIDO PRINCIPAL */
 .login-main {
