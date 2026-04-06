@@ -186,6 +186,28 @@
   color: #98a2b3;
 }
 
+.catalogo-select,
+.filtro-busqueda input {
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #e7edf3;
+  background: #ffffff;
+  color: #101828;
+  font-size: 14px;
+  min-width: 200px;
+  outline: none;
+}
+
+.catalogo-select {
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.catalogo-select:focus {
+  border-color: #18b27a;
+  box-shadow: 0 0 0 3px rgba(24, 178, 122, 0.12);
+}
+
 .btn-limpiar {
   background: transparent;
   border: none;

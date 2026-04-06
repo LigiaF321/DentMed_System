@@ -10,8 +10,6 @@ export default function CatalogoInsumosScreen() {
   const [selectedInsumo, setSelectedInsumo] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroCategoria, setFiltroCategoria] = useState("todas");
-  const [mostrarDropdownCategoria, setMostrarDropdownCategoria] = useState(false);
-  const [mostrarDropdownEstado, setMostrarDropdownEstado] = useState(false);
   const [sortField, setSortField] = useState("nombre");
   const [sortDirection, setSortDirection] = useState("asc");
   const [paginaActual, setPaginaActual] = useState(1);
@@ -26,17 +24,17 @@ export default function CatalogoInsumosScreen() {
   const [totalCount, setTotalCount] = useState(0);
 
   const categorias = [
-    "Anestesia", "Antibióticos", "Binders y Adhesivos", "Blanqueamiento",
-    "Cementos", "Cirugía", "Composites", "Desinfección", "Endodoncia",
-    "Escayolas", "Filtrado", "Fluoruro", "Gasa y Algodón", "Hemostáticos",
-    "Higiene", "Impresión", "Instrumental", "Irrigación", "Jeringas",
-    "Láminas de matrices", "Lubricantes", "Medicamentos", "Oclusión",
-    "Ortodoncia", "Oxido de Zinc", "Pasta dental", "Pinzes", "Profilaxis",
-    "Rayos X", "Resinas", "Retracción Gingival", "Selladores", "Suturas",
-    "Uniformes", "Varios"
+    "Insumos quirúrgicos",
+    "Medicamentos",
+    "Instrumental",
+    "Protección personal",
+    "Material de curación",
+    "Equipos",
+    "Papelería",
+    "Otros"
   ];
 
-  const estados = ["todos", "activos", "inactivos"];
+  const estados = ["todos", "activo", "inactivo"];
 
   // Función reutilizable para cargar insumos
   const cargarInsumos = async (page = paginaActual) => {
@@ -96,18 +94,6 @@ export default function CatalogoInsumosScreen() {
       setSortDirection("asc");
     }
   };
-
-  // Manejo de clicks externos para cerrar dropdowns
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest('.filtro-dropdown')) {
-        setMostrarDropdownCategoria(false);
-        setMostrarDropdownEstado(false);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   // Handlers de UI
   const handleNuevoInsumo = () => setMostrarFormulario(true);
@@ -173,8 +159,8 @@ export default function CatalogoInsumosScreen() {
 
   const getLabelEstado = (estado) => {
     switch(estado) {
-      case 'activos': return 'ACTIVOS';
-      case 'inactivos': return 'INACTIVOS';
+      case 'activo': return 'ACTIVOS';
+      case 'inactivo': return 'INACTIVOS';
       default: return 'TODOS';
     }
   };
@@ -231,32 +217,28 @@ export default function CatalogoInsumosScreen() {
           </div>
 
           <div className="filtro-dropdown">
-            <button className="btn-dropdown" onClick={() => setMostrarDropdownCategoria(!mostrarDropdownCategoria)}>
-              <i className="fa-solid fa-tag"></i>
-              <span>{filtroCategoria === 'todas' ? 'CATEGORÍA: TODAS' : filtroCategoria}</span>
-            </button>
-            {mostrarDropdownCategoria && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={() => { setFiltroCategoria('todas'); setMostrarDropdownCategoria(false); }}>TODAS</div>
-                {categorias.map(cat => (
-                  <div key={cat} className="dropdown-item" onClick={() => { setFiltroCategoria(cat); setMostrarDropdownCategoria(false); }}>{cat}</div>
-                ))}
-              </div>
-            )}
+            <select
+              className="catalogo-select"
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+            >
+              <option value="todas">Todas las categorías</option>
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           <div className="filtro-dropdown">
-            <button className="btn-dropdown" onClick={() => setMostrarDropdownEstado(!mostrarDropdownEstado)}>
-              <i className="fa-solid fa-filter"></i>
-              <span>ESTADO: {getLabelEstado(filtroEstado)}</span>
-            </button>
-            {mostrarDropdownEstado && (
-              <div className="dropdown-menu">
-                {estados.map(est => (
-                  <div key={est} className="dropdown-item" onClick={() => { setFiltroEstado(est); setMostrarDropdownEstado(false); }}>{getLabelEstado(est)}</div>
-                ))}
-              </div>
-            )}
+            <select
+              className="catalogo-select"
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="activo">Activos</option>
+              <option value="inactivo">Inactivos</option>
+            </select>
           </div>
         </div>
 
