@@ -38,29 +38,30 @@ export default function CatalogoInsumosScreen() {
 
   const estados = ["todos", "activos", "inactivos"];
 
+  // Función reutilizable para cargar insumos
+  const cargarInsumos = async (page = paginaActual) => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit: registrosPorPagina,
+        search: filtro || undefined,
+        categoria: filtroCategoria === 'todas' ? undefined : filtroCategoria,
+        estado: filtroEstado === 'todos' ? undefined : filtroEstado
+      };
+      const response = await materialService.listar(params);
+      setInsumos(response.data || []);
+      setTotalCount(response.pagination?.total || 0);
+    } catch (error) {
+      console.error('Error cargando insumos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch insumos desde la API
   useEffect(() => {
-    const fetchInsumos = async () => {
-      setLoading(true);
-      try {
-        const params = {
-          page: paginaActual,
-          limit: registrosPorPagina,
-          search: filtro || undefined,
-          categoria: filtroCategoria === 'todas' ? undefined : filtroCategoria,
-          estado: filtroEstado === 'todos' ? undefined : filtroEstado
-        };
-        const response = await materialService.listar(params);
-        setInsumos(response.data || []);
-        setTotalCount(response.pagination?.total || 0);
-      } catch (error) {
-        console.error('Error cargando insumos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInsumos();
+    cargarInsumos(paginaActual);
   }, [paginaActual, registrosPorPagina, filtro, filtroCategoria, filtroEstado]);
 
   // Lógica de visualización (Ordenamiento)
@@ -111,14 +112,24 @@ export default function CatalogoInsumosScreen() {
   // Handlers de UI
   const handleNuevoInsumo = () => setMostrarFormulario(true);
   const handleCancelarFormulario = () => setMostrarFormulario(false);
-  const handleGuardarInsumo = () => {
+  const handleGuardarInsumo = async () => {
     setMostrarFormulario(false);
-    setPaginaActual(1); // Refrescar lista
+    // Recargar insumos inmediatamente sin esperar cambio de página
+    await cargarInsumos(1);
   };
 
   const handleEditarInsumo = (insumo) => {
     setInsumoEditando(insumo);
     setModoEdicion(true);
+  };
+
+  const handleEliminarInsumo = async (insumo) => {
+    try {
+      await materialService.eliminar(insumo.id);
+      await cargarInsumos(paginaActual);
+    } catch (error) {
+      alert("Error al eliminar el insumo");
+    }
   };
 
   const handleToggleEstado = (insumo) => {
@@ -130,8 +141,8 @@ export default function CatalogoInsumosScreen() {
     try {
         const nuevoEstado = insumoCambioEstado.estado === "activo" ? "inactivo" : "activo";
         await materialService.actualizar(insumoCambioEstado.id, { estado: nuevoEstado });
-        // Refrescar datos
-        setPaginaActual(paginaActual); 
+        // Refrescar datos inmediatamente
+        await cargarInsumos(paginaActual);
         setMostrarModalEstado(false);
     } catch (error) {
         alert("Error al cambiar estado");
@@ -142,7 +153,10 @@ export default function CatalogoInsumosScreen() {
     return (
       <EditarInsumoScreen
         insumo={insumoEditando}
-        onGuardar={() => { setModoEdicion(false); setPaginaActual(1); }}
+        onGuardar={() => { 
+          setModoEdicion(false); 
+          cargarInsumos(paginaActual);
+        }}
         onCancelar={() => setModoEdicion(false)}
       />
     );
@@ -289,8 +303,15 @@ export default function CatalogoInsumosScreen() {
                         </td>
                         <td className="acciones-cell">
                           <button className="btn-accion" onClick={() => handleEditarInsumo(insumo)}><i className="fa-solid fa-pen"></i></button>
-                          <button className="btn-accion" onClick={() => handleToggleEstado(insumo)}>
-                            <i className={`fa-solid fa-${insumo.estado === "activo" ? "xmark" : "check"}`}></i>
+                          <button 
+                            className={`toggle-estado ${insumo.estado}`}
+                            onClick={() => handleToggleEstado(insumo)}
+                            title={insumo.estado === "activo" ? "Desactivar" : "Activar"}
+                          >
+                            <span className="toggle-circle"></span>
+                          </button>
+                          <button className="btn-accion btn-accion-delete" onClick={() => handleEliminarInsumo(insumo)} title="Eliminar">
+                            <i className="fa-solid fa-trash"></i>
                           </button>
                         </td>
                       </tr>

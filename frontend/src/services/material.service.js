@@ -15,10 +15,16 @@ export async function actualizar(id, payload) {
   return data;
 }
 
+export async function eliminar(id) {
+  const { data } = await api.delete(`/admin/materiales/${id}`);
+  return data;
+}
+
 const materialService = {
   listar,
   crear,
   actualizar,
+  eliminar,
 };
 
 export default materialService;

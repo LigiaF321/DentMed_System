@@ -66,6 +66,13 @@ const Material = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+
+    estado: {
+      type: DataTypes.ENUM("activo", "inactivo"),
+      allowNull: false,
+      defaultValue: "activo",
+      comment: "Estado del insumo (activo/inactivo)",
+    },
   },
   {
     tableName: "materiales",

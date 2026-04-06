@@ -146,7 +146,14 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
         cantidad_actual: formData.cantidad || 0
       };
       
-      const response = await materialService.crear(data);
+      let response;
+      if (esModoEditar && datosPrecargados?.id) {
+        // Modo edición: actualizar
+        response = await materialService.actualizar(datosPrecargados.id, data);
+      } else {
+        // Modo nuevo/duplicación: crear
+        response = await materialService.crear(data);
+      }
       
       if (onGuardar) {
         onGuardar(response.data);

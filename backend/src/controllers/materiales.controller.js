@@ -1,14 +1,6 @@
 const { Op } = require("sequelize");
 const { Material } = require("../models");
 
-const parseBooleanState = (estado) => {
-  if (!estado) return null;
-  const value = String(estado).trim().toLowerCase();
-  if (value === "activo" || value === "activos") return "activo";
-  if (value === "inactivo" || value === "inactivos") return "inactivo";
-  return null;
-};
-
 const listarMateriales = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, search, categoria, estado } = req.query;
@@ -25,9 +17,13 @@ const listarMateriales = async (req, res, next) => {
       where.categoria = categoria;
     }
 
-    const estadoFiltro = parseBooleanState(estado);
-    if (estadoFiltro && Object.prototype.hasOwnProperty.call(Material.rawAttributes, "estado")) {
-      where.estado = estadoFiltro;
+    if (estado) {
+      const estadoValue = String(estado).toLowerCase();
+      if (estadoValue === "inactivo") {
+        where.estado = "inactivo";
+      } else if (estadoValue === "activo" || estadoValue === "activos") {
+        where.estado = "activo";
+      }
     }
 
     const pageNumber = Number(page) || 1;
@@ -67,6 +63,7 @@ const crearMaterial = async (req, res, next) => {
       precio,
       cantidad,
       cantidad_actual,
+      estado = "activo",
     } = req.body;
 
     if (!codigo || !codigo.toString().trim()) {
@@ -80,6 +77,7 @@ const crearMaterial = async (req, res, next) => {
     const stockMinimoValue = Number(stockMinimo) || 0;
     const cantidadInicial = Number(cantidad ?? cantidad_actual ?? 0) || 0;
     const costoPromedio = Number(precio) || 0;
+    const estadoValue = String(estado).toLowerCase() === "inactivo" ? "inactivo" : "activo";
 
     const nuevoMaterial = await Material.create({
       codigo: codigo.toString().trim(),
@@ -90,6 +88,7 @@ const crearMaterial = async (req, res, next) => {
       unidad_medida: unidadMedida || null,
       cantidad_actual: cantidadInicial,
       costo_promedio: costoPromedio,
+      estado: estadoValue,
       ultima_entrada: cantidadInicial > 0 ? new Date() : null,
     });
 
@@ -116,6 +115,7 @@ const actualizarMaterial = async (req, res, next) => {
       precio,
       cantidad,
       cantidad_actual,
+      estado,
     } = req.body;
 
     const material = await Material.findByPk(id);
@@ -134,6 +134,9 @@ const actualizarMaterial = async (req, res, next) => {
     if (cantidad !== undefined) updatePayload.cantidad_actual = Number(cantidad) || 0;
     if (cantidad_actual !== undefined) updatePayload.cantidad_actual = Number(cantidad_actual) || 0;
     if (precio !== undefined) updatePayload.costo_promedio = Number(precio) || 0;
+    if (estado !== undefined) {
+      updatePayload.estado = String(estado).toLowerCase() === "inactivo" ? "inactivo" : "activo";
+    }
 
     await material.update(updatePayload);
 
@@ -147,8 +150,29 @@ const actualizarMaterial = async (req, res, next) => {
   }
 };
 
+const eliminarMaterial = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const material = await Material.findByPk(id);
+    if (!material) {
+      return res.status(404).json({ message: "Insumo no encontrado" });
+    }
+
+    await material.destroy();
+
+    res.json({
+      message: "Insumo eliminado correctamente",
+      data: { id },
+    });
+  } catch (error) {
+    console.error("MATERIALES eliminarMaterial:", error.parent?.sqlMessage || error.message);
+    next(error);
+  }
+};
+
 module.exports = {
   listarMateriales,
   crearMaterial,
   actualizarMaterial,
+  eliminarMaterial,
 };
