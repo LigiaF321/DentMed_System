@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import { Draggable } from '@fullcalendar/interaction';
 import DentistSidebar from './DentistSidebar';
 import MetricCards from './MetricCards';
 import AppointmentsList from './AppointmentsList';
@@ -13,10 +14,11 @@ import TreatmentHistory from './TreatmentHistory';
 import NuevaCitaModal from './NuevaCitaModal';
 import MisPacientesScreen from './MisPacientesScreen';
 import BloqueoModal from './BloqueoModal';
+import ReprogramarCitaModal from './ReprogramarCitaModal';
 import bloquesService from '../../services/bloques.service';
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
-import { actualizarConsultorioCita } from '../../services/citas.service';
+import { actualizarConsultorioCita, reprogramarCita } from '../../services/citas.service';
 import './DentistDashboard.css';
 
 const normalizarEstadoConsultorio = (estado) =>
@@ -248,6 +250,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [activeView, setActiveView] = useState('agenda');
   const [showNuevaCitaModal, setShowNuevaCitaModal] = useState(false);
   const [showBloqueoModal, setShowBloqueoModal] = useState(false);
+  const [showReprogramarModal, setShowReprogramarModal] = useState(false);
+  const [reprogramarData, setReprogramarData] = useState({
+    cita: null,
+    nuevaFecha: null,
+    nuevaHora: null,
+  });
   const [toastMessage, setToastMessage] = useState('');
 
   const [metrics, setMetrics] = useState({
@@ -561,16 +569,109 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const handleEventClick = (info) => {
     const isBloqueo = info.event.extendedProps.isBloqueo;
     setSelectedEvent(info.event);
-    setShowModal(true);
 
     if (!isBloqueo) {
       const cita = citas.find((c) => String(c.id) === String(info.event.id));
       if (cita) handleSelectCita(cita);
+      return;
     }
+
+    setShowModal(true);
+  };
+
+  const handleEventDrop = async (info) => {
+    const { event } = info;
+    const isBloqueo = event.extendedProps?.isBloqueo;
+
+    // No permitir drag & drop de bloqueos
+    if (isBloqueo) {
+      info.revert();
+      return;
+    }
+
+    // Obtener la cita original
+    const citaOriginal = citas.find((c) => String(c.id) === String(event.id));
+
+    if (!citaOriginal) {
+      info.revert();
+      return;
+    }
+
+    // Extraer fecha y hora de la nueva posición
+    const nuevaFecha = event.start.toISOString().split('T')[0];
+    const nuevaHora = `${String(event.start.getHours()).padStart(2, '0')}:${String(
+      event.start.getMinutes()
+    ).padStart(2, '0')}`;
+
+    // Mostrar modal de confirmación con los datos
+    setReprogramarData({
+      cita: citaOriginal,
+      nuevaFecha,
+      nuevaHora,
+    });
+    setShowReprogramarModal(true);
+
+    // Revert el cambio mientras se confirma
+    info.revert();
+  };
+
+  const handleReprogramarConfirm = async (citaActualizada) => {
+    setShowReprogramarModal(false);
+
+    // Actualizar la cita en el estado y recalcular métricas
+    setCitas((prevCitas) => {
+      const actualizadas = ordenarCitasPorFecha(
+        prevCitas.map((c) =>
+          c.id === citaActualizada.id ? { ...c, ...citaActualizada } : c
+        )
+      );
+
+      setMetrics(calcularMetricas(actualizadas));
+      return actualizadas;
+    });
+
+    setSelectedCita((prev) => {
+      if (!prev) return prev;
+      return Number(prev.id) === Number(citaActualizada.id)
+        ? { ...prev, ...citaActualizada }
+        : prev;
+    });
+
+    // Resetear datos
+    setReprogramarData({
+      cita: null,
+      nuevaFecha: null,
+      nuevaHora: null,
+    });
+
+    // Mostrar mensaje de éxito
+    setToastMessage('¡Cita reprogramada correctamente!');
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const handleReprogramarCancel = () => {
+    setShowReprogramarModal(false);
+    setReprogramarData({
+      cita: null,
+      nuevaFecha: null,
+      nuevaHora: null,
+    });
   };
 
   const handleDateClick = (info) => {
-    setAgendaDate(new Date(info.date));
+    const nuevaFecha = new Date(info.date);
+    setAgendaDate(nuevaFecha);
+    setSelectedEvent(null);
+
+    const citasEnFecha = ordenarCitasPorFecha(
+      citas.filter(
+        (cita) =>
+          esMismoDia(cita.fecha_hora, nuevaFecha) &&
+          normalizarEstado(cita.estado) !== 'cancelada'
+      )
+    );
+
+    setSelectedCita(citasEnFecha.length ? citasEnFecha[0] : null);
   };
 
   const handleViewChange = (view) => {
@@ -672,25 +773,27 @@ const DentistDashboard = ({ userData, onLogout }) => {
   }, [dentistaInfo]);
 
   const eventsToDisplay = useMemo(() => {
-    const eventosCitas = (Array.isArray(citas) ? citas : []).map((cita) => {
-      const estado = normalizarEstado(cita.estado);
+    const eventosCitas = (Array.isArray(citas) ? citas : [])
+      .filter((cita) => normalizarEstado(cita.estado) !== 'cancelada')
+      .map((cita) => {
+        const estado = normalizarEstado(cita.estado);
 
-      return {
-        id: String(cita.id),
-        title: obtenerPacienteNombre(cita),
-        start: cita.fecha_hora,
-        end: obtenerFechaFin(cita),
-        extendedProps: {
-          estado,
-          motivo: cita.motivo,
-          paciente: cita.paciente,
-          isBloqueo: false,
-        },
-        backgroundColor: estadoColores[estado]?.background || '#007bff',
-        borderColor: estadoColores[estado]?.border || '#0069d9',
-        textColor: '#ffffff',
-      };
-    });
+        return {
+          id: String(cita.id),
+          title: obtenerPacienteNombre(cita),
+          start: cita.fecha_hora,
+          end: obtenerFechaFin(cita),
+          extendedProps: {
+            estado,
+            motivo: cita.motivo,
+            paciente: cita.paciente,
+            isBloqueo: false,
+          },
+          backgroundColor: estadoColores[estado]?.background || '#007bff',
+          borderColor: estadoColores[estado]?.border || '#0069d9',
+          textColor: '#ffffff',
+        };
+      });
 
     const eventosBloques = (Array.isArray(bloques) ? bloques : []).map((bloque) => ({
       id: `bloque-${bloque.id}`,
@@ -722,7 +825,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
   }
 
   const citasAgendaSeleccionada = ordenarCitasPorFecha(
-    citas.filter((cita) => esMismoDia(cita.fecha_hora, agendaDate))
+    citas.filter(
+      (cita) =>
+        esMismoDia(cita.fecha_hora, agendaDate) &&
+        normalizarEstado(cita.estado) !== 'cancelada'
+    )
   );
 
   const renderContent = () => {
@@ -814,6 +921,8 @@ const DentistDashboard = ({ userData, onLogout }) => {
                     events={eventsToDisplay}
                     eventClick={handleEventClick}
                     dateClick={handleDateClick}
+                    eventDrop={handleEventDrop}
+                    editable={true}
                     slotMinTime={startHour}
                     slotMaxTime="20:00:00"
                     allDaySlot={false}
@@ -954,6 +1063,16 @@ const DentistDashboard = ({ userData, onLogout }) => {
         onSave={handleSaveBloqueo}
         idDentista={dentistaInfo?.id}
       />
+
+      {showReprogramarModal && reprogramarData.cita && (
+        <ReprogramarCitaModal
+          cita={reprogramarData.cita}
+          nuevaFecha={reprogramarData.nuevaFecha}
+          nuevaHora={reprogramarData.nuevaHora}
+          onConfirm={handleReprogramarConfirm}
+          onCancel={handleReprogramarCancel}
+        />
+      )}
 
       {showModal && selectedEvent && !selectedEvent.extendedProps.isBloqueo && (
         <CambioConsultorioModal

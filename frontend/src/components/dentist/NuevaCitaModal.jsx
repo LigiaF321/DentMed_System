@@ -312,6 +312,7 @@ export default function NuevaCitaModal({
     id_consultorio: "",
     motivo: "",
     preReserva: false,
+    notificar_paciente: true,
   });
 
   const [resultados, setResultados] = useState([]);
@@ -446,6 +447,7 @@ export default function NuevaCitaModal({
       id_consultorio: "",
       motivo: "",
       preReserva: false,
+      notificar_paciente: true,
     });
 
     setResultados([]);
@@ -863,6 +865,7 @@ export default function NuevaCitaModal({
         id_consultorio: Number(form.id_consultorio),
         motivo: form.motivo.trim(),
         preReserva: form.preReserva,
+        notificar_paciente: form.notificar_paciente,
       });
 
       try {
@@ -1273,6 +1276,19 @@ export default function NuevaCitaModal({
                 Esta cita será registrada como <b>pre-reserva provisional</b>.
               </div>
             ) : null}
+
+            <div className="checkbox-group" style={{ marginBottom: 16, marginTop: 16 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.notificar_paciente}
+                  onChange={(e) => setForm((prev) => ({ ...prev, notificar_paciente: e.target.checked }))}
+                />
+                <span className="checkbox-label">
+                  <i className="fas fa-bell"></i> Notificar al paciente por correo electrónico
+                </span>
+              </label>
+            </div>
 
             <div className="dm17-actions">
               <button

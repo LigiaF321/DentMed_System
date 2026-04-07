@@ -49,6 +49,12 @@ const Cita = sequelize.define(
       allowNull: true,
       comment: "Minutos",
     },
+    notificar_paciente: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      comment: "Si se debe notificar al paciente de cambios en la cita",
+    },
   },
   {
     tableName: "citas",

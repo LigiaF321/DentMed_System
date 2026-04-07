@@ -454,6 +454,7 @@ const crearCita = async (req, res) => {
       motivo,
       id_consultorio,
       preReserva,
+      notificar_paciente = true,
     } = req.body;
 
     if (!id_paciente || !fecha || !hora || !duracion) {
@@ -553,6 +554,7 @@ const crearCita = async (req, res) => {
       estado: "Programada",
       motivo: motivo || null,
       duracion_estimada: Number(duracion),
+      notificar_paciente: Boolean(notificar_paciente),
     });
 
     if (preReserva && id_consultorio) {
@@ -666,8 +668,434 @@ const cancelarCita = async (req, res) => {
   }
 };
 
+const buscarHorariosDisponibles = async ({
+  fechaInicial,
+  idDentista,
+  duracion = 30,
+  idConsultorio = null,
+  excluirCitaId = null,
+  horaInicio = 6,
+  horaFin = 20,
+}) => {
+  const INTERVALO_MINUTOS = 30;
+  const horariosDisponibles = [];
+  const diasABuscar = 4; // Día actual + 3 días siguientes
+
+  try {
+    for (let diaOffset = 0; diaOffset < diasABuscar; diaOffset++) {
+      const fecha = new Date(fechaInicial);
+      fecha.setDate(fecha.getDate() + diaOffset);
+
+      // Validar que no sea fin de semana (opcional, según tus requerimientos)
+      const diaSemana = fecha.getDay();
+      if (diaSemana === 0 || diaSemana === 6) continue;
+
+      const { inicio: inicioDelDia, fin: finDelDia } = obtenerInicioYFinDia(fecha);
+
+      // Buscar bloqueos del día
+      const bloquesDelDia = await Bloque.findAll({
+        where: {
+          id_dentista: idDentista,
+          activo: true,
+          [Op.or]: [
+            { fecha_inicio: { [Op.between]: [inicioDelDia, finDelDia] } },
+            { fecha_fin: { [Op.between]: [inicioDelDia, finDelDia] } },
+          ],
+        },
+        attributes: ["fecha_inicio", "fecha_fin"],
+      });
+
+      // Buscar citas del día
+      const citasDelDia = await Cita.findAll({
+        where: {
+          id_dentista: idDentista,
+          fecha_hora: {
+            [Op.between]: [inicioDelDia, finDelDia],
+          },
+          estado: {
+            [Op.notIn]: ["Cancelada", "cancelada"],
+          },
+          ...(excluirCitaId
+            ? {
+                id: {
+                  [Op.ne]: excluirCitaId,
+                },
+              }
+            : {}),
+        },
+        attributes: ["fecha_hora", "duracion_estimada", "id_consultorio"],
+      });
+
+      // Buscar pre-reservas activas si hay consultorio
+      let preReservasActivas = [];
+      if (idConsultorio) {
+        preReservasActivas = await obtenerPreReservasActivasConCitas({
+          idConsultorio,
+          excluirCitaId,
+        }).then((preReservas) =>
+          preReservas.filter((pr) => {
+            const diaPreReserva = new Date(pr.cita.fecha_hora);
+            const diaComparar = new Date(fecha);
+            return (
+              diaPreReserva.getDate() === diaComparar.getDate() &&
+              diaPreReserva.getMonth() === diaComparar.getMonth() &&
+              diaPreReserva.getFullYear() === diaComparar.getFullYear()
+            );
+          })
+        );
+      }
+
+      // Verificar cada slot de 30 minutos
+      for (let hora = horaInicio; hora < horaFin; hora++) {
+        for (let minutos = 0; minutos < 60; minutos += INTERVALO_MINUTOS) {
+          const fechaPrueba = new Date(fecha);
+          fechaPrueba.setHours(hora, minutos, 0, 0);
+
+          const finCitaPrueba = sumarMinutos(fechaPrueba, duracion);
+
+          // Validar que no se salga del horario permitido
+          if (finCitaPrueba.getHours() > horaFin) break;
+
+          // Verificar conflicto con bloqueos
+          const conflictoBloque = bloquesDelDia.some((bloque) => {
+            return haySolapamiento(
+              fechaPrueba,
+              finCitaPrueba,
+              new Date(bloque.fecha_inicio),
+              new Date(bloque.fecha_fin)
+            );
+          });
+
+          if (conflictoBloque) continue;
+
+          // Verificar conflicto con citas
+          const conflictoCita = citasDelDia.some((cita) => {
+            const inicioCita = new Date(cita.fecha_hora);
+            const finCita = sumarMinutos(
+              inicioCita,
+              Number(cita.duracion_estimada || 30)
+            );
+
+            // Si hay consultorio, validar que coincida
+            if (idConsultorio && cita.id_consultorio) {
+              if (Number(cita.id_consultorio) !== Number(idConsultorio)) {
+                return false;
+              }
+            }
+
+            return haySolapamiento(
+              fechaPrueba,
+              finCitaPrueba,
+              inicioCita,
+              finCita
+            );
+          });
+
+          if (conflictoCita) continue;
+
+          // Verificar conflicto con pre-reservas
+          const conflictoPreReserva = preReservasActivas.some((pr) => {
+            const inicioPreReserva = new Date(pr.cita.fecha_hora);
+            const finPreReserva = sumarMinutos(
+              inicioPreReserva,
+              Number(pr.cita.duracion_estimada || 30)
+            );
+
+            return haySolapamiento(
+              fechaPrueba,
+              finCitaPrueba,
+              inicioPreReserva,
+              finPreReserva
+            );
+          });
+
+          if (conflictoPreReserva) continue;
+
+          // Si llegamos aquí, este slot está disponible
+          horariosDisponibles.push({
+            fecha: fechaPrueba.toISOString().split("T")[0],
+            hora: `${String(hora).padStart(2, "0")}:${String(minutos).padStart(
+              2,
+              "0"
+            )}`,
+            displayFecha: fechaPrueba.toLocaleDateString("es-ES", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            }),
+            displayHora: `${String(hora).padStart(2, "0")}:${String(minutos).padStart(
+              2,
+              "0"
+            )}`,
+          });
+
+          // Limitar a 5 sugerencias
+          if (horariosDisponibles.length >= 5) {
+            return horariosDisponibles;
+          }
+        }
+      }
+    }
+
+    return horariosDisponibles;
+  } catch (error) {
+    console.error("Error al buscar horarios disponibles:", error);
+    return [];
+  }
+};
+
+const reprogramarCita = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha, hora, duracion, motivo_reprogramacion, notificar_paciente } = req.body;
+
+    if (!fecha || !hora || !duracion) {
+      return res.status(400).json({
+        ok: false,
+        message: "fecha, hora y duracion son obligatorios",
+      });
+    }
+
+    const cita = await Cita.findByPk(id);
+
+    if (!cita) {
+      return res.status(404).json({
+        ok: false,
+        message: "Cita no encontrada",
+      });
+    }
+
+    const estadoActual = normalizarEstado(cita.estado);
+
+    if (ESTADOS_NO_DISPONIBLES.includes(estadoActual)) {
+      return res.status(409).json({
+        ok: false,
+        message: "No se puede reprogramar una cita cancelada",
+      });
+    }
+
+    const inicioNuevaCita = combinarFechaHora(fecha, hora);
+    const finNuevaCita = sumarMinutos(inicioNuevaCita, Number(duracion));
+
+    // Obtener el dentista de la cita
+    const idDentista = cita.id_dentista;
+
+    // Validar bloqueos
+    const bloquesDelDia = await obtenerBloquesDelDiaParaValidar({
+      fechaHoraInicio: inicioNuevaCita,
+      idDentista,
+    });
+
+    const conflictoBloque = bloquesDelDia.find((bloque) => {
+      return haySolapamiento(
+        inicioNuevaCita,
+        finNuevaCita,
+        new Date(bloque.fecha_inicio),
+        new Date(bloque.fecha_fin)
+      );
+    });
+
+    if (conflictoBloque) {
+      const horariosAlternativos = await buscarHorariosDisponibles({
+        fechaInicial: inicioNuevaCita,
+        idDentista,
+        duracion: Number(duracion),
+        idConsultorio: cita.id_consultorio || null,
+        excluirCitaId: id,
+      });
+
+      return res.status(409).json({
+        ok: false,
+        message: `No se puede agendar: Horario bloqueado por ${conflictoBloque.tipo}.`,
+        horariosAlternativos,
+        hayAlternativas: horariosAlternativos.length > 0,
+      });
+    }
+
+    // Validar conflictos con otras citas (excluyendo la actual)
+    const citasDelDia = await obtenerCitasDelDiaParaValidar({
+      fechaHoraInicio: inicioNuevaCita,
+      idDentista,
+      idConsultorio: cita.id_consultorio || null,
+      excluirCitaId: id,
+    });
+
+    const conflicto = citasDelDia.find((citaExistente) => {
+      const estado = normalizarEstado(citaExistente.estado);
+
+      if (ESTADOS_NO_DISPONIBLES.includes(estado)) {
+        return false;
+      }
+
+      const inicioExistente = new Date(citaExistente.fecha_hora);
+      const finExistente = sumarMinutos(
+        inicioExistente,
+        Number(citaExistente.duracion_estimada || 30)
+      );
+
+      return haySolapamiento(
+        inicioNuevaCita,
+        finNuevaCita,
+        inicioExistente,
+        finExistente
+      );
+    });
+
+    if (conflicto) {
+      const horariosAlternativos = await buscarHorariosDisponibles({
+        fechaInicial: inicioNuevaCita,
+        idDentista,
+        duracion: Number(duracion),
+        idConsultorio: cita.id_consultorio || null,
+        excluirCitaId: id,
+      });
+
+      return res.status(409).json({
+        ok: false,
+        message: "Conflicto de horario. Ya existe una cita en ese rango.",
+        horariosAlternativos,
+        hayAlternativas: horariosAlternativos.length > 0,
+      });
+    }
+
+    // Validar consultorio si la cita tiene uno asignado
+    if (cita.id_consultorio) {
+      const validacionConsultorio = await validarConsultorioDisponible({
+        idConsultorio: Number(cita.id_consultorio),
+        inicioNuevaCita,
+        finNuevaCita,
+        excluirCitaId: id,
+      });
+
+      if (!validacionConsultorio.ok) {
+        const horariosAlternativos = await buscarHorariosDisponibles({
+          fechaInicial: inicioNuevaCita,
+          idDentista,
+          duracion: Number(duracion),
+          idConsultorio: cita.id_consultorio || null,
+          excluirCitaId: id,
+        });
+
+        return res.status(validacionConsultorio.status || 409).json({
+          ok: false,
+          message: validacionConsultorio.message,
+          horariosAlternativos,
+          hayAlternativas: horariosAlternativos.length > 0,
+        });
+      }
+    }
+
+    // Actualizar la cita
+    cita.fecha_hora = inicioNuevaCita;
+    cita.duracion_estimada = Number(duracion);
+    cita.estado = "Reprogramada";
+    
+    // Agregar el motivo de reprogramación al motivo existente
+    if (motivo_reprogramacion) {
+      cita.motivo = motivo_reprogramacion;
+    }
+
+    // Establecer si se debe notificar al paciente
+    if (typeof notificar_paciente !== 'undefined') {
+      cita.notificar_paciente = Boolean(notificar_paciente);
+    }
+
+    await cita.save();
+
+    const citaRespuesta = await construirRespuestaCita(cita);
+
+    return res.status(200).json({
+      ok: true,
+      message: "Cita reprogramada correctamente",
+      data: citaRespuesta,
+    });
+  } catch (error) {
+    console.error("Error al reprogramar cita:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al reprogramar la cita",
+    });
+  }
+};
+
+const obtenerCitasDentista = async (req, res) => {
+  try {
+    const idDentista = await obtenerDentistaIdDesdeRequest(req);
+
+    if (!idDentista) {
+      return res.status(400).json({
+        ok: false,
+        message: "No se pudo determinar el dentista desde el token",
+      });
+    }
+
+    const citas = await Cita.findAll({
+      where: {
+        id_dentista: idDentista,
+      },
+      include: [
+        {
+          model: Paciente,
+          attributes: ["id", "nombre", "telefono", "email"],
+        },
+      ],
+      order: [["fecha_hora", "ASC"]],
+    });
+
+    if (!citas || citas.length === 0) {
+      return res.status(200).json({
+        ok: true,
+        data: [],
+        message: "No hay citas registradas",
+      });
+    }
+
+    // Transformar respuesta para incluir datos del paciente de forma clara
+    const citasFormatadas = citas.map((cita) => {
+      const duracion = Number(cita.duracion_estimada || 30);
+      const fechaInicio = new Date(cita.fecha_hora);
+      const fechaFin = sumarMinutos(fechaInicio, duracion);
+
+      return {
+        id: cita.id,
+        id_paciente: cita.id_paciente,
+        id_dentista: cita.id_dentista,
+        id_consultorio: cita.id_consultorio,
+        fecha_hora: cita.fecha_hora,
+        fecha_fin: fechaFin,
+        estado: normalizarEstado(cita.estado || "Programada"),
+        motivo: cita.motivo || "",
+        duracion_estimada: duracion,
+        paciente_nombre: cita.Paciente?.nombre || "Paciente",
+        paciente: cita.Paciente
+          ? {
+              id: cita.Paciente.id,
+              nombre: cita.Paciente.nombre,
+              telefono: cita.Paciente.telefono || "",
+              email: cita.Paciente.email || "",
+            }
+          : null,
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: citasFormatadas,
+      message: `${citasFormatadas.length} cita(s) encontrada(s)`,
+    });
+  } catch (error) {
+    console.error("Error al obtener citas del dentista:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al obtener las citas",
+    });
+  }
+};
+
 module.exports = {
   verificarDisponibilidad,
   crearCita,
   cancelarCita,
+  reprogramarCita,
+  obtenerCitasDentista,
 };

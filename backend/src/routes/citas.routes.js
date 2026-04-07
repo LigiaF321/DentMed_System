@@ -6,6 +6,8 @@ const {
   verificarDisponibilidad,
   crearCita,
   cancelarCita,
+  reprogramarCita,
+  obtenerCitasDentista,
 } = require("../controllers/citas.controller");
 
 const {
@@ -14,9 +16,11 @@ const {
   eliminarPreReserva,
 } = require("../controllers/consultorios.controller");
 
+router.get("/dentista", verifyToken, obtenerCitasDentista);
 router.get("/verificar-disponibilidad", verifyToken, verificarDisponibilidad);
 router.post("/", verifyToken, crearCita);
 router.patch("/:id/cancelar", verifyToken, cancelarCita);
+router.patch("/:id/reprogramar", verifyToken, reprogramarCita);
 
 router.post("/pre-reserva", verifyToken, crearPreReserva);
 router.put("/:id/consultorio", verifyToken, actualizarConsultorioCita);

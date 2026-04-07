@@ -73,6 +73,31 @@ export const cancelarCita = async (idCita) => {
   return parseResponse(response);
 };
 
+export const reprogramarCita = async (idCita, payload) => {
+  const response = await fetch(`${API_URL}/citas/${idCita}/reprogramar`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const rawText = await response.text();
+
+  if (!contentType.includes("application/json")) {
+    throw new Error("El servidor no devolvió JSON.");
+  }
+
+  const data = JSON.parse(rawText);
+
+  if (!response.ok) {
+    const error = new Error(data.message || "Error en la petición");
+    error.response = { data };
+    throw error;
+  }
+
+  return data;
+};
+
 export const actualizarConsultorioCita = async (idCita, idConsultorio) => {
   const response = await fetch(`${API_URL}/citas/${idCita}/consultorio`, {
     method: "PUT",
