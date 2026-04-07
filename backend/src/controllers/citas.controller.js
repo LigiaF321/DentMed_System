@@ -66,9 +66,7 @@ const obtenerDentistaIdDesdeRequest = async (req) => {
   if (usuario.id_dentista) return usuario.id_dentista;
   if (usuario.dentista_id) return usuario.dentista_id;
 
-  if ((usuario.rol === "dentista" || usuario.role === "dentista") && usuario.id) {
-    return usuario.id;
-  }
+  
 
   const dentista = await Dentista.findOne({
     where: { id_usuario: usuario.id },
