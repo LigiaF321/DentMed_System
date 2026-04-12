@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import ConsultorioSugerido from "./ConsultorioSugerido";
 import {
   buscarPacientes,
   crearPacienteRapido,
@@ -14,7 +13,6 @@ import {
   obtenerDisponibilidadConsultorios,
   obtenerEquipamientoConsultorios,
   filtrarConsultoriosPorEquipamiento,
-  sugerirConsultorios,
 } from "../../services/consultorios.service";
 import "./NuevaCitaModal.css";
 
@@ -326,9 +324,6 @@ export default function NuevaCitaModal({
     message: "",
   });
 
-  const [consultoriosSugeridos, setConsultoriosSugeridos] = useState([]);
-  const [sugiriendo, setSugiriendo] = useState(false);
-
   const [consultoriosDisponibles, setConsultoriosDisponibles] = useState([]);
   const [catalogoEquipamiento, setCatalogoEquipamiento] = useState([]);
   const [consultoriosCompatiblesEquipo, setConsultoriosCompatiblesEquipo] = useState([]);
@@ -409,14 +404,6 @@ export default function NuevaCitaModal({
     idsCompatiblesSet,
   ]);
 
-  const consultoriosSugeridosCompatibles = useMemo(() => {
-    if (!hayFiltroPorEquipo) return consultoriosSugeridos;
-
-    return (consultoriosSugeridos || []).filter((consultorio) =>
-      idsCompatiblesSet.has(String(consultorio.id))
-    );
-  }, [consultoriosSugeridos, hayFiltroPorEquipo, idsCompatiblesSet]);
-
   useEffect(() => {
     if (!form.fecha || !form.hora) {
       setForm((prev) => ({ ...prev, preReserva: false }));
@@ -460,8 +447,6 @@ export default function NuevaCitaModal({
       disponible: true,
       message: "",
     });
-    setConsultoriosSugeridos([]);
-    setSugiriendo(false);
     setConflictoSimultaneo(null);
     setConsultoriosDisponibles(Array.isArray(consultorios) ? consultorios : []);
     setCatalogoEquipamiento([]);
@@ -482,7 +467,6 @@ export default function NuevaCitaModal({
         }
       } catch (error) {
         if (!cancelado) {
-          console.error("Error cargando equipamiento de consultorios:", error);
           setCatalogoEquipamiento([]);
         }
       }
@@ -538,7 +522,6 @@ export default function NuevaCitaModal({
         }
       } catch (error) {
         if (!cancelado) {
-          console.error("Error filtrando consultorios por equipamiento:", error);
           setConsultoriosCompatiblesEquipo([]);
         }
       }
@@ -619,7 +602,6 @@ export default function NuevaCitaModal({
         });
       } catch (err) {
         if (!cancelado) {
-          console.error("Error cargando disponibilidad de consultorios:", err);
           setConsultoriosDisponibles([]);
         }
       }
@@ -659,7 +641,6 @@ export default function NuevaCitaModal({
         const response = await buscarPacientes(query);
         setResultados(response?.data || []);
       } catch (err) {
-        console.error("Error buscando pacientes:", err);
         setResultados([]);
       } finally {
         setSearching(false);
@@ -735,42 +716,6 @@ export default function NuevaCitaModal({
 
     return () => clearTimeout(timer);
   }, [form.fecha, form.hora, form.duracion, form.id_consultorio, open]);
-
-  useEffect(() => {
-    if (!form.motivo || form.motivo.trim().length < 3) {
-      setConsultoriosSugeridos([]);
-      return;
-    }
-
-    let cancelado = false;
-    setSugiriendo(true);
-
-    sugerirConsultorios({
-      procedimiento: form.motivo.trim(),
-      fecha: form.fecha,
-      hora: form.hora,
-      duracion: form.duracion,
-    })
-      .then((res) => {
-        if (!cancelado) {
-          setConsultoriosSugeridos(res?.data || []);
-        }
-      })
-      .catch(() => {
-        if (!cancelado) {
-          setConsultoriosSugeridos([]);
-        }
-      })
-      .finally(() => {
-        if (!cancelado) {
-          setSugiriendo(false);
-        }
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [form.motivo, form.fecha, form.hora, form.duracion]);
 
   const canSave = useMemo(() => {
     return (
@@ -885,9 +830,7 @@ export default function NuevaCitaModal({
             preReserva: form.preReserva,
           },
         });
-      } catch (err) {
-        console.warn("No se pudo registrar auditoría de consultorio", err);
-      }
+      } catch (err) {}
 
       if (onCreated) {
         onCreated(response);
@@ -962,21 +905,21 @@ export default function NuevaCitaModal({
                 </div>
               ) : null}
 
-              {!form.paciente &&
-              form.queryPaciente.trim().length >= 2 &&
-              !searching &&
-              resultados.length === 0 ? (
-                <div className="dm17-empty-search">
-                  <span>No se encontró el paciente.</span>
-                  <button
-                    type="button"
-                    className="dm17-link-btn"
-                    onClick={() => setShowCrearPaciente(true)}
-                  >
-                    Crear nuevo paciente
-                  </button>
-                </div>
-              ) : null}
+              {!form.paciente && form.queryPaciente.trim().length >= 2 && !searching && (
+  <div className="dm17-empty-search">
+    {resultados.length === 0 && (
+      <span>No se encontró el paciente.</span>
+    )}
+
+    <button
+      type="button"
+      className="dm17-link-btn"
+      onClick={() => setShowCrearPaciente(true)}
+    >
+      Crear nuevo paciente
+    </button>
+  </div>
+)}
             </div>
 
             <div className="dm17-grid">
@@ -1121,111 +1064,8 @@ export default function NuevaCitaModal({
                     </span>
                   </div>
                 ) : null}
-
-                <ConsultorioSugerido
-                  procedimiento={form.motivo}
-                  consultorios={consultoriosSugeridosCompatibles}
-                  loading={sugiriendo}
-                  onSelectConsultorio={(c) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      id_consultorio: String(c.id),
-                    }))
-                  }
-                />
               </div>
             </div>
-
-            {!consultoriosDisponibles.length ? (
-              <div className="dm17-error">
-                No hay consultorios disponibles para agendar.
-              </div>
-            ) : null}
-
-            {checking ? (
-              <div className="dm17-help">Verificando disponibilidad...</div>
-            ) : null}
-
-            {consultoriosDisponibles.length > 0 &&
-            form.id_consultorio &&
-            (() => {
-              const consultorioSel = consultoriosDisponibles.find(
-                (c) => String(c.id) === String(form.id_consultorio)
-              );
-
-              if (
-                consultorioSel &&
-                ["mantenimiento", "limpieza"].includes(
-                  normalizarEstado(
-                    consultorioSel.estado_operativo || consultorioSel.estado
-                  )
-                )
-              ) {
-                return (
-                  <div
-                    className="dm17-error"
-                    style={{
-                      fontWeight: "bold",
-                      background: "#fff3cd",
-                      color: "#856404",
-                      border: "1px solid #ffeeba",
-                    }}
-                  >
-                    El consultorio seleccionado está en{" "}
-                    <b>
-                      {obtenerTextoEstadoConsultorio(
-                        consultorioSel
-                      ).toLowerCase()}
-                    </b>
-                    .
-                  </div>
-                );
-              }
-
-              return null;
-            })()}
-
-            {!checking && !disponibilidad.disponible ? (
-              <div className="dm17-error" style={{ fontWeight: "bold" }}>
-                {disponibilidad.message}
-              </div>
-            ) : null}
-
-            {conflictoSimultaneo ? (
-              <div className="dm17-error" style={{ fontWeight: "bold" }}>
-                Conflicto: Ya tienes una cita en otro consultorio en este
-                horario.
-              </div>
-            ) : null}
-
-            {advertenciasEquipamiento.length > 0 ? (
-              <div className="dm26-warning-box">
-                <div className="dm26-warning-title">
-                  <i className="fas fa-exclamation-triangle"></i>
-                  <span>Advertencia de equipamiento</span>
-                </div>
-
-                {advertenciasEquipamiento.map((mensaje, index) => (
-                  <div key={index} className="dm26-warning-item">
-                    {mensaje}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {hayFiltroPorEquipo &&
-            consultoriosCompatiblesEquipo.length === 0 ? (
-              <div className="dm26-warning-box">
-                <div className="dm26-warning-title">
-                  <i className="fas fa-exclamation-circle"></i>
-                  <span>No hay consultorios compatibles</span>
-                </div>
-                <div className="dm26-warning-item">
-                  Ningún consultorio tiene disponible el equipo requerido para
-                  este procedimiento.
-                </div>
-              </div>
-            ) : null}
 
             {((consultorioSeleccionado &&
               esConsultorioBloqueado(consultorioSeleccionado)) ||
@@ -1262,33 +1102,6 @@ export default function NuevaCitaModal({
             )}
 
             {error ? <div className="dm17-error">{error}</div> : null}
-
-            {form.preReserva ? (
-              <div
-                className="dm17-help"
-                style={{
-                  background: "#fffbe6",
-                  color: "#b26a00",
-                  border: "1px solid #ffe58f",
-                  marginBottom: 10,
-                }}
-              >
-                Esta cita será registrada como <b>pre-reserva provisional</b>.
-              </div>
-            ) : null}
-
-            <div className="checkbox-group" style={{ marginBottom: 16, marginTop: 16 }}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={form.notificar_paciente}
-                  onChange={(e) => setForm((prev) => ({ ...prev, notificar_paciente: e.target.checked }))}
-                />
-                <span className="checkbox-label">
-                  <i className="fas fa-bell"></i> Notificar al paciente por correo electrónico
-                </span>
-              </label>
-            </div>
 
             <div className="dm17-actions">
               <button
