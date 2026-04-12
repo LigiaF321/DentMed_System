@@ -1034,7 +1034,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
             </button>
 
             <button
-              className="new-appointment-btn"
+              className="btn-bloquear-horario"
               onClick={() => setShowNuevaCitaModal(true)}
             >
               + Nueva cita
