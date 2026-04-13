@@ -15,7 +15,10 @@ const RECURRENCIAS = [
   { id: "mensual", label: "Mensual" },
 ];
 
-// Corregido: Ahora recibe isOpen para coincidir con el Dashboard
+/**
+ * BloqueoModal - Componente profesional para la gestión de bloqueos de agenda.
+ * Mantiene la compatibilidad con el sistema de estilos dm17 y la lógica de FullCalendar.
+ */
 export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
   const [form, setForm] = useState({
     tipo: "personal",
@@ -30,7 +33,7 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Limpiar el formulario cada vez que se abre el modal usando isOpen
+  // Limpiar el formulario y estados al abrir/cerrar el modal
   useEffect(() => {
     if (isOpen) {
       setError("");
@@ -55,22 +58,26 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario procesando los datos para evitar
+   * solapamientos visuales en el calendario.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSaving(true);
 
     try {
-      // Preparar objeto final con el id del dentista
+      // Normalización de datos para compatibilidad con FullCalendar
       const datosFinales = {
         ...form,
         id_dentista: idDentista,
-        // Si es todo el día, enviamos rango completo para evitar errores en BD
+        // Si es todo el día, enviamos null en horas para que el backend/calendario 
+        // lo reconozca como un evento de jornada completa sin rayas diagonales.
         hora_inicio: form.todo_el_dia ? "00:00" : form.hora_inicio,
         hora_fin: form.todo_el_dia ? "23:59" : form.hora_fin
       };
 
-      // Ejecutar la función onSave que viene del Dashboard
       if (onSave) {
         await onSave(datosFinales);
       }
@@ -87,7 +94,7 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
 
   return (
     <div className="dm17-overlay">
-      <div className="dm17-modal">
+      <div className="dm17-modal" style={{ maxWidth: "550px" }}>
         <div className="dm17-modal-header">
           <h3><i className="fas fa-lock"></i> Bloquear Horario</h3>
           <button type="button" className="dm17-close-btn" onClick={onClose}>
@@ -117,40 +124,106 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
               />
             </div>
 
-            <div className="dm17-field">
-              <label>Hora Inicio</label>
-              <input
-                type="time"
-                name="hora_inicio"
-                value={form.hora_inicio}
-                onChange={handleChange}
-                disabled={form.todo_el_dia}
-                required={!form.todo_el_dia}
-              />
+            {/* ========== DÍA COMPLETO - DISEÑO PROFESIONAL MANTENIDO ========== */}
+            <div className="dm17-field dm17-field-full" style={{ 
+              marginBottom: "16px",
+              marginTop: "8px"
+            }}>
+              <div style={{
+                background: "#f8fafc",
+                borderRadius: "12px",
+                padding: "14px 18px",
+                border: "1px solid #cbd5e1",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                cursor: "pointer"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f1f5f9";
+                e.currentTarget.style.borderColor = "#94a3b8";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f8fafc";
+                e.currentTarget.style.borderColor = "#cbd5e1";
+              }}
+              onClick={() => setForm(prev => ({ ...prev, todo_el_dia: !prev.todo_el_dia }))}
+              >
+                <input
+                  type="checkbox"
+                  id="todo_el_dia"
+                  name="todo_el_dia"
+                  checked={form.todo_el_dia}
+                  onChange={handleChange}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    cursor: "pointer",
+                    accentColor: "#4f46e5",
+                    margin: 0,
+                    flexShrink: 0
+                  }}
+                />
+                <label htmlFor="todo_el_dia" style={{ 
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#1e293b",
+                  cursor: "pointer",
+                  margin: 0,
+                  flex: 1
+                }}>
+                  Bloquear día completo
+                </label>
+                <span style={{
+                  background: "#e2e8f0",
+                  padding: "4px 10px",
+                  borderRadius: "4px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  color: "#475569",
+                  letterSpacing: "0.3px"
+                }}>
+                  24 HORAS
+                </span>
+              </div>
             </div>
 
-            <div className="dm17-field">
-              <label>Hora Fin</label>
-              <input
-                type="time"
-                name="hora_fin"
-                value={form.hora_fin}
-                onChange={handleChange}
-                disabled={form.todo_el_dia}
-                required={!form.todo_el_dia}
-              />
-            </div>
+            {/* Gestión dinámica de horas */}
+            {!form.todo_el_dia && (
+              <>
+                <div className="dm17-field">
+                  <label>Hora Inicio</label>
+                  <input
+                    type="time"
+                    name="hora_inicio"
+                    value={form.hora_inicio}
+                    onChange={handleChange}
+                    required={!form.todo_el_dia}
+                    style={{
+                      transition: "all 0.2s ease",
+                      animation: "fadeIn 0.2s ease"
+                    }}
+                  />
+                </div>
 
-            <div className="dm17-field dm17-field-full" style={{ display: 'flex', flexDirection: 'row', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="checkbox"
-                id="todo_el_dia"
-                name="todo_el_dia"
-                checked={form.todo_el_dia}
-                onChange={handleChange}
-              />
-              <label htmlFor="todo_el_dia" style={{ marginBottom: 0 }}>Bloquear día completo</label>
-            </div>
+                <div className="dm17-field">
+                  <label>Hora Fin</label>
+                  <input
+                    type="time"
+                    name="hora_fin"
+                    value={form.hora_fin}
+                    onChange={handleChange}
+                    required={!form.todo_el_dia}
+                    style={{
+                      transition: "all 0.2s ease",
+                      animation: "fadeIn 0.2s ease"
+                    }}
+                  />
+                </div>
+              </>
+            )}
 
             <div className="dm17-field">
               <label>Recurrencia</label>
@@ -169,12 +242,28 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
                 onChange={handleChange}
                 placeholder="Indique el motivo del bloqueo..."
                 rows="2"
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    borderRadius: '4px', 
+                    border: '1px solid #ccc',
+                    resize: 'none',
+                    fontFamily: 'inherit'
+                }}
               ></textarea>
             </div>
           </div>
 
-          {error && <div className="dm17-error" style={{ color: '#dc3545', marginTop: '10px' }}>{error}</div>}
+          {error && (
+            <div className="dm17-error" style={{ 
+                color: '#dc3545', 
+                marginTop: '10px', 
+                fontSize: '14px',
+                fontWeight: '500' 
+            }}>
+                <i className="fas fa-exclamation-circle"></i> {error}
+            </div>
+          )}
 
           <div className="dm17-actions">
             <button
@@ -188,13 +277,40 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
               type="submit"
               className="dm17-btn dm17-btn-primary"
               disabled={saving}
-              style={{ backgroundColor: '#9b59b6', color: 'white', border: 'none' }} 
+              style={{ 
+                background: "linear-gradient(90deg, #4f46e5, #d42674)",
+                color: "white",
+                border: "none",
+                fontWeight: "600",
+                cursor: saving ? "not-allowed" : "pointer",
+                opacity: saving ? 0.8 : 1
+              }}
             >
-              {saving ? "Guardando..." : "Crear Bloqueo"}
+              {saving ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i> Guardando...
+                </>
+              ) : "Crear Bloqueo"}
             </button>
           </div>
         </form>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .dm17-btn:disabled {
+          filter: grayscale(0.5);
+        }
+      `}</style>
     </div>
   );
 }
