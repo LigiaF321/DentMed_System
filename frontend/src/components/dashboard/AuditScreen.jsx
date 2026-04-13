@@ -280,14 +280,14 @@ export default function AuditScreen() {
                 <label>Fecha hasta</label>
                 <input type="date" name="fechaHasta" placeholder="dd/mm/aaaa" style={inputStyle} value={filtros.fechaHasta} onChange={handleFiltroChange} />
               </div>
-              <div className="audit-filter audit-filter-period">
+              <div className="audit-filter-period">
                 <label>Período rápido</label>
                 <div className="audit-period-btns">
-                  <button type="button">HOY</button>
-                  <button type="button">AYER</button>
-                  <button type="button">ÚLTIMOS 7 DÍAS</button>
-                  <button type="button">ÚLTIMOS 30 DÍAS</button>
-                  <button type="button">ESTE MES</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para HOY */}}>HOY</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para AYER */}}>AYER</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para 7 días */}}>ÚLTIMOS 7 DÍAS</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para 30 días */}}>ÚLTIMOS 30 DÍAS</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para este mes */}}>ESTE MES</button>
                 </div>
               </div>
             </div>
@@ -347,21 +347,6 @@ export default function AuditScreen() {
             <div className="audit-table-header">
               <span className="audit-table-title">RESULTADOS DE AUDITORÍA</span>
               <span className="audit-table-info">Mostrando 0-0 de 0 registros</span>
-              <div className="audit-table-page-controls">
-                <button>{"|<"}</button>
-                <button>{"<"}</button>
-                <span>1</span>
-                <button>{">"}</button>
-                <button>{">|"}</button>
-                <select>
-                  <option>25</option>
-                  <option>50</option>
-                  <option>100</option>
-                  <option>200</option>
-                  <option>500</option>
-                </select>
-                <span>registros por página</span>
-              </div>
             </div>
             <div className="audit-table-wrap">
               <table className="audit-table">
@@ -396,6 +381,7 @@ export default function AuditScreen() {
                 </tbody>
               </table>
             </div>
+            {/* Paginación solo abajo, centrada */}
           </div>
           {/* Leyenda de roles */}
           <div className="audit-legend">
@@ -510,14 +496,25 @@ export default function AuditScreen() {
                     ))}
                   </tbody>
                 </table>
-                <div className="audit-table-page-controls">
-                  <button>{"|<"}</button>
-                  <button>{"<"}</button>
-                  <span>1</span>
-                  <button>{">"}</button>
-                  <button>{">|"}</button>
-                </div>
+                {/* Paginación solo en la tabla principal, no aquí */}
                 <div className="audit-timeline-update">Última actualización: 21/02/2026 11:30 AM</div>
+              </div>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+                <div className="audit-table-page-controls">
+                  <button className="audit-page-btn">{'|<'}</button>
+                  <button className="audit-page-btn">{'<'}</button>
+                  <button className="audit-page-btn active">1</button>
+                  <button className="audit-page-btn">{'>'}</button>
+                  <button className="audit-page-btn">{'>|'}</button>
+                  <select className="audit-page-size">
+                    <option>25</option>
+                    <option>50</option>
+                    <option>100</option>
+                    <option>200</option>
+                    <option>500</option>
+                  </select>
+                  <span>registros por página</span>
+                </div>
               </div>
             </div>
           )}

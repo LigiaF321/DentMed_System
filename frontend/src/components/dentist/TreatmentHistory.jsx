@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import './MisPacientesScreen.css';
+import VisualizadorDocumentos from './VisualizadorDocumentos';
 
 function MultiSesionViewer({ sesiones }) {
   const [idx, setIdx] = useState(0);
@@ -290,6 +291,14 @@ const TreatmentHistory = ({ pacienteId }) => {
           )}
         </div>
       </div>
+      {modalRx && (
+        <VisualizadorDocumentos
+          open={!!modalRx}
+          documentos={[modalRx]}
+          initialIndex={0}
+          onClose={() => setModalRx(null)}
+        />
+      )}
     </div>
   );
 }
