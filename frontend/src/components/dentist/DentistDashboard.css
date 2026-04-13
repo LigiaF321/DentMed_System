@@ -1050,3 +1050,58 @@
     width: 100%;
   }
 }
+/* ========== NUEVOS ESTILOS - TÍTULO DEL MES ========== */
+.calendar-month-title {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.calendar-month-title h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #0088cc;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+/* ========== AJUSTES DEL CALENDARIO MÁS PEQUEÑO ========== */
+/* Hacer el calendario más compacto */
+.calendar-wrapper {
+  padding: 16px; /* Reducido de 20px a 16px */
+}
+
+.fc .fc-timegrid-slot {
+  height: 36px; /* Reducido de 44px a 36px */
+}
+
+.fc .fc-event {
+  font-size: 11px; /* Reducido */
+  padding: 2px 4px;
+}
+
+/* Ajustar tamaño de fuente de los encabezados de días */
+.fc .fc-col-header-cell-cushion {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Ajustar altura de la barra de tiempo */
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  font-size: 11px;
+}
+
+/* Hacer el calendario más pequeño en general */
+.fc .fc-daygrid-day-number {
+  font-size: 12px;
+}
+
+/* Ajustar tamaño de los eventos en vista mensual */
+.fc .fc-daygrid-day-frame {
+  min-height: 60px;
+}
+
+.fc .fc-daygrid-event {
+  font-size: 10px;
+  padding: 1px 3px;
+}

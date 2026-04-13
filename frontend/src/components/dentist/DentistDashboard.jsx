@@ -4,7 +4,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
-import { Draggable } from '@fullcalendar/interaction';
 import DentistSidebar from './DentistSidebar';
 import MetricCards from './MetricCards';
 import AppointmentsList from './AppointmentsList';
@@ -18,7 +17,7 @@ import ReprogramarCitaModal from './ReprogramarCitaModal';
 import bloquesService from '../../services/bloques.service';
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
-import { actualizarConsultorioCita, reprogramarCita } from '../../services/citas.service';
+import { actualizarConsultorioCita } from '../../services/citas.service';
 import './DentistDashboard.css';
 
 const normalizarEstadoConsultorio = (estado) =>
@@ -251,6 +250,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [showNuevaCitaModal, setShowNuevaCitaModal] = useState(false);
   const [showBloqueoModal, setShowBloqueoModal] = useState(false);
   const [showReprogramarModal, setShowReprogramarModal] = useState(false);
+  const [currentMonthYear, setCurrentMonthYear] = useState(new Date());
   const [reprogramarData, setReprogramarData] = useState({
     cita: null,
     nuevaFecha: null,
@@ -266,8 +266,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
   });
 
   const calendarRef = useRef(null);
-
-  const horasDisponibles = ['06:00', '07:00', '08:00', '09:00', '10:00'];
 
   const estadoColores = {
     confirmada: {
@@ -583,13 +581,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
     const { event } = info;
     const isBloqueo = event.extendedProps?.isBloqueo;
 
-    // No permitir drag & drop de bloqueos
     if (isBloqueo) {
       info.revert();
       return;
     }
 
-    // Obtener la cita original
     const citaOriginal = citas.find((c) => String(c.id) === String(event.id));
 
     if (!citaOriginal) {
@@ -597,13 +593,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
       return;
     }
 
-    // Extraer fecha y hora de la nueva posición
     const nuevaFecha = event.start.toISOString().split('T')[0];
     const nuevaHora = `${String(event.start.getHours()).padStart(2, '0')}:${String(
       event.start.getMinutes()
     ).padStart(2, '0')}`;
 
-    // Mostrar modal de confirmación con los datos
     setReprogramarData({
       cita: citaOriginal,
       nuevaFecha,
@@ -611,14 +605,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
     });
     setShowReprogramarModal(true);
 
-    // Revert el cambio mientras se confirma
     info.revert();
   };
 
   const handleReprogramarConfirm = async (citaActualizada) => {
     setShowReprogramarModal(false);
 
-    // Actualizar la cita en el estado y recalcular métricas
     setCitas((prevCitas) => {
       const actualizadas = ordenarCitasPorFecha(
         prevCitas.map((c) =>
@@ -637,14 +629,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
         : prev;
     });
 
-    // Resetear datos
     setReprogramarData({
       cita: null,
       nuevaFecha: null,
       nuevaHora: null,
     });
 
-    // Mostrar mensaje de éxito
     setToastMessage('¡Cita reprogramada correctamente!');
     setTimeout(() => setToastMessage(''), 3000);
   };
@@ -676,18 +666,36 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const handleViewChange = (view) => {
     setCurrentView(view);
-
     if (calendarRef.current) {
-      calendarRef.current.getApi().changeView(view);
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.changeView(view);
+      setCurrentMonthYear(calendarApi.getDate());
     }
   };
 
-  const handlePrev = () => calendarRef.current?.getApi().prev();
-  const handleNext = () => calendarRef.current?.getApi().next();
+  const handlePrev = () => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.prev();
+      setCurrentMonthYear(calendarApi.getDate());
+    }
+  };
+
+  const handleNext = () => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.next();
+      setCurrentMonthYear(calendarApi.getDate());
+    }
+  };
 
   const handleToday = () => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.today();
+      setCurrentMonthYear(calendarApi.getDate());
+    }
     setAgendaDate(new Date());
-    calendarRef.current?.getApi().today();
   };
 
   const closeModal = () => {
@@ -846,6 +854,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
             <div className="dashboard-two-columns">
               <div className="dashboard-left-column">
+                <div className="calendar-month-title">
+                  <h2>
+                    {currentMonthYear.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}
+                  </h2>
+                </div>
+
                 <div className="calendar-controls">
                   <div className="nav-buttons">
                     <button className="nav-btn" onClick={handlePrev}>
@@ -889,22 +903,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
                       MES
                     </button>
                   </div>
-
-                  <div className="hour-selector">
-                    <label>
-                      <i className="fas fa-clock"></i> Mostrar desde:
-                      <select
-                        value={startHour}
-                        onChange={(e) => setStartHour(e.target.value)}
-                      >
-                        {horasDisponibles.map((hora) => (
-                          <option key={hora} value={hora}>
-                            {hora}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
                 </div>
 
                 <div className="calendar-wrapper">
@@ -928,17 +926,10 @@ const DentistDashboard = ({ userData, onLogout }) => {
                     allDaySlot={false}
                     slotDuration="00:30:00"
                     height="auto"
-                    contentHeight={450}
+                    contentHeight={380}
                     locale="es"
                     firstDay={1}
-                    buttonText={{
-                      today: 'Hoy',
-                      month: 'Mes',
-                      week: 'Semana',
-                      day: 'Día',
-                    }}
-                    titleFormat={{ year: 'numeric', month: 'long' }}
-                    dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
+                    dayHeaderFormat={{ weekday: 'short' }}
                   />
                 </div>
               </div>
