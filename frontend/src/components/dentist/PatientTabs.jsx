@@ -1,28 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import TreatmentHistory from './TreatmentHistory';
 import DocumentosTab from './DocumentosTab';
 import { obtenerPacienteDetalle } from '../../services/pacientes.service';
 import './PatientTabs.css';
 
-const TAB_INFO = 'info';
-const TAB_HISTORIAL = 'historial';
+const TAB_INFO         = 'info';
+const TAB_HISTORIAL    = 'historial';
 const TAB_TRATAMIENTOS = 'tratamientos';
-const TAB_DOCUMENTOS = 'documentos';
+const TAB_DOCUMENTOS   = 'documentos';
 
 const toArray = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value !== 'string') return [];
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return value.split(',').map((i) => i.trim()).filter(Boolean);
 };
 
 const getValue = (obj, keys, fallback = '') => {
   for (const key of keys) {
-    if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
+    if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '')
       return obj[key];
-    }
   }
   return fallback;
 };
@@ -31,79 +26,110 @@ const formatDateTime = (value) => {
   if (!value) return '-';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleString('es-HN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return date.toLocaleString('es-HN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 };
 
-const PatientTabs = ({ paciente }) => {
-  const [activeTab, setActiveTab] = useState(TAB_INFO);
-  const [editModes, setEditModes] = useState({
-    [TAB_INFO]: false,
-    [TAB_HISTORIAL]: false,
-    [TAB_TRATAMIENTOS]: false,
-    [TAB_DOCUMENTOS]: false,
+// ── Resumen de tratamientos (últimos 3) ───────────────────────────────────────
+const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
+  const [items,   setItems]   = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!pacienteId) return;
+    setLoading(true);
+    fetch(`/api/tratamientos/pacientes/${pacienteId}/tratamientos`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setItems((d.tratamientos || []).slice(0, 3)))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, [pacienteId]);
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {loading && <p style={{ fontSize: 12, color: '#6b7280' }}>Cargando...</p>}
+      {!loading && items.length === 0 && (
+        <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0' }}>Sin tratamientos registrados.</p>
+      )}
+      {items.map((t) => (
+        <div key={t.id} style={{
+          padding: '8px 10px', borderRadius: 8, background: '#f8fafc',
+          border: '1px solid #e2e8f0', marginBottom: 6,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.tipo || t.procedimiento || '-'}</div>
+            <div style={{ fontSize: 11, color: '#6b7280' }}>
+              {t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}
+              {t.diente ? ` · Diente ${t.diente}` : ''}
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+            background: t.estado === 'realizado' ? '#dcfce7' : '#fef9c3',
+            color: t.estado === 'realizado' ? '#166534' : '#854d0e',
+          }}>
+            {t.estado || 'planificado'}
+          </span>
+        </div>
+      ))}
+      <button onClick={onVerTodos} style={{
+        width: '100%', marginTop: 6, padding: '8px 0', borderRadius: 8,
+        border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb',
+        fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+      }}
+        onMouseEnter={(e) => { e.target.style.background = '#2563eb'; e.target.style.color = '#fff'; }}
+        onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2563eb'; }}
+      >
+        <i className="fas fa-external-link-alt" style={{ marginRight: 6 }}></i>
+        Ver todos los tratamientos
+      </button>
+    </div>
+  );
+};
+
+// ── Componente principal ──────────────────────────────────────────────────────
+// modoPanel = true  → panel derecho de Mi Agenda: solo lectura, sin "Editar", con "Ver expediente completo"
+// modoPanel = false → página completa (Mis Pacientes): edición habilitada, sin "Ver expediente completo"
+// onVerExpediente → navega a Mis Pacientes con el expediente abierto (solo en modoPanel)
+// onVerTodos      → navega a Tratamientos
+const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }) => {
+  const [activeTab,      setActiveTab]      = useState(TAB_INFO);
+  const [editModes,      setEditModes]      = useState({
+    [TAB_INFO]: false, [TAB_HISTORIAL]: false,
+    [TAB_TRATAMIENTOS]: false, [TAB_DOCUMENTOS]: false,
   });
   const [detallePaciente, setDetallePaciente] = useState(null);
-  const [loadingDetalle, setLoadingDetalle] = useState(false);
-  const [notaTratamientos, setNotaTratamientos] = useState('');
-  const [notaDocumentos, setNotaDocumentos] = useState('');
+  const [loadingDetalle,  setLoadingDetalle]  = useState(false);
+  const [notaDocumentos,  setNotaDocumentos]  = useState('');
 
   const patientId = useMemo(() => {
     if (!paciente) return null;
-    return (
-      paciente.id_paciente ||
-      paciente.idPaciente ||
-      paciente.paciente?.id ||
-      (typeof paciente.id === 'number' ? paciente.id : null)
-    );
+    return paciente.id_paciente || paciente.idPaciente || paciente.paciente?.id ||
+      (typeof paciente.id === 'number' ? paciente.id : null);
   }, [paciente]);
 
   useEffect(() => {
     let mounted = true;
-
-    const cargarDetalle = async () => {
-      if (!patientId) {
-        setDetallePaciente(paciente?.paciente || paciente || null);
-        return;
-      }
-
+    const cargar = async () => {
+      if (!patientId) { setDetallePaciente(paciente?.paciente || paciente || null); return; }
       setLoadingDetalle(true);
       try {
         const data = await obtenerPacienteDetalle(patientId);
-        if (mounted) {
-          setDetallePaciente(data);
-        }
-      } catch (error) {
-        if (mounted) {
-          setDetallePaciente(paciente?.paciente || paciente || null);
-        }
+        if (mounted) setDetallePaciente(data);
+      } catch {
+        if (mounted) setDetallePaciente(paciente?.paciente || paciente || null);
       } finally {
-        if (mounted) {
-          setLoadingDetalle(false);
-        }
+        if (mounted) setLoadingDetalle(false);
       }
     };
-
-    cargarDetalle();
-
-    return () => {
-      mounted = false;
-    };
+    cargar();
+    return () => { mounted = false; };
   }, [patientId, paciente]);
 
   useEffect(() => {
-    setEditModes({
-      [TAB_INFO]: false,
-      [TAB_HISTORIAL]: false,
-      [TAB_TRATAMIENTOS]: false,
-      [TAB_DOCUMENTOS]: false,
-    });
-    setNotaTratamientos('');
+    setEditModes({ [TAB_INFO]: false, [TAB_HISTORIAL]: false, [TAB_TRATAMIENTOS]: false, [TAB_DOCUMENTOS]: false });
     setNotaDocumentos('');
   }, [patientId]);
 
@@ -116,72 +142,73 @@ const PatientTabs = ({ paciente }) => {
     );
   }
 
-  const source = detallePaciente || paciente?.paciente || paciente;
+  const source         = detallePaciente || paciente?.paciente || paciente;
   const nombrePaciente = getValue(source, ['nombre_completo', 'paciente_nombre', 'nombre'], 'Paciente');
 
   const infoPersonal = {
-    nombre: nombrePaciente,
-    edad: getValue(source, ['edad'], '-'),
-    sexo: getValue(source, ['sexo', 'genero'], 'No especificado'),
-    direccion: getValue(source, ['direccion'], 'No registrada'),
-    telefono: getValue(source, ['telefono'], 'No registrado'),
-    seguroMedico: getValue(source, ['seguro_medico', 'aseguradora', 'seguro'], 'No registrado'),
-    contactoEmergencia: getValue(
-      source,
-      ['contacto_emergencia', 'contacto_emergencia_nombre', 'nombre_contacto_emergencia'],
-      'No registrado'
-    ),
-    telefonoEmergencia: getValue(
-      source,
-      ['telefono_emergencia', 'contacto_emergencia_telefono'],
-      'No registrado'
-    ),
+    nombre:             getValue(source, ['nombre_completo', 'paciente_nombre', 'nombre']),
+    edad:               getValue(source, ['edad'], '-'),
+    sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
+    direccion:          getValue(source, ['direccion'], 'No registrada'),
+    telefono:           getValue(source, ['telefono'], 'No registrado'),
+    seguroMedico:       getValue(source, ['seguro_medico', 'aseguradora', 'seguro'], 'No registrado'),
+    contactoEmergencia: getValue(source, ['contacto_emergencia', 'contacto_emergencia_nombre', 'nombre_contacto_emergencia'], 'No registrado'),
+    telefonoEmergencia: getValue(source, ['telefono_emergencia', 'contacto_emergencia_telefono'], 'No registrado'),
   };
 
   const historialMedico = {
-    enfermedades: toArray(
-      getValue(source, ['enfermedades', 'enfermedades_cronicas', 'padecimientos', 'condiciones_cronicas'])
-    ),
-    medicamentos: toArray(getValue(source, ['medicamentos', 'medicamentos_actuales'])),
-    alergias: toArray(getValue(source, ['alergias'])),
+    enfermedades: toArray(getValue(source, ['enfermedades', 'enfermedades_cronicas', 'padecimientos', 'condiciones_cronicas'])),
+    medicamentos:  toArray(getValue(source, ['medicamentos', 'medicamentos_actuales'])),
+    alergias:      toArray(getValue(source, ['alergias'])),
   };
 
   const alertasMedicas = [
-    ...historialMedico.alergias.map((item) => ({ tipo: 'Alergia', valor: item })),
-    ...historialMedico.enfermedades.map((item) => ({ tipo: 'Condición crónica', valor: item })),
+    ...historialMedico.alergias.map((v) => ({ tipo: 'Alergia', valor: v })),
+    ...historialMedico.enfermedades.map((v) => ({ tipo: 'Condición crónica', valor: v })),
   ];
 
-  const ultimaActualizacion =
-    source?.updated_at || source?.updatedAt || source?.fecha_actualizacion || source?.created_at || source?.createdAt;
+  const ultimaActualizacion = source?.updated_at || source?.updatedAt || source?.fecha_actualizacion || source?.created_at || source?.createdAt;
 
-  const toggleEdit = (tab) => {
-    setEditModes((prev) => ({
-      ...prev,
-      [tab]: !prev[tab],
-    }));
-  };
-
-  const updateField = (field, value) => {
-    setDetallePaciente((prev) => ({
-      ...(prev || source),
-      [field]: value,
-    }));
-  };
+  const toggleEdit  = (tab) => setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
+  const updateField = (field, value) => setDetallePaciente((p) => ({ ...(p || source), [field]: value }));
 
   const renderField = (label, value, fieldName, canEdit) => (
     <div className="info-field" key={label}>
       <span className="info-label">{label}</span>
-      {canEdit ? (
-        <input
-          className="info-input"
-          value={value || ''}
-          onChange={(e) => updateField(fieldName, e.target.value)}
-        />
-      ) : (
-        <span className="info-value">{value || '-'}</span>
-      )}
+      {canEdit
+        ? <input className="info-input" value={value || ''} onChange={(e) => updateField(fieldName, e.target.value)} />
+        : <span className="info-value">{value || '-'}</span>}
     </div>
   );
+
+  // ── Botón "Ver expediente completo" — solo aparece en modoPanel ──────────
+  const BtnVerExpediente = () => {
+    if (!modoPanel) return null;
+    return (
+      <button
+        onClick={onVerExpediente}
+        style={{
+          width: '100%',
+          padding: '11px 0',
+          borderRadius: 12,
+          border: 'none',
+          background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+          color: 'white',
+          fontWeight: 800,
+          fontSize: 13,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          boxShadow: '0 6px 16px rgba(37,99,235,0.18)',
+          marginTop: 12,
+        }}
+      >
+        <i className="fas fa-folder-open"></i> Ver expediente completo
+      </button>
+    );
+  };
 
   return (
     <div className="patient-tabs">
@@ -197,60 +224,40 @@ const PatientTabs = ({ paciente }) => {
       </div>
 
       <div className="tabs-header">
-        <button
-          className={`tab-btn ${activeTab === TAB_INFO ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_INFO)}
-        >
+        <button className={`tab-btn ${activeTab === TAB_INFO         ? 'active' : ''}`} onClick={() => setActiveTab(TAB_INFO)}>
           <i className="fas fa-id-card"></i> Info Personal
         </button>
-
-        <button
-          className={`tab-btn ${activeTab === TAB_HISTORIAL ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_HISTORIAL)}
-        >
+        <button className={`tab-btn ${activeTab === TAB_HISTORIAL    ? 'active' : ''}`} onClick={() => setActiveTab(TAB_HISTORIAL)}>
           <i className="fas fa-heartbeat"></i> Historial Médico
         </button>
-
-        <button
-          className={`tab-btn ${activeTab === TAB_TRATAMIENTOS ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_TRATAMIENTOS)}
-        >
+        <button className={`tab-btn ${activeTab === TAB_TRATAMIENTOS ? 'active' : ''}`} onClick={() => setActiveTab(TAB_TRATAMIENTOS)}>
           <i className="fas fa-tooth"></i> Tratamientos
         </button>
-
-        <button
-          className={`tab-btn ${activeTab === TAB_DOCUMENTOS ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_DOCUMENTOS)}
-        >
+        <button className={`tab-btn ${activeTab === TAB_DOCUMENTOS   ? 'active' : ''}`} onClick={() => setActiveTab(TAB_DOCUMENTOS)}>
           <i className="fas fa-file-medical"></i> Documentos
         </button>
       </div>
 
       <div className="tabs-content">
-        {loadingDetalle ? (
-          <div className="tab-loading">Cargando expediente del paciente...</div>
-        ) : null}
+        {loadingDetalle ? <div className="tab-loading">Cargando expediente del paciente...</div> : null}
 
+        {/* ── Info Personal ── */}
         {activeTab === TAB_INFO && (
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Información Personal</h4>
-              <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_INFO)}>
-                <i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}
-              </button>
+              {!modoPanel && (
+                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_INFO)}>
+                  <i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}
+                </button>
+              )}
             </div>
 
             {alertasMedicas.length > 0 ? (
               <div className="medical-alert-banner">
-                <div className="medical-alert-title">
-                  <i className="fas fa-exclamation-triangle"></i> Alertas médicas
-                </div>
+                <div className="medical-alert-title"><i className="fas fa-exclamation-triangle"></i> Alertas médicas</div>
                 <div className="medical-alert-items">
-                  {alertasMedicas.map((alerta, index) => (
-                    <span key={`${alerta.tipo}-${alerta.valor}-${index}`}>
-                      {alerta.tipo}: {alerta.valor}
-                    </span>
-                  ))}
+                  {alertasMedicas.map((a, i) => <span key={i}>{a.tipo}: {a.valor}</span>)}
                 </div>
               </div>
             ) : (
@@ -258,143 +265,121 @@ const PatientTabs = ({ paciente }) => {
             )}
 
             <div className="info-grid">
-              {renderField('Nombre', infoPersonal.nombre, 'nombre', editModes[TAB_INFO])}
-              {renderField('Edad', String(infoPersonal.edad), 'edad', editModes[TAB_INFO])}
-              {renderField('Sexo', infoPersonal.sexo, 'sexo', editModes[TAB_INFO])}
-              {renderField('Dirección', infoPersonal.direccion, 'direccion', editModes[TAB_INFO])}
-              {renderField('Teléfono', infoPersonal.telefono, 'telefono', editModes[TAB_INFO])}
-              {renderField('Seguro médico', infoPersonal.seguroMedico, 'seguro_medico', editModes[TAB_INFO])}
-              {renderField(
-                'Contacto emergencia',
-                infoPersonal.contactoEmergencia,
-                'contacto_emergencia',
-                editModes[TAB_INFO]
-              )}
-              {renderField(
-                'Teléfono emergencia',
-                infoPersonal.telefonoEmergencia,
-                'telefono_emergencia',
-                editModes[TAB_INFO]
-              )}
+              {renderField('Nombre',              infoPersonal.nombre,             'nombre',              !modoPanel && editModes[TAB_INFO])}
+              {renderField('Edad',                String(infoPersonal.edad),       'edad',                !modoPanel && editModes[TAB_INFO])}
+              {renderField('Sexo',                infoPersonal.sexo,               'sexo',                !modoPanel && editModes[TAB_INFO])}
+              {renderField('Teléfono',            infoPersonal.telefono,           'telefono',            !modoPanel && editModes[TAB_INFO])}
+              {renderField('Dirección',           infoPersonal.direccion,          'direccion',           !modoPanel && editModes[TAB_INFO])}
+              {renderField('Seguro médico',       infoPersonal.seguroMedico,       'seguro_medico',       !modoPanel && editModes[TAB_INFO])}
+              {!modoPanel && renderField('Contacto emergencia', infoPersonal.contactoEmergencia, 'contacto_emergencia', editModes[TAB_INFO])}
+              {!modoPanel && renderField('Teléfono emergencia', infoPersonal.telefonoEmergencia, 'telefono_emergencia', editModes[TAB_INFO])}
             </div>
+
+            <BtnVerExpediente />
           </div>
         )}
 
+        {/* ── Historial Médico ── */}
         {activeTab === TAB_HISTORIAL && (
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Historial Médico</h4>
-              <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_HISTORIAL)}>
-                <i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}
-              </button>
+              {!modoPanel && (
+                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_HISTORIAL)}>
+                  <i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}
+                </button>
+              )}
             </div>
 
             <div className="history-grid">
               <div className="history-card">
                 <h5>Enfermedades</h5>
-                {editModes[TAB_HISTORIAL] ? (
-                  <textarea
-                    className="history-input"
-                    value={historialMedico.enfermedades.join(', ')}
-                    onChange={(e) => updateField('enfermedades', e.target.value)}
-                  />
-                ) : historialMedico.enfermedades.length > 0 ? (
-                  historialMedico.enfermedades.map((item, index) => (
-                    <span key={`${item}-${index}`} className="history-chip">{item}</span>
-                  ))
-                ) : (
-                  <p className="history-empty">Sin registros</p>
-                )}
+                {!modoPanel && editModes[TAB_HISTORIAL]
+                  ? <textarea className="history-input" value={historialMedico.enfermedades.join(', ')} onChange={(e) => updateField('enfermedades', e.target.value)} />
+                  : historialMedico.enfermedades.length > 0
+                    ? historialMedico.enfermedades.map((item, i) => <span key={i} className="history-chip">{item}</span>)
+                    : <p className="history-empty">Sin registros</p>}
               </div>
-
               <div className="history-card">
                 <h5>Medicamentos</h5>
-                {editModes[TAB_HISTORIAL] ? (
-                  <textarea
-                    className="history-input"
-                    value={historialMedico.medicamentos.join(', ')}
-                    onChange={(e) => updateField('medicamentos', e.target.value)}
-                  />
-                ) : historialMedico.medicamentos.length > 0 ? (
-                  historialMedico.medicamentos.map((item, index) => (
-                    <span key={`${item}-${index}`} className="history-chip">{item}</span>
-                  ))
-                ) : (
-                  <p className="history-empty">Sin registros</p>
-                )}
+                {!modoPanel && editModes[TAB_HISTORIAL]
+                  ? <textarea className="history-input" value={historialMedico.medicamentos.join(', ')} onChange={(e) => updateField('medicamentos', e.target.value)} />
+                  : historialMedico.medicamentos.length > 0
+                    ? historialMedico.medicamentos.map((item, i) => <span key={i} className="history-chip">{item}</span>)
+                    : <p className="history-empty">Sin registros</p>}
               </div>
-
               <div className="history-card">
                 <h5>Alergias</h5>
-                {editModes[TAB_HISTORIAL] ? (
-                  <textarea
-                    className="history-input"
-                    value={historialMedico.alergias.join(', ')}
-                    onChange={(e) => updateField('alergias', e.target.value)}
-                  />
-                ) : historialMedico.alergias.length > 0 ? (
-                  historialMedico.alergias.map((item, index) => (
-                    <span key={`${item}-${index}`} className="history-chip danger">{item}</span>
-                  ))
-                ) : (
-                  <p className="history-empty">Sin registros</p>
-                )}
+                {!modoPanel && editModes[TAB_HISTORIAL]
+                  ? <textarea className="history-input" value={historialMedico.alergias.join(', ')} onChange={(e) => updateField('alergias', e.target.value)} />
+                  : historialMedico.alergias.length > 0
+                    ? historialMedico.alergias.map((item, i) => <span key={i} className="history-chip danger">{item}</span>)
+                    : <p className="history-empty">Sin registros</p>}
               </div>
             </div>
+
+            <BtnVerExpediente />
           </div>
         )}
 
+        {/* ── Tratamientos ── */}
         {activeTab === TAB_TRATAMIENTOS && (
           <div className="tab-pane">
             <div className="tab-toolbar">
-              <h4>Tratamientos Realizados</h4>
-              <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_TRATAMIENTOS)}>
-                <i className="fas fa-pen"></i> {editModes[TAB_TRATAMIENTOS] ? 'Finalizar' : 'Editar'}
-              </button>
+              <h4>Tratamientos</h4>
             </div>
-
-            {editModes[TAB_TRATAMIENTOS] ? (
-              <div className="tab-quick-edit">
-                <label>Campo rápido: observaciones de tratamientos</label>
-                <textarea
-                  value={notaTratamientos}
-                  onChange={(e) => setNotaTratamientos(e.target.value)}
-                  placeholder="Ejemplo: priorizar revisión de tratamiento pendiente en próxima cita."
-                />
-              </div>
-            ) : notaTratamientos ? (
-              <div className="tab-quick-preview">{notaTratamientos}</div>
-            ) : null}
-
-            <TreatmentHistory pacienteId={patientId || paciente?.id} />
+            <ResumenTratamientos
+              pacienteId={patientId || paciente?.id}
+              onVerTodos={onVerTodos}
+            />
+            <BtnVerExpediente />
           </div>
         )}
 
+        {/* ── Documentos ── */}
         {activeTab === TAB_DOCUMENTOS && (
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Documentos y Radiografías</h4>
-              <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_DOCUMENTOS)}>
-                <i className="fas fa-pen"></i> {editModes[TAB_DOCUMENTOS] ? 'Finalizar' : 'Editar'}
-              </button>
+              {!modoPanel && (
+                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_DOCUMENTOS)}>
+                  <i className="fas fa-pen"></i> {editModes[TAB_DOCUMENTOS] ? 'Finalizar' : 'Editar'}
+                </button>
+              )}
             </div>
 
-            {editModes[TAB_DOCUMENTOS] ? (
-              <div className="tab-quick-edit">
-                <label>Campo rápido: observaciones de documentos</label>
-                <textarea
-                  value={notaDocumentos}
-                  onChange={(e) => setNotaDocumentos(e.target.value)}
-                  placeholder="Ejemplo: pendiente cargar radiografía panorámica y consentimiento firmado."
-                />
+            {/* Panel: solo mensaje, sin uploader ni gestión */}
+            {modoPanel ? (
+              <div style={{
+                padding: '20px', textAlign: 'center', color: '#9ca3af',
+                background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb',
+              }}>
+                <i className="fas fa-file-medical" style={{ fontSize: 24, marginBottom: 8, display: 'block', opacity: 0.4 }}></i>
+                <p style={{ margin: 0, fontSize: 12 }}>
+                  Los documentos y radiografías se gestionan desde el expediente completo.
+                </p>
               </div>
-            ) : notaDocumentos ? (
-              <div className="tab-quick-preview">{notaDocumentos}</div>
-            ) : null}
+            ) : (
+              <>
+                {editModes[TAB_DOCUMENTOS] ? (
+                  <div className="tab-quick-edit">
+                    <label>Campo rápido: observaciones de documentos</label>
+                    <textarea
+                      value={notaDocumentos}
+                      onChange={(e) => setNotaDocumentos(e.target.value)}
+                      placeholder="Ejemplo: pendiente cargar radiografía panorámica y consentimiento firmado."
+                    />
+                  </div>
+                ) : notaDocumentos ? (
+                  <div className="tab-quick-preview">{notaDocumentos}</div>
+                ) : null}
+                <div className="documentos-embedded">
+                  <DocumentosTab paciente={source} />
+                </div>
+              </>
+            )}
 
-            <div className="documentos-embedded">
-              <DocumentosTab paciente={source} />
-            </div>
+            <BtnVerExpediente />
           </div>
         )}
       </div>

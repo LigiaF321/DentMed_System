@@ -1,0 +1,402 @@
+/* frontend/src/components/dentist/NuevoTratamientoModal.css */
+
+.nt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  backdrop-filter: blur(3px);
+  padding: 16px;
+}
+
+.nt-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.nt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+  border-radius: 20px 20px 0 0;
+}
+
+.nt-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nt-header h3 i { color: #2563eb; }
+
+.nt-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+  padding: 0;
+}
+
+/* ── Form ── */
+.nt-form {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.nt-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #e0ebff;
+}
+
+.nt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.nt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nt-field-full {
+  grid-column: 1 / -1;
+}
+
+.nt-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.nt-field label span.required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.nt-field input,
+.nt-field select,
+.nt-field textarea {
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  background: #fafafa;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nt-field input:focus,
+.nt-field select:focus,
+.nt-field textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #fff;
+}
+
+.nt-field textarea { resize: vertical; min-height: 72px; }
+
+/* ── Odontograma selector ── */
+.nt-odonto-wrap {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.nt-odonto-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.nt-odonto-arch {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.nt-tooth-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1.5px solid #94a3b8;
+  background: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.nt-tooth-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+.nt-tooth-btn.selected {
+  background: #2563eb;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.nt-odonto-divider {
+  width: 2px;
+  height: 22px;
+  background: #94a3b8;
+  opacity: 0.4;
+  margin: 0 3px;
+  align-self: center;
+}
+
+.nt-selected-teeth {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #374151;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.nt-tooth-chip {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nt-tooth-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1d4ed8;
+  font-size: 12px;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ── Materiales ── */
+.nt-mat-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.nt-mat-search input { flex: 1; }
+
+.nt-mat-results {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.nt-mat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.nt-mat-item:hover { background: #eff6ff; }
+.nt-mat-item:last-child { border-bottom: none; }
+
+.nt-mat-item span { color: #374151; }
+.nt-mat-item small { color: #6b7280; font-size: 11px; }
+
+.nt-mat-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nt-mat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.nt-mat-row span { flex: 1; color: #111827; }
+
+.nt-mat-row input[type='number'] {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.nt-mat-row button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+/* ── Drag & Drop radiografías ── */
+.nt-dropzone {
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #f0f9ff;
+}
+
+.nt-dropzone.over {
+  border-color: #2563eb;
+  background: #dbeafe;
+}
+
+.nt-dropzone i { font-size: 24px; color: #60a5fa; margin-bottom: 6px; display: block; }
+.nt-dropzone p { margin: 0; font-size: 13px; color: #6b7280; }
+.nt-dropzone small { font-size: 11px; color: #9ca3af; }
+
+.nt-files-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.nt-file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.nt-file-chip button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+/* ── Multi-sesión ── */
+.nt-multisesion-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nt-multisesion-check input { width: 16px; height: 16px; cursor: pointer; }
+
+/* ── Error ── */
+.nt-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Actions ── */
+.nt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.nt-btn {
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.nt-btn-primary {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37,99,235,0.22);
+}
+
+.nt-btn-primary:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+.nt-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.nt-btn-secondary {
+  background: #f1f5f9;
+  color: #374151;
+}
+
+.nt-btn-secondary:hover { background: #e2e8f0; }
+
+@media (max-width: 600px) {
+  .nt-grid { grid-template-columns: 1fr; }
+  .nt-modal { border-radius: 16px; }
+  .nt-form { padding: 16px; }
+}
