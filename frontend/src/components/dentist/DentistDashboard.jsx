@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import { Draggable } from '@fullcalendar/interaction';
 import DentistSidebar from './DentistSidebar';
 import MetricCards from './MetricCards';
 import AppointmentsList from './AppointmentsList';
@@ -17,7 +18,7 @@ import ReprogramarCitaModal from './ReprogramarCitaModal';
 import bloquesService from '../../services/bloques.service';
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
-import { actualizarConsultorioCita } from '../../services/citas.service';
+import { actualizarConsultorioCita, reprogramarCita } from '../../services/citas.service';
 import './DentistDashboard.css';
 
 const normalizarEstadoConsultorio = (estado) =>
@@ -53,7 +54,10 @@ const CambioConsultorioModal = ({
       consultorioSeleccionado?.estado_operativo || consultorioSeleccionado?.estado
     );
 
-    if (estadoConsultorio === 'mantenimiento' || estadoConsultorio === 'limpieza') {
+    if (
+      estadoConsultorio === 'mantenimiento' ||
+      estadoConsultorio === 'limpieza'
+    ) {
       setError(`El consultorio está en ${estadoConsultorio}.`);
       return false;
     }
@@ -66,10 +70,15 @@ const CambioConsultorioModal = ({
     const conflicto = (citasDentista || []).find((c) => {
       if (Number(c.id) === Number(cita.id)) return false;
       if (!c.fecha_hora || !c.duracion_estimada) return false;
+
       const estadoCita = String(c.estado || '').toLowerCase();
       if (estadoCita === 'cancelada') return false;
+
       const inicioC = new Date(c.fecha_hora);
-      const finC = new Date(inicioC.getTime() + Number(c.duracion_estimada || 30) * 60000);
+      const finC = new Date(
+        inicioC.getTime() + Number(c.duracion_estimada || 30) * 60000
+      );
+
       return (
         c.id_consultorio &&
         String(c.id_consultorio) === String(idConsultorio) &&
@@ -79,7 +88,9 @@ const CambioConsultorioModal = ({
     });
 
     if (conflicto) {
-      setError('Conflicto: Ya existe una cita en este consultorio en ese horario.');
+      setError(
+        'Conflicto: Ya existe una cita en este consultorio en ese horario.'
+      );
       return false;
     }
 
@@ -105,13 +116,28 @@ const CambioConsultorioModal = ({
 
     try {
       setSaving(true);
-      const response = await actualizarConsultorioCita(cita.id, Number(nuevoConsultorio));
+
+      const response = await actualizarConsultorioCita(
+        cita.id,
+        Number(nuevoConsultorio)
+      );
+
       const dataActualizada = response?.data
-        ? { ...cita, ...response.data, id_consultorio: Number(nuevoConsultorio) }
-        : { ...cita, id_consultorio: Number(nuevoConsultorio) };
+        ? {
+            ...cita,
+            ...response.data,
+            id_consultorio: Number(nuevoConsultorio),
+          }
+        : {
+            ...cita,
+            id_consultorio: Number(nuevoConsultorio),
+          };
 
       setSuccess(response?.message || 'Consultorio actualizado correctamente.');
-      setTimeout(() => { onUpdated(dataActualizada); }, 800);
+
+      setTimeout(() => {
+        onUpdated(dataActualizada);
+      }, 800);
     } catch (err) {
       setError(err.message || 'No se pudo actualizar la cita.');
     } finally {
@@ -126,24 +152,47 @@ const CambioConsultorioModal = ({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header" style={{ borderLeft: '4px solid #2563eb' }}>
           <h3>Cambiar consultorio</h3>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="modal-close" onClick={onClose}>
+            &times;
+          </button>
         </div>
 
         <div className="modal-body">
-          <p><strong>Paciente:</strong> {cita.paciente_nombre || cita.paciente?.nombre || 'Paciente'}</p>
-          <p><strong>Fecha:</strong> {new Date(cita.fecha_hora).toLocaleString('es-ES')}</p>
+          <p>
+            <strong>Paciente:</strong>{' '}
+            {cita.paciente_nombre || cita.paciente?.nombre || 'Paciente'}
+          </p>
+
+          <p>
+            <strong>Fecha:</strong>{' '}
+            {new Date(cita.fecha_hora).toLocaleString('es-ES')}
+          </p>
 
           <div className="dm17-field">
             <label>Nuevo consultorio</label>
-            <select value={nuevoConsultorio} onChange={(e) => setNuevoConsultorio(e.target.value)} disabled={saving}>
+            <select
+              value={nuevoConsultorio}
+              onChange={(e) => setNuevoConsultorio(e.target.value)}
+              disabled={saving}
+            >
               <option value="">Seleccione</option>
               {consultorios.map((c) => {
-                const estado = normalizarEstadoConsultorio(c.estado_operativo || c.estado);
-                const bloqueado = estado === 'mantenimiento' || estado === 'limpieza';
+                const estado = normalizarEstadoConsultorio(
+                  c.estado_operativo || c.estado
+                );
+                const bloqueado =
+                  estado === 'mantenimiento' || estado === 'limpieza';
+
                 return (
-                  <option key={c.id} value={String(c.id)} disabled={bloqueado}>
+                  <option
+                    key={c.id}
+                    value={String(c.id)}
+                    disabled={bloqueado}
+                  >
                     {c.nombre}
-                    {c.equipamiento?.length ? ` - ${c.equipamiento.join(', ')}` : ''}
+                    {c.equipamiento?.length
+                      ? ` - ${c.equipamiento.join(', ')}`
+                      : ''}
                     {bloqueado ? ` (${estado})` : ''}
                   </option>
                 );
@@ -151,15 +200,33 @@ const CambioConsultorioModal = ({
             </select>
           </div>
 
-          {error ? <div className="dm17-error" style={{ marginTop: 8 }}>{error}</div> : null}
-          {success ? <div className="dm17-success" style={{ marginTop: 8 }}>{success}</div> : null}
+          {error ? (
+            <div className="dm17-error" style={{ marginTop: 8 }}>
+              {error}
+            </div>
+          ) : null}
+
+          {success ? (
+            <div className="dm17-success" style={{ marginTop: 8 }}>
+              {success}
+            </div>
+          ) : null}
         </div>
 
         <div className="modal-footer">
-          <button className="dm17-btn dm17-btn-primary" onClick={handleGuardar} disabled={saving}>
+          <button
+            className="dm17-btn dm17-btn-primary"
+            onClick={handleGuardar}
+            disabled={saving}
+          >
             {saving ? 'Guardando...' : 'Guardar'}
           </button>
-          <button className="dm17-btn dm17-btn-secondary" onClick={onClose} disabled={saving}>
+
+          <button
+            className="dm17-btn dm17-btn-secondary"
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancelar
           </button>
         </div>
@@ -184,13 +251,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [showNuevaCitaModal, setShowNuevaCitaModal] = useState(false);
   const [showBloqueoModal, setShowBloqueoModal] = useState(false);
   const [showReprogramarModal, setShowReprogramarModal] = useState(false);
-  const [currentMonthYear, setCurrentMonthYear] = useState(new Date());
   const [reprogramarData, setReprogramarData] = useState({
     cita: null,
     nuevaFecha: null,
     nuevaHora: null,
   });
   const [toastMessage, setToastMessage] = useState('');
+  
+  // Estados para el modal de confirmación personalizado
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [bloqueoToDelete, setBloqueoToDelete] = useState(null);
 
@@ -201,32 +269,74 @@ const DentistDashboard = ({ userData, onLogout }) => {
     tratamientosPendientes: 0,
   });
 
-  // ── Horas disponibles para el selector ──────────────────────────────────────
-  const horasDisponibles = ['06:00', '07:00', '08:00', '09:00', '10:00'];
-
   const calendarRef = useRef(null);
 
+  const horasDisponibles = ['06:00', '07:00', '08:00', '09:00', '10:00'];
+
   const estadoColores = {
-    confirmada:   { background: '#28a745', border: '#1e7e34', text: 'Confirmada',    icon: 'fa-check-circle' },
-    completada:   { background: '#6c757d', border: '#545b62', text: 'Completada',    icon: 'fa-check-double' },
-    cancelada:    { background: '#dc3545', border: '#a71d2a', text: 'Cancelada',     icon: 'fa-times-circle' },
-    reprogramada: { background: '#ffc107', border: '#e0a800', text: 'Reprogramada',  icon: 'fa-calendar-alt' },
-    pendiente:    { background: '#17a2b8', border: '#117a8b', text: 'Pendiente',     icon: 'fa-clock' },
-    bloqueado:    { background: '#9b59b6', border: '#8e44ad', text: 'Bloqueado',     icon: 'fa-lock' },
-    programada:   { background: '#2563eb', border: '#1d4ed8', text: 'Programada',    icon: 'fa-calendar-check' },
+    confirmada: {
+      background: '#28a745',
+      border: '#1e7e34',
+      text: 'Confirmada',
+      icon: 'fa-check-circle',
+    },
+    completada: {
+      background: '#6c757d',
+      border: '#545b62',
+      text: 'Completada',
+      icon: 'fa-check-double',
+    },
+    cancelada: {
+      background: '#dc3545',
+      border: '#a71d2a',
+      text: 'Cancelada',
+      icon: 'fa-times-circle',
+    },
+    reprogramada: {
+      background: '#ffc107',
+      border: '#e0a800',
+      text: 'Reprogramada',
+      icon: 'fa-calendar-alt',
+    },
+    pendiente: {
+      background: '#17a2b8',
+      border: '#117a8b',
+      text: 'Pendiente',
+      icon: 'fa-clock',
+    },
+    bloqueado: {
+      background: '#9b59b6',
+      border: '#8e44ad',
+      text: 'Bloqueado',
+      icon: 'fa-lock',
+    },
+    programada: {
+      background: '#2563eb',
+      border: '#1d4ed8',
+      text: 'Programada',
+      icon: 'fa-calendar-check',
+    },
   };
 
-  const normalizarEstado = (estado) => String(estado || '').trim().toLowerCase();
+  const normalizarEstado = (estado) =>
+    String(estado || '').trim().toLowerCase();
 
   const ordenarCitasPorFecha = (lista) => {
     if (!Array.isArray(lista)) return [];
-    return [...lista].sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
+    return [...lista].sort(
+      (a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora)
+    );
   };
 
   const esMismoDia = (fechaA, fechaB) => {
     const a = new Date(fechaA);
     const b = new Date(fechaB);
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
   };
 
   const sumarMinutos = (fecha, minutos) => {
@@ -237,28 +347,54 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const obtenerFechaFin = (cita) => {
     if (cita.fecha_fin) return cita.fecha_fin;
-    return sumarMinutos(cita.fecha_hora, cita.duracion_estimada || 30).toISOString();
+    return sumarMinutos(
+      cita.fecha_hora,
+      cita.duracion_estimada || 30
+    ).toISOString();
   };
 
   const calcularMetricas = (listaCitas) => {
-    if (!Array.isArray(listaCitas)) return { citasHoy: 0, pacientesVistos: 0, siguienteCita: null, tratamientosPendientes: 0 };
+    if (!Array.isArray(listaCitas)) {
+      return {
+        citasHoy: 0,
+        pacientesVistos: 0,
+        siguienteCita: null,
+        tratamientosPendientes: 0,
+      };
+    }
+
     const hoy = new Date().toDateString();
+
     const citasHoy = ordenarCitasPorFecha(
-      listaCitas.filter((cita) =>
-        new Date(cita.fecha_hora).toDateString() === hoy &&
-        !['cancelada'].includes(normalizarEstado(cita.estado))
+      listaCitas.filter(
+        (cita) =>
+          new Date(cita.fecha_hora).toDateString() === hoy &&
+          !['cancelada'].includes(normalizarEstado(cita.estado))
       )
     );
-    const citasCompletadasHoy = citasHoy.filter((cita) => normalizarEstado(cita.estado) === 'completada');
-    const siguienteCitaData = citasHoy.find((cita) => !['completada', 'cancelada'].includes(normalizarEstado(cita.estado)));
+
+    const citasCompletadasHoy = citasHoy.filter(
+      (cita) => normalizarEstado(cita.estado) === 'completada'
+    );
+
+    const siguienteCitaData = citasHoy.find(
+      (cita) =>
+        !['completada', 'cancelada'].includes(normalizarEstado(cita.estado))
+    );
+
     return {
       citasHoy: citasHoy.length,
       pacientesVistos: citasCompletadasHoy.length,
       siguienteCita: siguienteCitaData
-        ? new Date(siguienteCitaData.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+        ? new Date(siguienteCitaData.fecha_hora).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
         : null,
       tratamientosPendientes: listaCitas.filter((cita) =>
-        ['pendiente', 'confirmada', 'programada'].includes(normalizarEstado(cita.estado))
+        ['pendiente', 'confirmada', 'programada'].includes(
+          normalizarEstado(cita.estado)
+        )
       ).length,
     };
   };
@@ -268,19 +404,30 @@ const DentistDashboard = ({ userData, onLogout }) => {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const obtenerPacienteNombre = (cita) =>
-    cita.paciente_nombre || cita.paciente?.nombre_completo || cita.paciente?.nombre || 'Paciente';
+  const obtenerPacienteNombre = (cita) => {
+    return (
+      cita.paciente_nombre ||
+      cita.paciente?.nombre_completo ||
+      cita.paciente?.nombre ||
+      'Paciente'
+    );
+  };
 
   const getAuthHeaders = () => {
     const token = getAuthToken();
+
     return token
-      ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      ? {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
       : { 'Content-Type': 'application/json' };
   };
 
   const fetchBloques = async (dentistaIdParam) => {
     const dentistaId = dentistaIdParam || dentistaInfo?.id;
     if (!dentistaId) return;
+
     try {
       const response = await bloquesService.obtenerBloques(dentistaId);
       const dataLimpia = Array.isArray(response) ? response : response?.data || [];
@@ -298,19 +445,25 @@ const DentistDashboard = ({ userData, onLogout }) => {
       setShowBloqueoModal(false);
       fetchBloques();
     } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || 'Error al crear el bloqueo';
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Error al crear el bloqueo';
       alert(msg);
     }
   };
 
   const handleEliminarBloqueo = (id) => {
+    // Cerrar el modal de detalles primero
     closeModal();
+    // Luego mostrar el modal de confirmación
     setBloqueoToDelete(id);
     setShowConfirmDeleteModal(true);
   };
 
   const confirmarEliminarBloqueo = async () => {
     if (!bloqueoToDelete) return;
+    
     try {
       await bloquesService.eliminarBloque(bloqueoToDelete);
       mostrarToast('Bloqueo eliminado');
@@ -332,47 +485,59 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const handleNuevaCitaCreada = (response) => {
     const nuevaCita = response.data;
     const fechaNuevaCita = new Date(nuevaCita.fecha_hora);
+
     setCitas((prev) => {
       const actualizadas = ordenarCitasPorFecha([...prev, nuevaCita]);
       setMetrics(calcularMetricas(actualizadas));
       return actualizadas;
     });
+
     setAgendaDate(fechaNuevaCita);
     setSelectedCita(response.selectedCita || nuevaCita);
+
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       calendarApi.gotoDate(fechaNuevaCita);
       calendarApi.changeView('timeGridDay');
       setCurrentView('timeGridDay');
     }
+
     mostrarToast('Cita creada correctamente');
   };
 
   const handleCitaCancelada = (citaCancelada) => {
     const idCita = Number(citaCancelada?.id);
+
     setCitas((prev) => {
       const actualizadas = prev.filter((cita) => Number(cita.id) !== idCita);
       setMetrics(calcularMetricas(actualizadas));
       return actualizadas;
     });
+
     setSelectedEvent((prev) => {
       if (!prev) return prev;
       return String(prev.id) === String(idCita) ? null : prev;
     });
+
     setShowModal((prev) => {
-      if (selectedEvent && String(selectedEvent.id) === String(idCita)) return false;
+      if (selectedEvent && String(selectedEvent.id) === String(idCita)) {
+        return false;
+      }
       return prev;
     });
+
     setSelectedCita((prev) => {
       if (!prev) return prev;
       return Number(prev.id) === idCita ? null : prev;
     });
+
     mostrarToast('Cita cancelada correctamente');
   };
 
   const handleSelectCita = (cita) => {
     setSelectedCita(cita);
     setAgendaDate(new Date(cita.fecha_hora));
+
     if (calendarRef.current) {
       calendarRef.current.getApi().gotoDate(new Date(cita.fecha_hora));
     }
@@ -383,13 +548,17 @@ const DentistDashboard = ({ userData, onLogout }) => {
       const samePatient = Number(cita.id_paciente) === Number(pacienteDetalle.id);
       const sameDay = esMismoDia(cita.fecha_hora, new Date());
       const estado = normalizarEstado(cita.estado);
+
       return samePatient && sameDay && !['cancelada', 'completada'].includes(estado);
     });
 
     if (citaHoy) {
       setSelectedCita(citaHoy);
       setAgendaDate(new Date(citaHoy.fecha_hora));
-      if (calendarRef.current) calendarRef.current.getApi().gotoDate(new Date(citaHoy.fecha_hora));
+
+      if (calendarRef.current) {
+        calendarRef.current.getApi().gotoDate(new Date(citaHoy.fecha_hora));
+      }
     } else {
       const citaVirtual = {
         id: `paciente-${pacienteDetalle.id}`,
@@ -399,14 +568,20 @@ const DentistDashboard = ({ userData, onLogout }) => {
         motivo: 'Paciente seleccionado desde Mis Pacientes',
         estado: 'pendiente',
         duracion_estimada: 30,
-        paciente_nombre: pacienteDetalle.nombre_completo || pacienteDetalle.nombre || 'Paciente',
+        paciente_nombre:
+          pacienteDetalle.nombre_completo || pacienteDetalle.nombre || 'Paciente',
         paciente: pacienteDetalle,
         esBusquedaPaciente: true,
       };
+
       setSelectedCita(citaVirtual);
       setAgendaDate(new Date());
-      if (calendarRef.current) calendarRef.current.getApi().gotoDate(new Date());
+
+      if (calendarRef.current) {
+        calendarRef.current.getApi().gotoDate(new Date());
+      }
     }
+
     setActiveView('agenda');
     mostrarToast('Paciente seleccionado correctamente');
   };
@@ -414,97 +589,117 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const handleEventClick = (info) => {
     const isBloqueo = info.event.extendedProps.isBloqueo;
     setSelectedEvent(info.event);
+
     if (!isBloqueo) {
       const cita = citas.find((c) => String(c.id) === String(info.event.id));
       if (cita) handleSelectCita(cita);
       return;
     }
+
     setShowModal(true);
   };
 
   const handleEventDrop = async (info) => {
     const { event } = info;
     const isBloqueo = event.extendedProps?.isBloqueo;
-    if (isBloqueo) { info.revert(); return; }
+
+    if (isBloqueo) {
+      info.revert();
+      return;
+    }
 
     const citaOriginal = citas.find((c) => String(c.id) === String(event.id));
-    if (!citaOriginal) { info.revert(); return; }
+
+    if (!citaOriginal) {
+      info.revert();
+      return;
+    }
 
     const nuevaFecha = event.start.toISOString().split('T')[0];
-    const nuevaHora = `${String(event.start.getHours()).padStart(2, '0')}:${String(event.start.getMinutes()).padStart(2, '0')}`;
+    const nuevaHora = `${String(event.start.getHours()).padStart(2, '0')}:${String(
+      event.start.getMinutes()
+    ).padStart(2, '0')}`;
 
-    setReprogramarData({ cita: citaOriginal, nuevaFecha, nuevaHora });
+    setReprogramarData({
+      cita: citaOriginal,
+      nuevaFecha,
+      nuevaHora,
+    });
     setShowReprogramarModal(true);
+
     info.revert();
   };
 
   const handleReprogramarConfirm = async (citaActualizada) => {
     setShowReprogramarModal(false);
+
     setCitas((prevCitas) => {
       const actualizadas = ordenarCitasPorFecha(
-        prevCitas.map((c) => c.id === citaActualizada.id ? { ...c, ...citaActualizada } : c)
+        prevCitas.map((c) =>
+          c.id === citaActualizada.id ? { ...c, ...citaActualizada } : c
+        )
       );
+
       setMetrics(calcularMetricas(actualizadas));
       return actualizadas;
     });
+
     setSelectedCita((prev) => {
       if (!prev) return prev;
-      return Number(prev.id) === Number(citaActualizada.id) ? { ...prev, ...citaActualizada } : prev;
+      return Number(prev.id) === Number(citaActualizada.id)
+        ? { ...prev, ...citaActualizada }
+        : prev;
     });
-    setReprogramarData({ cita: null, nuevaFecha: null, nuevaHora: null });
+
+    setReprogramarData({
+      cita: null,
+      nuevaFecha: null,
+      nuevaHora: null,
+    });
+
     setToastMessage('¡Cita reprogramada correctamente!');
     setTimeout(() => setToastMessage(''), 3000);
   };
 
   const handleReprogramarCancel = () => {
     setShowReprogramarModal(false);
-    setReprogramarData({ cita: null, nuevaFecha: null, nuevaHora: null });
+    setReprogramarData({
+      cita: null,
+      nuevaFecha: null,
+      nuevaHora: null,
+    });
   };
 
   const handleDateClick = (info) => {
     const nuevaFecha = new Date(info.date);
     setAgendaDate(nuevaFecha);
     setSelectedEvent(null);
+
     const citasEnFecha = ordenarCitasPorFecha(
-      citas.filter((cita) =>
-        esMismoDia(cita.fecha_hora, nuevaFecha) && normalizarEstado(cita.estado) !== 'cancelada'
+      citas.filter(
+        (cita) =>
+          esMismoDia(cita.fecha_hora, nuevaFecha) &&
+          normalizarEstado(cita.estado) !== 'cancelada'
       )
     );
+
     setSelectedCita(citasEnFecha.length ? citasEnFecha[0] : null);
   };
 
   const handleViewChange = (view) => {
     setCurrentView(view);
+
     if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.changeView(view);
-      setCurrentMonthYear(calendarApi.getDate());
+      calendarRef.current.getApi().changeView(view);
     }
   };
 
-  const handlePrev = () => {
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.prev();
-      setCurrentMonthYear(calendarApi.getDate());
-    }
-  };
-
-  const handleNext = () => {
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.next();
-      setCurrentMonthYear(calendarApi.getDate());
-    }
-  };
+  const handlePrev = () => calendarRef.current?.getApi().prev();
+  const handleNext = () => calendarRef.current?.getApi().next();
 
   const handleToday = () => {
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.today();
-      setCurrentMonthYear(calendarApi.getDate());
-    }
     setAgendaDate(new Date());
+    calendarRef.current?.getApi().today();
   };
 
   const closeModal = () => {
@@ -515,7 +710,10 @@ const DentistDashboard = ({ userData, onLogout }) => {
   useEffect(() => {
     const fetchDentistaInfo = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/dentistas/perfil', { headers: getAuthHeaders() });
+        const response = await fetch('http://localhost:3000/api/dentistas/perfil', {
+          headers: getAuthHeaders(),
+        });
+
         if (response.ok) {
           const data = await response.json();
           setDentistaInfo(data);
@@ -526,6 +724,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
         setDentistaInfo({ nombre: 'Usuario', id: 1 });
       }
     };
+
     fetchDentistaInfo();
   }, []);
 
@@ -538,25 +737,32 @@ const DentistDashboard = ({ userData, onLogout }) => {
         setConsultorios([]);
       }
     };
+
     fetchConsultorios();
   }, []);
 
   useEffect(() => {
     const fetchCitas = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/citas/dentista', { headers: getAuthHeaders() });
+        const response = await fetch('http://localhost:3000/api/citas/dentista', {
+          headers: getAuthHeaders(),
+        });
+
         if (response.ok) {
           const data = await response.json();
           const citasData = Array.isArray(data) ? data : data?.data || [];
           const citasOrdenadas = ordenarCitasPorFecha(citasData);
+
           setCitas(citasOrdenadas);
           setMetrics(calcularMetricas(citasOrdenadas));
+
           const hoy = new Date().toDateString();
           const primeraCita = citasOrdenadas.find(
             (cita) =>
               new Date(cita.fecha_hora).toDateString() === hoy &&
               !['completada', 'cancelada'].includes(normalizarEstado(cita.estado))
           );
+
           if (primeraCita) {
             setSelectedCita(primeraCita);
             setAgendaDate(new Date(primeraCita.fecha_hora));
@@ -568,11 +774,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
         setLoading(false);
       }
     };
+
     fetchCitas();
   }, []);
 
   useEffect(() => {
-    if (dentistaInfo?.id) fetchBloques(dentistaInfo.id);
+    if (dentistaInfo?.id) {
+      fetchBloques(dentistaInfo.id);
+    }
   }, [dentistaInfo]);
 
   const eventsToDisplay = useMemo(() => {
@@ -580,12 +789,18 @@ const DentistDashboard = ({ userData, onLogout }) => {
       .filter((cita) => normalizarEstado(cita.estado) !== 'cancelada')
       .map((cita) => {
         const estado = normalizarEstado(cita.estado);
+
         return {
           id: String(cita.id),
           title: obtenerPacienteNombre(cita),
           start: cita.fecha_hora,
           end: obtenerFechaFin(cita),
-          extendedProps: { estado, motivo: cita.motivo, paciente: cita.paciente, isBloqueo: false },
+          extendedProps: {
+            estado,
+            motivo: cita.motivo,
+            paciente: cita.paciente,
+            isBloqueo: false,
+          },
           backgroundColor: estadoColores[estado]?.background || '#007bff',
           borderColor: estadoColores[estado]?.border || '#0069d9',
           textColor: '#ffffff',
@@ -598,7 +813,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
       start: bloque.fecha_inicio,
       end: bloque.fecha_fin,
       className: 'event-bloqueo',
-      extendedProps: { isBloqueo: true, idOriginal: bloque.id, descripcion: bloque.descripcion, tipo: bloque.tipo },
+      extendedProps: {
+        isBloqueo: true,
+        idOriginal: bloque.id,
+        descripcion: bloque.descripcion,
+        tipo: bloque.tipo,
+      },
       backgroundColor: '#9b59b6',
       borderColor: '#8e44ad',
       textColor: '#ffffff',
@@ -627,14 +847,32 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const dentistName = dentistaInfo?.nombre || userData?.username || 'Doctor(a)';
 
   const topbarMeta = {
-    agenda:       { title: 'Mi Agenda',    subtitle: `Dr. ${dentistName}` },
-    pacientes:    { title: 'Mis Pacientes', subtitle: `Gestión clínica de Dr. ${dentistName}` },
-    tratamientos: { title: 'Tratamientos', subtitle: `Seguimiento clínico de Dr. ${dentistName}` },
-    notas:        { title: 'Notas',        subtitle: `Registro rápido de Dr. ${dentistName}` },
-  }[activeView] || { title: 'Panel del Doctor', subtitle: `Dr. ${dentistName}` };
+    agenda: {
+      title: 'Mi Agenda',
+      subtitle: `Dr. ${dentistName}`,
+    },
+    pacientes: {
+      title: 'Mis Pacientes',
+      subtitle: `Gestión clínica de Dr. ${dentistName}`,
+    },
+    tratamientos: {
+      title: 'Tratamientos',
+      subtitle: `Seguimiento clínico de Dr. ${dentistName}`,
+    },
+    notas: {
+      title: 'Notas',
+      subtitle: `Registro rápido de Dr. ${dentistName}`,
+    },
+  }[activeView] || {
+    title: 'Panel del Doctor',
+    subtitle: `Dr. ${dentistName}`,
+  };
 
   const topDate = new Date().toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 
   const renderContent = () => {
@@ -650,7 +888,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
             />
 
             <div className="dashboard-two-columns">
-              {/* ── Columna izquierda: Calendario ────────────────────────── */}
               <div className="dashboard-left-column">
                 <div className="dd-panel dd-calendar-panel">
                   <div className="dd-panel-head">
@@ -667,9 +904,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
                       <button className="nav-btn" onClick={handlePrev}>
                         <i className="fas fa-chevron-left"></i> ANTERIOR
                       </button>
+
                       <button className="nav-btn today-btn" onClick={handleToday}>
                         <i className="fas fa-calendar-day"></i> HOY
                       </button>
+
                       <button className="nav-btn" onClick={handleNext}>
                         SIGUIENTE <i className="fas fa-chevron-right"></i>
                       </button>
@@ -677,19 +916,27 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
                     <div className="view-buttons">
                       <button
-                        className={`view-btn ${currentView === 'timeGridDay' ? 'active' : ''}`}
+                        className={`view-btn ${
+                          currentView === 'timeGridDay' ? 'active' : ''
+                        }`}
                         onClick={() => handleViewChange('timeGridDay')}
                       >
                         DÍA
                       </button>
+
                       <button
-                        className={`view-btn ${currentView === 'timeGridWeek' ? 'active' : ''}`}
+                        className={`view-btn ${
+                          currentView === 'timeGridWeek' ? 'active' : ''
+                        }`}
                         onClick={() => handleViewChange('timeGridWeek')}
                       >
                         SEMANA
                       </button>
+
                       <button
-                        className={`view-btn ${currentView === 'dayGridMonth' ? 'active' : ''}`}
+                        className={`view-btn ${
+                          currentView === 'dayGridMonth' ? 'active' : ''
+                        }`}
                         onClick={() => handleViewChange('dayGridMonth')}
                       >
                         MES
@@ -704,7 +951,9 @@ const DentistDashboard = ({ userData, onLogout }) => {
                           onChange={(e) => setStartHour(e.target.value)}
                         >
                           {horasDisponibles.map((hora) => (
-                            <option key={hora} value={hora}>{hora}</option>
+                            <option key={hora} value={hora}>
+                              {hora}
+                            </option>
                           ))}
                         </select>
                       </label>
@@ -714,7 +963,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
                   <div className="calendar-wrapper">
                     <FullCalendar
                       ref={calendarRef}
-                      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
+                      plugins={[
+                        dayGridPlugin,
+                        timeGridPlugin,
+                        interactionPlugin,
+                        listPlugin,
+                      ]}
                       headerToolbar={false}
                       initialView={currentView}
                       events={eventsToDisplay}
@@ -730,7 +984,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
                       contentHeight={450}
                       locale="es"
                       firstDay={1}
-                      buttonText={{ today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día' }}
+                      buttonText={{
+                        today: 'Hoy',
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                      }}
                       titleFormat={{ year: 'numeric', month: 'long' }}
                       dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
                     />
@@ -738,7 +997,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
                 </div>
               </div>
 
-              {/* ── Columna derecha ──────────────────────────────────────── */}
               <div className="dashboard-right-column">
                 <AppointmentsList
                   citas={citasAgendaSeleccionada}
@@ -747,6 +1005,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
                   selectedDate={agendaDate}
                   onCitaCancelada={handleCitaCancelada}
                 />
+
                 <Odontograma paciente={selectedCita} />
                 <PatientTabs paciente={selectedCita} />
               </div>
@@ -823,18 +1082,17 @@ const DentistDashboard = ({ userData, onLogout }) => {
           <div className="dentist-topbar-right">
             <div className="dentist-date-pill">{topDate}</div>
 
-            <button className="btn-bloquear-horario" onClick={() => setShowBloqueoModal(true)}>
+            <button
+              className="btn-bloquear-horario"
+              onClick={() => setShowBloqueoModal(true)}
+            >
               <i className="fas fa-lock"></i> Bloquear horario
             </button>
 
-<<<<<<< HEAD
-            <button className="new-appointment-btn" onClick={() => setShowNuevaCitaModal(true)}>
-=======
             <button
               className="btn-bloquear-horario"
               onClick={() => setShowNuevaCitaModal(true)}
             >
->>>>>>> 5315be8686fcbfbee47234c77ed4035c2bef28f9
               <i className="fas fa-plus"></i> Nueva cita
             </button>
           </div>
@@ -843,7 +1101,9 @@ const DentistDashboard = ({ userData, onLogout }) => {
         {renderContent()}
       </main>
 
-      {toastMessage ? <div className="dentist-toast-success">{toastMessage}</div> : null}
+      {toastMessage ? (
+        <div className="dentist-toast-success">{toastMessage}</div>
+      ) : null}
 
       <NuevaCitaModal
         open={showNuevaCitaModal}
@@ -884,10 +1144,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
               setMetrics(calcularMetricas(actualizadas));
               return actualizadas;
             });
+
             setSelectedCita((prev) => {
               if (!prev) return prev;
-              return Number(prev.id) === Number(citaActualizada.id) ? citaActualizada : prev;
+              return Number(prev.id) === Number(citaActualizada.id)
+                ? citaActualizada
+                : prev;
             });
+
             setToastMessage('Consultorio actualizado correctamente');
             closeModal();
           }}
@@ -897,58 +1161,153 @@ const DentistDashboard = ({ userData, onLogout }) => {
       {showModal && selectedEvent && selectedEvent.extendedProps.isBloqueo && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ borderLeft: `4px solid ${selectedEvent.backgroundColor}` }}>
+            <div
+              className="modal-header"
+              style={{ borderLeft: `4px solid ${selectedEvent.backgroundColor}` }}
+            >
               <h3>Detalles del Bloqueo</h3>
-              <button className="modal-close" onClick={closeModal}>&times;</button>
+              <button className="modal-close" onClick={closeModal}>
+                &times;
+              </button>
             </div>
+
             <div className="modal-body">
-              <p><strong>Evento:</strong> {selectedEvent.title}</p>
-              <p><strong>Inicio:</strong> {new Date(selectedEvent.start).toLocaleString()}</p>
-              <p><strong>Fin:</strong> {new Date(selectedEvent.end).toLocaleString()}</p>
+              <p>
+                <strong>Evento:</strong> {selectedEvent.title}
+              </p>
+              <p>
+                <strong>Inicio:</strong>{' '}
+                {new Date(selectedEvent.start).toLocaleString()}
+              </p>
+              <p>
+                <strong>Fin:</strong>{' '}
+                {new Date(selectedEvent.end).toLocaleString()}
+              </p>
+
               {selectedEvent.extendedProps.descripcion && (
-                <p><strong>Nota:</strong> {selectedEvent.extendedProps.descripcion}</p>
+                <p>
+                  <strong>Nota:</strong> {selectedEvent.extendedProps.descripcion}
+                </p>
               )}
             </div>
+
             <div className="modal-footer">
-              <button className="btn-danger" onClick={() => handleEliminarBloqueo(selectedEvent.extendedProps.idOriginal)}>
+              <button
+                className="btn-danger"
+                onClick={() =>
+                  handleEliminarBloqueo(selectedEvent.extendedProps.idOriginal)
+                }
+              >
                 <i className="fas fa-unlock"></i> Eliminar Bloqueo
               </button>
-              <button className="btn-secondary" onClick={closeModal}>Cerrar</button>
+
+              <button className="btn-secondary" onClick={closeModal}>
+                Cerrar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Modal de confirmación personalizado - se muestra SOLO cuando se confirma eliminación */}
       {showConfirmDeleteModal && (
-        <div
+        <div 
           style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 1200,
-          }}
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1200,
+          }} 
           onClick={cancelarEliminarBloqueo}
         >
-          <div
+          <div 
             style={{
-              backgroundColor: '#fff', borderRadius: '12px', width: '90%', maxWidth: '400px',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            }}
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '400px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }} 
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#111827' }}>Confirmar eliminación</h3>
-              <button onClick={cancelarEliminarBloqueo} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6b7280' }}>&times;</button>
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#111827' }}>
+                Confirmar eliminación
+              </h3>
+              <button
+                onClick={cancelarEliminarBloqueo}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                }}
+              >
+                &times;
+              </button>
             </div>
+
             <div style={{ padding: '24px' }}>
               <p style={{ margin: 0, fontSize: '1rem', color: '#111827', textAlign: 'center' }}>
                 ¿Desea eliminar este bloqueo de horario?
               </p>
             </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button onClick={cancelarEliminarBloqueo} style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', padding: '8px 20px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+
+            <div
+              style={{
+                padding: '16px 24px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+              }}
+            >
+              <button
+                onClick={cancelarEliminarBloqueo}
+                style={{
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
                 Cancelar
               </button>
-              <button onClick={confirmarEliminarBloqueo} style={{ backgroundColor: '#dc2626', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+
+              <button
+                onClick={confirmarEliminarBloqueo}
+                style={{
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
                 Aceptar
               </button>
             </div>
