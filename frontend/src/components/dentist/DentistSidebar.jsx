@@ -1,43 +1,65 @@
-// frontend/src/components/dentist/DentistSidebar.jsx
 import React from 'react';
+import logoDentMed from '../../assets/dentmed-logo.png';
 import './DentistSidebar.css';
 
-const DentistSidebar = ({ activeView, onSelectView, onLogout }) => {
-  const menuItems = [
-    { id: 'agenda', icon: 'fa-calendar-alt', label: 'Mi Agenda' },
-    { id: 'pacientes', icon: 'fa-users', label: 'Mis Pacientes' },
-    { id: 'tratamientos', icon: 'fa-tooth', label: 'Tratamientos' },
-    { id: 'notas', icon: 'fa-sticky-note', label: 'Notas' },
-  ];
+const MENU_ITEMS = [
+  { id: 'agenda', icon: 'fa-calendar-alt', label: 'Mi Agenda' },
+  { id: 'pacientes', icon: 'fa-users', label: 'Mis Pacientes' },
+  { id: 'tratamientos', icon: 'fa-tooth', label: 'Tratamientos' },
+  { id: 'notas', icon: 'fa-sticky-note', label: 'Notas' },
+];
+
+const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentistaInfo }) => {
+  const displayName =
+    dentistaInfo?.nombre ||
+    userData?.username ||
+    userData?.email?.split('@')?.[0] ||
+    'Doctor(a)';
+
+  const userInitial = String(displayName).charAt(0).toUpperCase();
 
   return (
     <aside className="dentist-sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">
-          <i className="fas fa-tooth"></i>
+      <div className="dentist-sidebar-top">
+        <div className="dentist-sidebar-logoBox" title="DentMed">
+          <img src={logoDentMed} alt="DentMed" className="dentist-sidebar-logoImg" />
         </div>
-        <div className="logo-text">
-          <span className="logo-dent">Dent</span>
-          <span className="logo-med">Med</span>
-        </div>
+
+        <div className="dentist-sidebar-sectionTitle">Menú</div>
+
+        <nav className="dentist-sidebar-nav">
+          {MENU_ITEMS.map((item) => {
+            const isActive = activeView === item.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`dentist-sidebar-item ${isActive ? 'is-active' : ''}`}
+                onClick={() => onSelectView(item.id)}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className="dentist-sidebar-ico" aria-hidden="true">
+                  <i className={`fa-solid ${item.icon}`} />
+                </span>
+                <span className="dentist-sidebar-label">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            className={`sidebar-nav-item ${activeView === item.id ? 'active' : ''}`}
-            onClick={() => onSelectView(item.id)}
-          >
-            <i className={`fas ${item.icon}`}></i>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="dentist-sidebar-bottom">
+        <div className="dentist-sidebar-user">
+          <div className="dentist-sidebar-avatar">{userInitial}</div>
+          <div className="dentist-sidebar-usertext">
+            <div className="dentist-sidebar-username">Dr. {displayName}</div>
+            <div className="dentist-sidebar-role">Odontólogo</div>
+          </div>
+        </div>
 
-      <div className="sidebar-logout">
-        <button className="logout-btn-sidebar" onClick={onLogout}>
-          <i className="fas fa-sign-out-alt"></i>
+        <button className="dentist-sidebar-logout" type="button" onClick={onLogout}>
+          <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
           <span>Salir</span>
         </button>
       </div>
