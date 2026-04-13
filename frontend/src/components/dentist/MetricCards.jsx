@@ -37,7 +37,14 @@ const MetricCards = ({ citasHoy, pacientesVistos, siguienteCita, tratamientosPen
   return (
     <div className="metrics-grid">
       {metrics.map((metric, index) => (
-        <div key={index} className="metric-card" style={{ borderBottomColor: metric.color }}>
+        <div
+          key={index}
+          className="metric-card"
+          style={{
+            borderBottomColor: metric.color,
+            '--metric-accent': metric.color,
+          }}
+        >
           <div className="metric-icon" style={{ backgroundColor: metric.bgColor, color: metric.color }}>
             <i className={`fas ${metric.icon}`}></i>
           </div>

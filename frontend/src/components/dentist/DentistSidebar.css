@@ -1,121 +1,231 @@
-/* frontend/src/components/dentist/DentistSidebar.css */
-
 .dentist-sidebar {
-  width: 260px;
-  background: white;
-  border-right: 1px solid #e9ecef;
+  width: 280px;
+  min-width: 280px;
+  height: calc(100vh - 36px);
+  position: sticky;
+  top: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(23,27,34,.96) 0%, rgba(18,22,30,.96) 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 18px 40px rgba(0,0,0,.28);
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  position: sticky;
-  top: 0;
+  overflow: hidden;
 }
 
-.sidebar-logo {
-  padding: 24px 20px;
+.dentist-sidebar-top {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.dentist-sidebar-logoBox {
+  width: 100%;
+  height: 64px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.08);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  flex-shrink: 0;
+  padding: 6px 10px;
+}
+
+.dentist-sidebar-logoImg {
+  max-height: 44px;
+  max-width: 78%;
+  object-fit: contain;
+  display: block;
+}
+
+.dentist-sidebar-sectionTitle {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: rgba(242,244,247,.55);
+  padding: 0 2px;
+}
+
+.dentist-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.2) transparent;
+}
+
+.dentist-sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dentist-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.2);
+  border-radius: 3px;
+}
+
+.dentist-sidebar-item {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  color: #f2f4f7;
+  border-radius: 18px;
+  padding: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.sidebar-logo .logo-icon {
-  background: linear-gradient(135deg, #0088cc, #006699);
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-logo .logo-icon i {
-  font-size: 20px;
-  color: white;
-}
-
-.sidebar-logo .logo-text {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.sidebar-logo .logo-dent {
-  color: #0088cc;
-}
-
-.sidebar-logo .logo-med {
-  color: #ff69b4;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  border-radius: 12px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  color: #5a6e7c;
-  transition: all 0.2s;
-  width: 100%;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
   text-align: left;
 }
 
-.sidebar-nav-item i {
-  width: 22px;
-  font-size: 18px;
+.dentist-sidebar-item:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
 }
 
-.sidebar-nav-item:hover {
-  background: #f0f9ff;
-  color: #0088cc;
+.dentist-sidebar-item:active {
+  transform: translateY(1px);
 }
 
-.sidebar-nav-item.active {
-  background: #0088cc;
-  color: white;
+.dentist-sidebar-item.is-active {
+  background: rgba(24,178,122,.12);
+  border-color: rgba(24,178,122,.32);
+  box-shadow: 0 0 0 3px rgba(24,178,122,.10);
 }
 
-/* Botón de salir */
-.sidebar-logout {
-  padding: 20px;
-  border-top: 1px solid #e9ecef;
+.dentist-sidebar-ico {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.dentist-sidebar-item.is-active .dentist-sidebar-ico {
+  background: rgba(24,178,122,.14);
+  border-color: rgba(24,178,122,.30);
+}
+
+.dentist-sidebar-ico i {
+  font-size: 16px;
+  color: rgba(242,244,247,.9);
+}
+
+.dentist-sidebar-item.is-active .dentist-sidebar-ico i {
+  color: rgba(24,178,122,1);
+}
+
+.dentist-sidebar-label {
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: .1px;
+}
+
+.dentist-sidebar-bottom {
   margin-top: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(0,0,0,.10) 100%);
 }
 
-.logout-btn-sidebar {
+.dentist-sidebar-user {
+  width: 100%;
+  border-radius: 18px;
+  padding: 12px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.dentist-sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: rgba(242,244,247,.95);
+  background: rgba(24,178,122,.14);
+  border: 1px solid rgba(24,178,122,.30);
+  flex: 0 0 auto;
+}
+
+.dentist-sidebar-usertext {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dentist-sidebar-username {
+  font-weight: 900;
+  color: rgba(242,244,247,.95);
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dentist-sidebar-role {
+  margin-top: 1px;
+  font-weight: 750;
+  color: rgba(242,244,247,.60);
+  font-size: 12px;
+}
+
+.dentist-sidebar-logout {
   width: 100%;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  border-radius: 12px;
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(242,244,247,.95);
+  font-weight: 850;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  color: #dc3545;
-  transition: all 0.2s;
+  transition: background .15s ease, border-color .15s ease, transform .08s ease;
 }
 
-.logout-btn-sidebar:hover {
-  background: #dc3545;
-  color: white;
+.dentist-sidebar-logout:hover {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.13);
 }
 
-.logout-btn-sidebar i {
-  width: 22px;
-  font-size: 18px;
+.dentist-sidebar-logout:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 1100px) {
+  .dentist-sidebar {
+    width: 250px;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dentist-sidebar {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    position: relative;
+    top: auto;
+  }
 }

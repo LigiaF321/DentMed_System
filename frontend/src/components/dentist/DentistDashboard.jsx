@@ -832,6 +832,37 @@ const DentistDashboard = ({ userData, onLogout }) => {
     )
   );
 
+  const dentistName = dentistaInfo?.nombre || userData?.username || 'Doctor(a)';
+
+  const topbarMeta = {
+    agenda: {
+      title: 'Mi Agenda',
+      subtitle: `Dr. ${dentistName}`,
+    },
+    pacientes: {
+      title: 'Mis Pacientes',
+      subtitle: `Gestión clínica de Dr. ${dentistName}`,
+    },
+    tratamientos: {
+      title: 'Tratamientos',
+      subtitle: `Seguimiento clínico de Dr. ${dentistName}`,
+    },
+    notas: {
+      title: 'Notas',
+      subtitle: `Registro rápido de Dr. ${dentistName}`,
+    },
+  }[activeView] || {
+    title: 'Panel del Doctor',
+    subtitle: `Dr. ${dentistName}`,
+  };
+
+  const topDate = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
   const renderContent = () => {
     switch (activeView) {
       case 'agenda':
@@ -846,100 +877,111 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
             <div className="dashboard-two-columns">
               <div className="dashboard-left-column">
-                <div className="calendar-controls">
-                  <div className="nav-buttons">
-                    <button className="nav-btn" onClick={handlePrev}>
-                      <i className="fas fa-chevron-left"></i> ANTERIOR
-                    </button>
-
-                    <button className="nav-btn today-btn" onClick={handleToday}>
-                      <i className="fas fa-calendar-day"></i> HOY
-                    </button>
-
-                    <button className="nav-btn" onClick={handleNext}>
-                      SIGUIENTE <i className="fas fa-chevron-right"></i>
-                    </button>
+                <div className="dd-panel dd-calendar-panel">
+                  <div className="dd-panel-head">
+                    <div>
+                      <div className="dd-panel-title">Agenda clínica</div>
+                      <div className="dd-panel-subtitle">
+                        Gestiona citas, bloques y disponibilidad semanal.
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="view-buttons">
-                    <button
-                      className={`view-btn ${
-                        currentView === 'timeGridDay' ? 'active' : ''
-                      }`}
-                      onClick={() => handleViewChange('timeGridDay')}
-                    >
-                      DÍA
-                    </button>
+                  <div className="calendar-controls">
+                    <div className="nav-buttons">
+                      <button className="nav-btn" onClick={handlePrev}>
+                        <i className="fas fa-chevron-left"></i> ANTERIOR
+                      </button>
 
-                    <button
-                      className={`view-btn ${
-                        currentView === 'timeGridWeek' ? 'active' : ''
-                      }`}
-                      onClick={() => handleViewChange('timeGridWeek')}
-                    >
-                      SEMANA
-                    </button>
+                      <button className="nav-btn today-btn" onClick={handleToday}>
+                        <i className="fas fa-calendar-day"></i> HOY
+                      </button>
 
-                    <button
-                      className={`view-btn ${
-                        currentView === 'dayGridMonth' ? 'active' : ''
-                      }`}
-                      onClick={() => handleViewChange('dayGridMonth')}
-                    >
-                      MES
-                    </button>
-                  </div>
+                      <button className="nav-btn" onClick={handleNext}>
+                        SIGUIENTE <i className="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
 
-                  <div className="hour-selector">
-                    <label>
-                      <i className="fas fa-clock"></i> Mostrar desde:
-                      <select
-                        value={startHour}
-                        onChange={(e) => setStartHour(e.target.value)}
+                    <div className="view-buttons">
+                      <button
+                        className={`view-btn ${
+                          currentView === 'timeGridDay' ? 'active' : ''
+                        }`}
+                        onClick={() => handleViewChange('timeGridDay')}
                       >
-                        {horasDisponibles.map((hora) => (
-                          <option key={hora} value={hora}>
-                            {hora}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                </div>
+                        DÍA
+                      </button>
 
-                <div className="calendar-wrapper">
-                  <FullCalendar
-                    ref={calendarRef}
-                    plugins={[
-                      dayGridPlugin,
-                      timeGridPlugin,
-                      interactionPlugin,
-                      listPlugin,
-                    ]}
-                    headerToolbar={false}
-                    initialView={currentView}
-                    events={eventsToDisplay}
-                    eventClick={handleEventClick}
-                    dateClick={handleDateClick}
-                    eventDrop={handleEventDrop}
-                    editable={true}
-                    slotMinTime={startHour}
-                    slotMaxTime="20:00:00"
-                    allDaySlot={false}
-                    slotDuration="00:30:00"
-                    height="auto"
-                    contentHeight={450}
-                    locale="es"
-                    firstDay={1}
-                    buttonText={{
-                      today: 'Hoy',
-                      month: 'Mes',
-                      week: 'Semana',
-                      day: 'Día',
-                    }}
-                    titleFormat={{ year: 'numeric', month: 'long' }}
-                    dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
-                  />
+                      <button
+                        className={`view-btn ${
+                          currentView === 'timeGridWeek' ? 'active' : ''
+                        }`}
+                        onClick={() => handleViewChange('timeGridWeek')}
+                      >
+                        SEMANA
+                      </button>
+
+                      <button
+                        className={`view-btn ${
+                          currentView === 'dayGridMonth' ? 'active' : ''
+                        }`}
+                        onClick={() => handleViewChange('dayGridMonth')}
+                      >
+                        MES
+                      </button>
+                    </div>
+
+                    <div className="hour-selector">
+                      <label>
+                        <i className="fas fa-clock"></i> Mostrar desde:
+                        <select
+                          value={startHour}
+                          onChange={(e) => setStartHour(e.target.value)}
+                        >
+                          {horasDisponibles.map((hora) => (
+                            <option key={hora} value={hora}>
+                              {hora}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="calendar-wrapper">
+                    <FullCalendar
+                      ref={calendarRef}
+                      plugins={[
+                        dayGridPlugin,
+                        timeGridPlugin,
+                        interactionPlugin,
+                        listPlugin,
+                      ]}
+                      headerToolbar={false}
+                      initialView={currentView}
+                      events={eventsToDisplay}
+                      eventClick={handleEventClick}
+                      dateClick={handleDateClick}
+                      eventDrop={handleEventDrop}
+                      editable={true}
+                      slotMinTime={startHour}
+                      slotMaxTime="20:00:00"
+                      allDaySlot={false}
+                      slotDuration="00:30:00"
+                      height="auto"
+                      contentHeight={450}
+                      locale="es"
+                      firstDay={1}
+                      buttonText={{
+                        today: 'Hoy',
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                      }}
+                      titleFormat={{ year: 'numeric', month: 'long' }}
+                      dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1014,18 +1056,20 @@ const DentistDashboard = ({ userData, onLogout }) => {
         activeView={activeView}
         onSelectView={setActiveView}
         onLogout={onLogout}
+        userData={userData}
+        dentistaInfo={dentistaInfo}
       />
 
       <main className="dentist-main-content">
         <div className="dentist-topbar">
           <div className="dentist-topbar-left">
-            <div className="doctor-name-topbar">
-              <i className="fas fa-user-md"></i>
-              <span>Dr. {dentistaInfo?.nombre || 'Cargando...'}</span>
-            </div>
+            <div className="dentist-topbar-title">{topbarMeta.title}</div>
+            <div className="dentist-topbar-subtitle">{topbarMeta.subtitle}</div>
           </div>
 
           <div className="dentist-topbar-right">
+            <div className="dentist-date-pill">{topDate}</div>
+
             <button
               className="btn-bloquear-horario"
               onClick={() => setShowBloqueoModal(true)}
@@ -1034,10 +1078,10 @@ const DentistDashboard = ({ userData, onLogout }) => {
             </button>
 
             <button
-              className="btn-bloquear-horario"
+              className="new-appointment-btn"
               onClick={() => setShowNuevaCitaModal(true)}
             >
-              + Nueva cita
+              <i className="fas fa-plus"></i> Nueva cita
             </button>
           </div>
         </div>
