@@ -346,6 +346,24 @@ export default function NuevaCitaModal({
   const equiposRequeridos = useMemo(() => {
     return obtenerEquiposRequeridosPorProcedimiento(form.motivo);
   }, [form.motivo]);
+  const existePacienteExacto = useMemo(() => {
+  const query = normalizarTexto(form.queryPaciente);
+  if (!query) return false;
+
+  return resultados.some(
+    (p) => normalizarTexto(p.nombre) === query
+  );
+}, [resultados, form.queryPaciente]);
+
+const resultadosFiltrados = useMemo(() => {
+  const query = normalizarTexto(form.queryPaciente);
+
+  if (!query) return [];
+
+  return resultados.filter((p) =>
+    normalizarTexto(p.nombre).includes(query)
+  );
+}, [resultados, form.queryPaciente]);
 
   const advertenciasEquipamiento = useMemo(() => {
     if (!equiposRequeridos.length || !consultorioSeleccionado) return [];
@@ -859,68 +877,82 @@ export default function NuevaCitaModal({
 
           <form className="dm17-form" onSubmit={handleSubmit}>
             <div className="dm17-field dm17-field-full dm17-typeahead-wrap">
-              <label>Paciente</label>
+  <label>Paciente</label>
 
-              <div className="dm17-typeahead-input-wrap">
-                <input
-                  type="text"
-                  name="queryPaciente"
-                  value={form.queryPaciente}
-                  onChange={handleChange}
-                  placeholder="Buscar por nombre, teléfono o correo"
-                />
+  <div className="dm17-typeahead-input-wrap">
+    <input
+      type="text"
+      name="queryPaciente"
+      value={form.queryPaciente}
+      onChange={handleChange}
+      placeholder="Buscar por nombre, teléfono o correo"
+    />
 
-                {form.paciente ? (
-                  <button
-                    type="button"
-                    className="dm17-chip-clear"
-                    onClick={limpiarPaciente}
-                  >
-                    Cambiar
-                  </button>
-                ) : null}
-              </div>
-
-              {!form.paciente && searching ? (
-                <div className="dm17-help">Buscando pacientes...</div>
-              ) : null}
-
-              {!form.paciente && resultados.length > 0 ? (
-                <div className="dm17-typeahead-list">
-                  {resultados.map((paciente) => (
-                    <button
-                      key={paciente.id}
-                      type="button"
-                      className="dm17-typeahead-item"
-                      onClick={() => seleccionarPaciente(paciente)}
-                    >
-                      <strong>{paciente.nombre}</strong>
-                      <span>
-                        {paciente.telefono ||
-                          paciente.email ||
-                          "Sin información adicional"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-
-              {!form.paciente && form.queryPaciente.trim().length >= 2 && !searching && (
-  <div className="dm17-empty-search">
-    {resultados.length === 0 && (
-      <span>No se encontró el paciente.</span>
-    )}
-
-    <button
-      type="button"
-      className="dm17-link-btn"
-      onClick={() => setShowCrearPaciente(true)}
-    >
-      Crear nuevo paciente
-    </button>
+    {form.paciente ? (
+      <button
+        type="button"
+        className="dm17-chip-clear"
+        onClick={limpiarPaciente}
+      >
+        Cambiar
+      </button>
+    ) : null}
   </div>
-)}
-            </div>
+
+  {!form.paciente && searching ? (
+    <div className="dm17-help">Buscando pacientes...</div>
+  ) : null}
+
+  {!form.paciente && resultadosFiltrados.length > 0 ? (
+    <div className="dm17-typeahead-list">
+      {resultadosFiltrados.map((paciente) => (
+        <button
+          key={paciente.id}
+          type="button"
+          className="dm17-typeahead-item"
+          onClick={() => seleccionarPaciente(paciente)}
+        >
+          <strong>{paciente.nombre}</strong>
+          <span>
+            {paciente.telefono ||
+              paciente.email ||
+              "Sin información adicional"}
+          </span>
+        </button>
+      ))}
+
+      
+      {form.queryPaciente.trim().length >= 2 &&
+        !existePacienteExacto && (
+          <button
+            type="button"
+            className="dm17-typeahead-item dm17-create-inline"
+            onClick={() => setShowCrearPaciente(true)}
+          >
+            Crear "{form.queryPaciente}"
+          </button>
+        )}
+    </div>
+  ) : null}
+
+  {!form.paciente &&
+    form.queryPaciente.trim().length >= 2 &&
+    !searching &&
+   resultadosFiltrados.length === 0 &&
+    !existePacienteExacto && (
+      <div className="dm17-empty-search">
+        <span>No se encontró el paciente.</span>
+
+        <button
+          type="button"
+          className="dm17-link-btn"
+          onClick={() => setShowCrearPaciente(true)}
+        >
+          Crear nuevo paciente "{form.queryPaciente}"
+        </button>
+      </div>
+    )}
+</div>
 
             <div className="dm17-grid">
               <div className="dm17-field">
