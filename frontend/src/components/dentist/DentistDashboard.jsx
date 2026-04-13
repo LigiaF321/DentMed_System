@@ -257,6 +257,10 @@ const DentistDashboard = ({ userData, onLogout }) => {
     nuevaHora: null,
   });
   const [toastMessage, setToastMessage] = useState('');
+  
+  // Estados para el modal de confirmación personalizado
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [bloqueoToDelete, setBloqueoToDelete] = useState(null);
 
   const [metrics, setMetrics] = useState({
     citasHoy: 0,
@@ -449,17 +453,33 @@ const DentistDashboard = ({ userData, onLogout }) => {
     }
   };
 
-  const handleEliminarBloqueo = async (id) => {
-    if (!window.confirm('¿Desea eliminar este bloqueo de horario?')) return;
+  const handleEliminarBloqueo = (id) => {
+    // Cerrar el modal de detalles primero
+    closeModal();
+    // Luego mostrar el modal de confirmación
+    setBloqueoToDelete(id);
+    setShowConfirmDeleteModal(true);
+  };
 
+  const confirmarEliminarBloqueo = async () => {
+    if (!bloqueoToDelete) return;
+    
     try {
-      await bloquesService.eliminarBloque(id);
+      await bloquesService.eliminarBloque(bloqueoToDelete);
       mostrarToast('Bloqueo eliminado');
-      closeModal();
+      setShowConfirmDeleteModal(false);
+      setBloqueoToDelete(null);
       fetchBloques();
     } catch (error) {
       alert('Error al eliminar el bloqueo');
+      setShowConfirmDeleteModal(false);
+      setBloqueoToDelete(null);
     }
+  };
+
+  const cancelarEliminarBloqueo = () => {
+    setShowConfirmDeleteModal(false);
+    setBloqueoToDelete(null);
   };
 
   const handleNuevaCitaCreada = (response) => {
@@ -583,13 +603,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
     const { event } = info;
     const isBloqueo = event.extendedProps?.isBloqueo;
 
-    // No permitir drag & drop de bloqueos
     if (isBloqueo) {
       info.revert();
       return;
     }
 
-    // Obtener la cita original
     const citaOriginal = citas.find((c) => String(c.id) === String(event.id));
 
     if (!citaOriginal) {
@@ -597,13 +615,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
       return;
     }
 
-    // Extraer fecha y hora de la nueva posición
     const nuevaFecha = event.start.toISOString().split('T')[0];
     const nuevaHora = `${String(event.start.getHours()).padStart(2, '0')}:${String(
       event.start.getMinutes()
     ).padStart(2, '0')}`;
 
-    // Mostrar modal de confirmación con los datos
     setReprogramarData({
       cita: citaOriginal,
       nuevaFecha,
@@ -611,14 +627,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
     });
     setShowReprogramarModal(true);
 
-    // Revert el cambio mientras se confirma
     info.revert();
   };
 
   const handleReprogramarConfirm = async (citaActualizada) => {
     setShowReprogramarModal(false);
 
-    // Actualizar la cita en el estado y recalcular métricas
     setCitas((prevCitas) => {
       const actualizadas = ordenarCitasPorFecha(
         prevCitas.map((c) =>
@@ -637,14 +651,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
         : prev;
     });
 
-    // Resetear datos
     setReprogramarData({
       cita: null,
       nuevaFecha: null,
       nuevaHora: null,
     });
 
-    // Mostrar mensaje de éxito
     setToastMessage('¡Cita reprogramada correctamente!');
     setTimeout(() => setToastMessage(''), 3000);
   };
@@ -1191,6 +1203,112 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
               <button className="btn-secondary" onClick={closeModal}>
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación personalizado - se muestra SOLO cuando se confirma eliminación */}
+      {showConfirmDeleteModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1200,
+          }} 
+          onClick={cancelarEliminarBloqueo}
+        >
+          <div 
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '400px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#111827' }}>
+                Confirmar eliminación
+              </h3>
+              <button
+                onClick={cancelarEliminarBloqueo}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <p style={{ margin: 0, fontSize: '1rem', color: '#111827', textAlign: 'center' }}>
+                ¿Desea eliminar este bloqueo de horario?
+              </p>
+            </div>
+
+            <div
+              style={{
+                padding: '16px 24px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+              }}
+            >
+              <button
+                onClick={cancelarEliminarBloqueo}
+                style={{
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={confirmarEliminarBloqueo}
+                style={{
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Aceptar
               </button>
             </div>
           </div>
