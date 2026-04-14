@@ -24,13 +24,7 @@ import './DentistDashboard.css';
 const normalizarEstadoConsultorio = (estado) =>
   String(estado || '').trim().toLowerCase();
 
-const CambioConsultorioModal = ({
-  cita,
-  consultorios,
-  citasDentista,
-  onClose,
-  onUpdated,
-}) => {
+const CambioConsultorioModal = ({ cita, consultorios, citasDentista, onClose, onUpdated }) => {
   const [nuevoConsultorio, setNuevoConsultorio] = React.useState(
     cita?.id_consultorio ? String(cita.id_consultorio) : ''
   );
@@ -585,7 +579,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
               </div>
 
               <div className="dashboard-right-column">
-                {/* AppointmentsList ahora solo muestra resumen */}
                 <AppointmentsList
                   citas={citasAgendaSeleccionada}
                   onSelectCita={handleSelectCita}
@@ -593,7 +586,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
                   selectedDate={agendaDate}
                   onVerDetalles={() => setActiveView('citas')}
                 />
-                <Odontograma paciente={selectedCita} />
+                <Odontograma paciente={selectedCita} soloLectura={true} />
                 <PatientTabs
                   paciente={selectedCita}
                   onVerTodos={() => setActiveView('tratamientos')}
@@ -604,7 +597,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
           </>
         );
 
-      // ── NUEVA VISTA: Citas ───────────────────────────────────────────────────────────────────────
       case 'citas':
         return (
           <CitasScreen

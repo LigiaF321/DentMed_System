@@ -67,72 +67,33 @@ const exportarExpedientePDF = (paciente) => {
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; color:#1a2c3e; background:white; padding:32px; }
-
     .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #2563eb; padding-bottom:16px; margin-bottom:24px; }
     .clinic-name { font-size:22px; font-weight:900; color:#2563eb; }
     .clinic-sub  { font-size:12px; color:#6b7280; margin-top:2px; }
     .doc-title   { text-align:right; }
     .doc-title h1{ font-size:18px; font-weight:800; color:#111827; }
     .doc-title p { font-size:11px; color:#6b7280; margin-top:3px; }
-
-    .patient-card {
-      background: linear-gradient(135deg, #eff6ff, #dbeafe);
-      border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
-      border-left: 5px solid #2563eb;
-    }
+    .patient-card { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border-left: 5px solid #2563eb; }
     .patient-name { font-size:20px; font-weight:900; color:#1e3a5f; }
     .patient-meta { font-size:12px; color:#4b6a8a; margin-top:4px; }
-
     .section { margin-bottom:20px; }
-    .section-title {
-      font-size:13px; font-weight:800; color:#2563eb;
-      text-transform:uppercase; letter-spacing:0.06em;
-      border-bottom:2px solid #dbeafe; padding-bottom:6px; margin-bottom:12px;
-    }
-
+    .section-title { font-size:13px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid #dbeafe; padding-bottom:6px; margin-bottom:12px; }
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .field   { background:#f8fafc; border-radius:8px; padding:10px 14px; border:1px solid #e2e8f0; }
     .field-label { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
     .field-value { font-size:14px; font-weight:600; color:#111827; }
-
-    .alert-box {
-      background:#fef2f2; border:1px solid #fecaca; border-radius:8px;
-      padding:10px 14px; margin-bottom:12px;
-      display:flex; align-items:center; gap:8px;
-    }
+    .alert-box { background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
     .alert-label { font-size:12px; font-weight:800; color:#dc2626; }
     .alert-value { font-size:13px; color:#7f1d1d; }
-
-    .chip {
-      display:inline-block; background:#dbeafe; color:#1d4ed8;
-      padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700;
-      margin:2px;
-    }
+    .chip { display:inline-block; background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; margin:2px; }
     .chip.danger { background:#fee2e2; color:#dc2626; }
-
-    .footer {
-      margin-top:32px; padding-top:16px; border-top:1px solid #e5e7eb;
-      display:flex; justify-content:space-between; font-size:11px; color:#9ca3af;
-    }
-
-    .sign-area {
-      margin-top:40px; display:flex; justify-content:flex-end;
-    }
-    .sign-box {
-      text-align:center; width:220px;
-      border-top:1px solid #374151; padding-top:6px;
-      font-size:11px; color:#374151;
-    }
-
-    @media print {
-      body { padding:20px; }
-      @page { margin:1.5cm; }
-    }
+    .footer { margin-top:32px; padding-top:16px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:11px; color:#9ca3af; }
+    .sign-area { margin-top:40px; display:flex; justify-content:flex-end; }
+    .sign-box { text-align:center; width:220px; border-top:1px solid #374151; padding-top:6px; font-size:11px; color:#374151; }
+    @media print { body { padding:20px; } @page { margin:1.5cm; } }
   </style>
 </head>
 <body>
-
-  <!-- Encabezado -->
   <div class="header">
     <div>
       <div class="clinic-name">DentMed</div>
@@ -143,8 +104,6 @@ const exportarExpedientePDF = (paciente) => {
       <p>Generado el ${fecha}</p>
     </div>
   </div>
-
-  <!-- Tarjeta del paciente -->
   <div class="patient-card">
     <div class="patient-name">${nombre}</div>
     <div class="patient-meta">
@@ -152,15 +111,7 @@ const exportarExpedientePDF = (paciente) => {
       ${paciente.id || paciente.id_paciente ? `&nbsp;·&nbsp; ID: ${paciente.id || paciente.id_paciente}` : ''}
     </div>
   </div>
-
-  <!-- Alerta de alergias -->
-  ${alergias !== 'Ninguna' ? `
-  <div class="alert-box">
-    <span class="alert-label">⚠ ALERGIAS:</span>
-    <span class="alert-value">${alergias}</span>
-  </div>` : ''}
-
-  <!-- Información personal -->
+  ${alergias !== 'Ninguna' ? `<div class="alert-box"><span class="alert-label">⚠ ALERGIAS:</span><span class="alert-value">${alergias}</span></div>` : ''}
   <div class="section">
     <div class="section-title">Información Personal</div>
     <div class="grid-2">
@@ -171,8 +122,6 @@ const exportarExpedientePDF = (paciente) => {
       <div class="field"><div class="field-label">Teléfono emergencia</div><div class="field-value">${telEmerg}</div></div>
     </div>
   </div>
-
-  <!-- Historial médico -->
   <div class="section">
     <div class="section-title">Historial Médico</div>
     <div class="grid-2">
@@ -196,33 +145,22 @@ const exportarExpedientePDF = (paciente) => {
       </div>
     </div>
   </div>
-
-  <!-- Firma -->
   <div class="sign-area">
-    <div class="sign-box">
-      Dr./Dra. ____________________________<br/>
-      Firma y sello del profesional
-    </div>
+    <div class="sign-box">Dr./Dra. ____________________________<br/>Firma y sello del profesional</div>
   </div>
-
-  <!-- Footer -->
   <div class="footer">
     <span>DentMed — Sistema de Gestión Clínica</span>
     <span>Expediente generado el ${fecha} · Documento confidencial</span>
   </div>
-
   <script>window.onload = () => { window.print(); }</script>
 </body>
 </html>`;
 
   const ventana = window.open('', '_blank', 'width=900,height=700');
-  if (ventana) {
-    ventana.document.write(html);
-    ventana.document.close();
-  }
+  if (ventana) { ventana.document.write(html); ventana.document.close(); }
 };
 
-// ── Modal para registrar nuevo paciente (HU20) ────────────────────────────────
+// ── Modal para registrar nuevo paciente ──────────────────────────────────────
 const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
   const [form, setForm] = useState({
     nombre: '', telefono: '', email: '', fecha_nacimiento: '',
@@ -259,9 +197,7 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
       onClose();
     } catch (err) {
       setError(err.message || 'Error al guardar');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   if (!open) return null;
@@ -276,7 +212,6 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
           </h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#6b7280' }}>×</button>
         </div>
-
         <form onSubmit={handleSubmit} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos personales
@@ -310,7 +245,6 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
               <input name="direccion" value={form.direccion} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
             </div>
           </div>
-
           <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos médicos
           </p>
@@ -327,13 +261,11 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
               </div>
             ))}
           </div>
-
           {error && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>
               {error}
             </div>
           )}
-
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
             <button type="button" onClick={onClose} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
               Cancelar
@@ -359,7 +291,6 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   const [loading, setLoading] = useState(false);
   const [busquedasRecientes, setBusquedasRecientes] = useState(leerBusquedasRecientes());
   const [backendRecientes, setBackendRecientes] = useState([]);
-  const [dentistaInicializado, setDentistaInicializado] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [showNuevoPaciente, setShowNuevoPaciente] = useState(false);
   const [reloadFlag, setReloadFlag] = useState(0);
@@ -369,7 +300,6 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   useEffect(() => {
     if (pacienteInicial) setPacienteSeleccionado(pacienteInicial);
   }, [pacienteInicial]);
-
 
   useEffect(() => {
     const cargarRecientes = async () => {
@@ -389,24 +319,14 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
       const cargar = async () => {
         setLoading(true);
         try {
-          const data = await buscarPacientes({
-            q: '',
-            page,
-            limit,
-            filtros: {}
-          });
-
+          const data = await buscarPacientes({ q: '', page, limit, filtros: {} });
           setRows(data?.data || []);
           setTotal(data?.total || 0);
         } catch (error) {
           console.error('Error cargando pacientes iniciales:', error);
-          setRows([]);
-          setTotal(0);
-        } finally {
-          setLoading(false);
-        }
+          setRows([]); setTotal(0);
+        } finally { setLoading(false); }
       };
-
       cargar();
       return;
     }
@@ -415,17 +335,9 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
       setLoading(true);
       try {
         const { id_dentista, ...filtrosSinDentista } = filtros;
-
-        const data = await buscarPacientes({
-          q,
-          page,
-          limit,
-          filtros: filtrosSinDentista
-        });
-
+        const data = await buscarPacientes({ q, page, limit, filtros: filtrosSinDentista });
         setRows(data?.data || []);
         setTotal(data?.total || 0);
-
         if (hasSearch || hasFilters) {
           const entry = { q: q.trim(), filtros, timestamp: new Date().toISOString() };
           guardarBusquedaReciente(entry);
@@ -433,11 +345,8 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
         }
       } catch (error) {
         console.error('Error buscando pacientes:', error);
-        setRows([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
+        setRows([]); setTotal(0);
+      } finally { setLoading(false); }
     }, 350);
 
     return () => clearTimeout(timer);
@@ -445,10 +354,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
 
   const handleFiltroChange = (field, value) => { setPage(1); setFiltros((prev) => ({ ...prev, [field]: value })); };
 
-  const limpiarFiltros = () => {
-    setPage(1);
-    setFiltros({ ...filtrosIniciales, id_dentista: dentistaInfo?.id ? String(dentistaInfo.id) : '' });
-  };
+  const limpiarFiltros = () => { setPage(1); setFiltros({ ...filtrosIniciales }); };
 
   const aplicarBusquedaReciente = (item) => { setPage(1); setQ(item.q || ''); setFiltros(item.filtros || filtrosIniciales); };
 
@@ -471,11 +377,25 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     }
   };
 
+  // ── Guardar odontograma del paciente ─────────────────────────────────────
+  const handleGuardarOdontograma = async (condiciones) => {
+    const id = pacienteSeleccionado?.id_paciente || pacienteSeleccionado?.id;
+    if (!id) throw new Error('No se encontró el ID del paciente');
+    const token = localStorage.getItem('token') || '';
+    const res = await fetch(`http://localhost:3000/api/pacientes/${id}/odontograma`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ odontograma: condiciones }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || 'Error al guardar odontograma');
+    setPacienteSeleccionado(prev => ({ ...prev, odontograma: condiciones }));
+  };
+
   // ── Vista expediente completo ─────────────────────────────────────────────
   if (pacienteSeleccionado) {
     return (
       <div className="dm20-page">
-        {/* Breadcrumb + botón exportar */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
           padding: '12px 20px', background: 'white', borderRadius: 16,
@@ -494,17 +414,9 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <span style={{ fontSize: 14, fontWeight: 700, color: '#111827', flex: 1 }}>
             {pacienteSeleccionado.paciente_nombre || pacienteSeleccionado.nombre_completo || 'Expediente'}
           </span>
-
-          {/* ── Botón Exportar PDF ── */}
           <button
             onClick={() => exportarExpedientePDF(pacienteSeleccionado)}
-            style={{
-              padding: '8px 16px', borderRadius: 10,
-              background: 'white', color: '#dc2626',
-              border: '1.5px solid #dc2626', fontWeight: 700, fontSize: 13,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'all 0.15s',
-            }}
+            style={{ padding: '8px 16px', borderRadius: 10, background: 'white', color: '#dc2626', border: '1.5px solid #dc2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#dc2626'; e.currentTarget.style.color = 'white'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#dc2626'; }}
           >
@@ -512,12 +424,13 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           </button>
         </div>
 
-        {/* Odontograma */}
         <div style={{ marginBottom: 20 }}>
-          <Odontograma paciente={pacienteSeleccionado} />
+          <Odontograma
+            paciente={pacienteSeleccionado}
+            onGuardar={handleGuardarOdontograma}
+          />
         </div>
 
-        {/* Expediente completo — modoPanel=false: edición habilitada */}
         <PatientTabs
           paciente={pacienteSeleccionado}
           onVerTodos={() => { }}
@@ -538,13 +451,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           </div>
           <button
             onClick={() => setShowNuevoPaciente(true)}
-            style={{
-              padding: '10px 18px', borderRadius: 12,
-              background: 'linear-gradient(135deg,#2563eb,#3b82f6)',
-              color: '#fff', border: 'none', fontWeight: 800, fontSize: 14,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: '0 6px 16px rgba(37,99,235,0.22)', whiteSpace: 'nowrap',
-            }}
+            style={{ padding: '10px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#2563eb,#3b82f6)', color: '#fff', border: 'none', fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px rgba(37,99,235,0.22)', whiteSpace: 'nowrap' }}
           >
             <i className="fas fa-user-plus"></i> Nuevo paciente
           </button>
@@ -627,14 +534,9 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
                     <td>
                       <button
                         onClick={() => handleSelectPaciente(paciente)}
-                        style={{
-                          padding: '5px 14px', borderRadius: 8,
-                          border: '1.5px solid #2563eb', background: 'transparent',
-                          color: '#2563eb', fontWeight: 700, fontSize: 12,
-                          cursor: 'pointer', whiteSpace: 'nowrap',
-                        }}
+                        style={{ padding: '5px 14px', borderRadius: 8, border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
-                        Ver expedientes.
+                        Ver expediente
                       </button>
                     </td>
                   </tr>
