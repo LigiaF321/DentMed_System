@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import CambiarConsultorioModal from "./CambiarConsultorioModal";
-import { cancelarCita } from "../../services/citas.service";
 import "./AppointmentsList.css";
 
 const AppointmentsList = ({
@@ -8,223 +6,140 @@ const AppointmentsList = ({
   onSelectCita,
   selectedCitaId,
   selectedDate,
-  onCitaCancelada,
+  onVerDetalles,
 }) => {
-  const [citaCambio, setCitaCambio] = useState(null);
   const [citasLocal, setCitasLocal] = useState(citas || []);
-  const [cancelandoId, setCancelandoId] = useState(null);
-  const [citaPendienteCancelar, setCitaPendienteCancelar] = useState(null);
 
   useEffect(() => {
     setCitasLocal(Array.isArray(citas) ? citas : []);
   }, [citas]);
 
-  const formatHora = (fecha) => {
-    return new Date(fecha).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatHora = (fecha) =>
+    new Date(fecha).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 
   const fechaBase = selectedDate ? new Date(selectedDate) : new Date();
-  const esHoy = fechaBase.toDateString() === new Date().toDateString();
+  const esHoy     = fechaBase.toDateString() === new Date().toDateString();
 
-  const abrirDialogoCancelar = (e, cita) => {
-    e.stopPropagation();
+  // Cita a mostrar: la seleccionada o la próxima pendiente
+  const ahora = new Date();
+  const citaAMostrar = citasLocal.find(c => String(c.id) === String(selectedCitaId))
+    || citasLocal.find(c => {
+        const estado = String(c.estado || '').toLowerCase();
+        return !['cancelada', 'completada'].includes(estado) && new Date(c.fecha_hora) >= ahora;
+      })
+    || citasLocal[0]
+    || null;
 
-    const estado = String(cita.estado || "").toLowerCase();
-
-    if (estado === "cancelada") {
-      return;
-    }
-
-    setCitaPendienteCancelar(cita);
+  const estadoLabel = {
+    confirmada:   'Confirmada',
+    pendiente:    'Pendiente',
+    completada:   'Completada',
+    cancelada:    'Cancelada',
+    programada:   'Programada',
+    reprogramada: 'Reprogramada',
   };
 
-  const cerrarDialogoCancelar = () => {
-    if (cancelandoId) return;
-    setCitaPendienteCancelar(null);
-  };
-
-  const confirmarCancelarCita = async () => {
-    if (!citaPendienteCancelar) return;
-
-    try {
-      setCancelandoId(citaPendienteCancelar.id);
-
-      const response = await cancelarCita(citaPendienteCancelar.id);
-
-      setCitasLocal((prev) =>
-        prev.filter(
-          (item) => Number(item.id) !== Number(citaPendienteCancelar.id)
-        )
-      );
-
-      if (onCitaCancelada) {
-        onCitaCancelada(
-          response?.data || {
-            ...citaPendienteCancelar,
-            estado: "cancelada",
-            id_consultorio: null,
-          }
-        );
-      }
-
-      setCitaPendienteCancelar(null);
-    } catch (error) {
-      alert(error.message || "No se pudo cancelar la cita");
-    } finally {
-      setCancelandoId(null);
-    }
+  const estadoColor = {
+    confirmada:   '#28a745',
+    pendiente:    '#17a2b8',
+    completada:   '#6c757d',
+    cancelada:    '#dc3545',
+    programada:   '#2563eb',
+    reprogramada: '#f59e0b',
   };
 
   return (
-    <>
-      <div className="appointments-list">
-        <div className="appointments-header">
-          <h3>{esHoy ? "Mi Agenda - Hoy" : "Mi Agenda"}</h3>
-          <span className="appointments-date">
-            {fechaBase.toLocaleDateString("es-ES", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-
-        <div className="appointments-items">
-          {citasLocal.length === 0 ? (
-            <div className="no-appointments">
-              <i className="fas fa-calendar-day"></i>
-              <p>No hay citas programadas para esta fecha</p>
-            </div>
-          ) : (
-            citasLocal.map((cita) => {
-              const estado = String(cita.estado || "").toLowerCase();
-              const puedeCancelar =
-                estado !== "cancelada" && estado !== "completada";
-
-              return (
-                <div
-                  key={cita.id}
-                  className={`appointment-item ${
-                    selectedCitaId === cita.id ? "selected" : ""
-                  }`}
-                  onClick={() => onSelectCita(cita)}
-                >
-                  <div className="appointment-time">
-                    <i className="fas fa-clock"></i>
-                    <span>{formatHora(cita.fecha_hora)}</span>
-                  </div>
-
-                  <div className="appointment-info">
-                    <div className="appointment-patient">
-                      {cita.paciente_nombre}
-                    </div>
-                    <div className="appointment-treatment">
-                      {cita.motivo || "Consulta general"}
-                    </div>
-                  </div>
-
-                  <div className={`appointment-status status-${estado}`}>
-                    {estado === "confirmada" && "Confirmada"}
-                    {estado === "pendiente" && "Pendiente"}
-                    {estado === "completada" && "Completada"}
-                    {estado === "cancelada" && "Cancelada"}
-                    {estado === "programada" && "Programada"}
-                  </div>
-
-                  <div
-                    className="appointment-actions"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className="dm17-btn dm17-btn-small"
-                      type="button"
-                      onClick={() => setCitaCambio(cita)}
-                      style={{ marginLeft: 8 }}
-                    >
-                      Cambiar consultorio
-                    </button>
-
-                    {puedeCancelar ? (
-                      <button
-                        className="dm17-btn dm17-btn-small dm17-btn-danger"
-                        type="button"
-                        onClick={(e) => abrirDialogoCancelar(e, cita)}
-                        disabled={cancelandoId === cita.id}
-                        style={{ marginLeft: 8 }}
-                      >
-                        {cancelandoId === cita.id
-                          ? "Cancelando..."
-                          : "Cancelar cita"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <CambiarConsultorioModal
-          open={!!citaCambio}
-          cita={citaCambio}
-          onClose={() => setCitaCambio(null)}
-          onUpdated={() => {
-            setCitaCambio(null);
-          }}
-        />
+    <div className="appointments-list">
+      <div className="appointments-header">
+        <h3>{esHoy ? 'Mi Agenda - Hoy' : 'Mi Agenda'}</h3>
+        <span className="appointments-date">
+          {fechaBase.toLocaleDateString('es-ES', {
+            day: 'numeric', month: 'long', year: 'numeric',
+          })}
+        </span>
       </div>
 
-      {citaPendienteCancelar ? (
-        <div className="modal-overlay" onClick={cerrarDialogoCancelar}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div
-              className="modal-header"
-              style={{ borderLeft: "4px solid #dc3545" }}
-            >
-              <h3>Cancelar cita</h3>
-              <button className="modal-close" onClick={cerrarDialogoCancelar}>
-                &times;
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <p>
-                ¿Seguro que deseas cancelar la cita de{" "}
-                <strong>
-                  {citaPendienteCancelar.paciente_nombre || "este paciente"}
-                </strong>
-                ?
-              </p>
-
-              <p style={{ marginTop: 10, color: "#6b7280" }}>
-                El consultorio asignado se liberará automáticamente.
-              </p>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn-secondary"
-                onClick={cerrarDialogoCancelar}
-                disabled={!!cancelandoId}
-              >
-                No, volver
-              </button>
-
-              <button
-                className="btn-danger"
-                onClick={confirmarCancelarCita}
-                disabled={!!cancelandoId}
-              >
-                {cancelandoId ? "Cancelando..." : "Sí, cancelar cita"}
-              </button>
-            </div>
+      <div className="appointments-items">
+        {citasLocal.length === 0 ? (
+          <div className="no-appointments">
+            <i className="fas fa-calendar-day"></i>
+            <p>No hay citas programadas para esta fecha</p>
           </div>
-        </div>
-      ) : null}
-    </>
+        ) : (
+          <>
+            {/* ── Resumen de la cita activa ── */}
+            {citaAMostrar && (
+              <div
+                className={`appointment-item selected`}
+                onClick={() => onSelectCita(citaAMostrar)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="appointment-time">
+                  <i className="fas fa-clock"></i>
+                  <span>{formatHora(citaAMostrar.fecha_hora)}</span>
+                </div>
+
+                <div className="appointment-info">
+                  <div className="appointment-patient">
+                    {citaAMostrar.paciente_nombre}
+                  </div>
+                  <div className="appointment-treatment">
+                    {citaAMostrar.motivo || 'Consulta general'}
+                  </div>
+                  {citaAMostrar.id_consultorio && (
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                      <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>
+                      Consultorio {citaAMostrar.id_consultorio}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  className={`appointment-status`}
+                  style={{
+                    color: estadoColor[String(citaAMostrar.estado || '').toLowerCase()] || '#374151',
+                    fontWeight: 700, fontSize: 11,
+                  }}
+                >
+                  {estadoLabel[String(citaAMostrar.estado || '').toLowerCase()] || citaAMostrar.estado}
+                </div>
+              </div>
+            )}
+
+            {/* ── Contador de citas del día ── */}
+            <div style={{
+              fontSize: 12, color: '#6b7280', padding: '6px 8px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span>
+                <i className="fas fa-list" style={{ marginRight: 5 }}></i>
+                {citasLocal.length} cita{citasLocal.length !== 1 ? 's' : ''} este día
+              </span>
+              <span style={{ color: '#28a745', fontWeight: 700 }}>
+                {citasLocal.filter(c => !['cancelada','completada'].includes(String(c.estado||'').toLowerCase())).length} pendientes
+              </span>
+            </div>
+
+            {/* ── Botón Ver detalles ── */}
+            <button
+              onClick={onVerDetalles}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 10,
+                border: 'none',
+                background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                color: 'white', fontWeight: 800, fontSize: 13,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+                marginTop: 6,
+              }}
+            >
+              <i className="fas fa-calendar-check"></i> Ver todas las citas
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 

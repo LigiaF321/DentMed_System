@@ -3,10 +3,11 @@ import logoDentMed from '../../assets/dentmed-logo.png';
 import './DentistSidebar.css';
 
 const MENU_ITEMS = [
-  { id: 'agenda', icon: 'fa-calendar-alt', label: 'Mi Agenda' },
-  { id: 'pacientes', icon: 'fa-users', label: 'Mis Pacientes' },
-  { id: 'tratamientos', icon: 'fa-tooth', label: 'Tratamientos' },
-  { id: 'notas', icon: 'fa-sticky-note', label: 'Notas' },
+  { id: 'agenda',       icon: 'fa-calendar-alt',  label: 'Mi Agenda' },
+  { id: 'citas',        icon: 'fa-calendar-check', label: 'Citas' },
+  { id: 'pacientes',    icon: 'fa-users',          label: 'Mis Pacientes' },
+  { id: 'tratamientos', icon: 'fa-tooth',          label: 'Tratamientos' },
+  { id: 'notas',        icon: 'fa-sticky-note',    label: 'Notas' },
 ];
 
 const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentistaInfo }) => {
@@ -30,7 +31,6 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
         <nav className="dentist-sidebar-nav">
           {MENU_ITEMS.map((item) => {
             const isActive = activeView === item.id;
-
             return (
               <button
                 key={item.id}
