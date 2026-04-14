@@ -244,18 +244,17 @@ const BuscadorPaciente = ({ onSelect }) => {
 // ── Modal principal ───────────────────────────────────────────────────────────
 export default function NuevoTratamientoModal({ open, onClose, onCreated, pacienteId: pacienteIdProp, pacienteNombre: pacienteNombreProp, onPacienteSeleccionado }) {
 
+  // ── NUEVO: estado interno del paciente seleccionado (cuando no viene por prop) ──
   const [pacienteIdLocal,     setPacienteIdLocal]     = useState(null);
   const [pacienteNombreLocal, setPacienteNombreLocal] = useState('');
 
+  // El paciente activo es el de la prop si existe, si no el seleccionado localmente
   const pacienteId     = pacienteIdProp     || pacienteIdLocal;
   const pacienteNombre = pacienteNombreProp || pacienteNombreLocal;
 
   const [form, setForm] = useState({
     diagnostico:'', procedimiento:'', dientes:[], dienteEstados:{}, observaciones:'',
     costo:'', forma_pago:'Efectivo', es_multisesion:false, sesiones_estimadas:2, estado:'planificado',
-    // ── NUEVO DM28: campos multi-sesión ──
-    objetivo_general: '',
-    fecha_fin_estimada: '',
   });
   const [selectedPaint, setSelectedPaint] = useState(null);
   const [materiales, setMateriales] = useState([]);
@@ -276,13 +275,11 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
 
   useEffect(() => {
     if (!open) return;
-    setForm({
-      diagnostico:'', procedimiento:'', dientes:[], dienteEstados:{}, observaciones:'',
-      costo:'', forma_pago:'Efectivo', es_multisesion:false, sesiones_estimadas:2, estado:'planificado',
-      objetivo_general: '', fecha_fin_estimada: '',
-    });
+    // Resetear todo al abrir
+    setForm({diagnostico:'',procedimiento:'',dientes:[],dienteEstados:{},observaciones:'',costo:'',forma_pago:'Efectivo',es_multisesion:false,sesiones_estimadas:2,estado:'planificado'});
     setSelectedPaint(null);
     setQueryMat(''); setMatSelec([]); setArchivos([]); setDragOver(false); setError('');
+    // Solo resetear paciente local si no viene por prop
     if (!pacienteIdProp) { setPacienteIdLocal(null); setPacienteNombreLocal(''); }
   }, [open]);
 
@@ -303,6 +300,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
     });
   };
 
+  // ── NUEVO: cuando se selecciona un paciente desde el buscador ──
   const handlePacienteSeleccionado = (p) => {
     const id     = p.id || p.id_paciente;
     const nombre = p.nombre_completo || p.nombre || 'Paciente';
@@ -339,9 +337,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
       fd.append('sesiones_estimadas', form.es_multisesion?form.sesiones_estimadas:1);
       fd.append('estado',             form.estado);
       fd.append('materiales',         JSON.stringify(matSelec.map(m=>({id:m.id,cantidad:m.cantidad}))));
-      // ── NUEVO DM28 ──
-      fd.append('objetivo_general',   form.objetivo_general || '');
-      fd.append('fecha_fin_estimada', form.fecha_fin_estimada || '');
       archivos.forEach(file=>fd.append('radiografias',file));
       const token = localStorage.getItem('token')||'';
       const res = await fetch('http://localhost:3000/api/tratamientos',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
@@ -377,6 +372,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
 
         <form className="nt-form" onSubmit={handleSubmit}>
 
+          {/* ── NUEVO: Selector de paciente (solo si no viene por prop) ── */}
           {!pacienteIdProp && (
             <div>
               <p style={sectionTitle}>Paciente</p>
@@ -396,8 +392,10 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             </div>
           )}
 
+          {/* ── El resto del formulario solo se muestra si hay paciente ── */}
           {pacienteId && (
             <>
+              {/* Paciente seleccionado por prop — mostrar nombre */}
               {pacienteIdProp && pacienteNombre && (
                 <div style={{ padding:'8px 14px', background:BRAND.light, borderRadius:10, border:`1.5px solid ${BRAND.border}`, fontSize:13, color:BRAND.primary, fontWeight:700, marginBottom:4 }}>
                   <i className="fas fa-user" style={{ marginRight:8 }}/>
@@ -513,7 +511,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 </div>
               </div>
 
-              {/* Sesiones — F1, F2 DM28 */}
+              {/* Sesiones */}
               <div>
                 <p style={sectionTitle}>Sesiones</p>
                 <label className="nt-multisesion-check">
@@ -521,49 +519,9 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                   Tratamiento multi-sesión
                 </label>
                 {form.es_multisesion && (
-                  <div style={{marginTop:12, display:'flex', flexDirection:'column', gap:12}}>
-                    {/* Sesiones estimadas — ya existía */}
-                    <div className="nt-field" style={{maxWidth:200}}>
-                      <label>Sesiones estimadas</label>
-                      <input type="number" name="sesiones_estimadas" value={form.sesiones_estimadas} onChange={handleChange} min={2} max={20}/>
-                    </div>
-
-                    {/* ── NUEVO DM28 F2: Objetivo general ── */}
-                    <div className="nt-field nt-field-full">
-                      <label>Objetivo general del tratamiento</label>
-                      <textarea
-                        name="objetivo_general"
-                        value={form.objetivo_general}
-                        onChange={handleChange}
-                        placeholder="Ej. Rehabilitación completa del sector posterior derecho..."
-                        rows={3}
-                        style={{width:'100%', padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14, resize:'vertical', boxSizing:'border-box'}}
-                      />
-                    </div>
-
-                    {/* ── NUEVO DM28 F2: Fecha fin estimada ── */}
-                    <div className="nt-field" style={{maxWidth:240}}>
-                      <label>Fecha fin estimada</label>
-                      <input
-                        type="date"
-                        name="fecha_fin_estimada"
-                        value={form.fecha_fin_estimada}
-                        onChange={handleChange}
-                        min={new Date().toISOString().split('T')[0]}
-                        style={{padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14, width:'100%', boxSizing:'border-box'}}
-                      />
-                    </div>
-
-                    {/* ── NUEVO DM28 F5: Preview barra de progreso ── */}
-                    <div style={{background:BRAND.light, borderRadius:10, padding:'12px 14px', border:`1px solid ${BRAND.border}`}}>
-                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6}}>
-                        <span style={{fontSize:12, fontWeight:700, color:BRAND.primary}}>Progreso estimado</span>
-                        <span style={{fontSize:11, color:'#6b7280'}}>0 de {form.sesiones_estimadas} sesiones</span>
-                      </div>
-                      <div style={{background:'#e5e7eb', borderRadius:20, height:8, overflow:'hidden'}}>
-                        <div style={{width:'0%', height:'100%', background:BRAND.gradient, borderRadius:20, transition:'width 0.3s'}}/>
-                      </div>
-                    </div>
+                  <div className="nt-field" style={{marginTop:10,maxWidth:200}}>
+                    <label>Sesiones estimadas</label>
+                    <input type="number" name="sesiones_estimadas" value={form.sesiones_estimadas} onChange={handleChange} min={2} max={20}/>
                   </div>
                 )}
               </div>
@@ -597,6 +555,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             </>
           )}
 
+          {/* Si no hay paciente seleccionado, mostrar mensaje */}
           {!pacienteId && pacienteIdProp === undefined && (
             <div style={{ textAlign:'center', padding:'24px', color:'#9ca3af', fontSize:13 }}>
               <i className="fas fa-user-circle" style={{ fontSize:32, display:'block', marginBottom:8, opacity:0.4 }}/>
