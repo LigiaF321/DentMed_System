@@ -2,55 +2,18 @@ import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import NuevoTratamientoModal from './NuevoTratamientoModal';
 import VisualizadorDocumentos from './VisualizadorDocumentos';
-import { buscarPacientes } from '../../services/pacientes.service';
 import './MisPacientesScreen.css';
 
-// ── Mini odontograma de solo lectura ─────────────────────────────────────────
-const UPPER = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-const LOWER = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
-
-const MiniOdontogramaReadonly = ({ dientesMarcados = [] }) => {
-  const Row = ({ teeth }) => (
-    <div style={{ display:'flex', gap:2, flexWrap:'wrap', justifyContent:'center' }}>
-      {teeth.map((n, i) => {
-        const marcado = dientesMarcados.includes(n);
-        const esSeparador = i === 7;
-        return (
-          <React.Fragment key={n}>
-            {esSeparador && <div style={{ width:2, background:'#cbd5e1', margin:'0 3px', alignSelf:'stretch' }}/>}
-            <div style={{
-              width: 24, height: 24, borderRadius: 5,
-              border: `1.5px solid ${marcado ? '#2563eb' : '#cbd5e1'}`,
-              background: marcado ? '#dbeafe' : '#f8fafc',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize: 8, fontWeight: 700,
-              color: marcado ? '#1d4ed8' : '#94a3b8',
-            }}>{n}</div>
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
-  return (
-    <div style={{ background:'#f1f5f9', borderRadius:10, padding:10, border:'1px solid #e2e8f0' }}>
-      <Row teeth={UPPER} />
-      <div style={{ height:4 }}/>
-      <Row teeth={LOWER} />
-    </div>
-  );
-};
-
-// ── Componente Multi-sesión ───────────────────────────────────────────────────
 function MultiSesionViewer({ sesiones }) {
   const [idx, setIdx] = useState(0);
   const sesion = sesiones[idx];
   return (
     <div style={{ marginTop:12, padding:12, background:'#f7f7f7', borderRadius:8 }}>
       <div style={{ display:'flex', alignItems:'center', marginBottom:8, gap:8 }}>
-        <button onClick={() => setIdx((i) => Math.max(0,i-1))} disabled={idx===0}
+        <button onClick={() => setIdx(i=>Math.max(0,i-1))} disabled={idx===0}
           style={{ padding:'2px 8px', borderRadius:6, border:'1px solid #d1d5db', cursor:'pointer', background:'white' }}>&lt;</button>
         <span style={{ fontWeight:'bold' }}>Sesión {idx+1} de {sesiones.length}</span>
-        <button onClick={() => setIdx((i) => Math.min(sesiones.length-1,i+1))} disabled={idx===sesiones.length-1}
+        <button onClick={() => setIdx(i=>Math.min(sesiones.length-1,i+1))} disabled={idx===sesiones.length-1}
           style={{ padding:'2px 8px', borderRadius:6, border:'1px solid #d1d5db', cursor:'pointer', background:'white' }}>&gt;</button>
       </div>
       <div style={{ fontSize:13 }}>
@@ -62,264 +25,299 @@ function MultiSesionViewer({ sesiones }) {
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+const getToken = () => localStorage.getItem('token') || '';
+
+const ESTADO_STYLE = {
+  realizado:   { bg:'#dcfce7', color:'#166534', label:'Realizado' },
+  en_proceso:  { bg:'#fef9c3', color:'#854d0e', label:'En proceso' },
+  planificado: { bg:'#eff6ff', color:'#1d4ed8', label:'Planificado' },
+};
+
 const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: pacienteNombreProp, dentistaInfo }) => {
-  const [tratamientos,    setTratamientos]    = useState([]);
-  const [loading,         setLoading]         = useState(false);
-  const [expandedId,      setExpandedId]      = useState(null);
-  const [exportMsg,       setExportMsg]       = useState('');
-  const [modalRx,         setModalRx]         = useState(null);
-  const [filtroTipo,      setFiltroTipo]      = useState('');
-  const [filtroDoctor,    setFiltroDoctor]    = useState('');
-  const [filtroDesde,     setFiltroDesde]     = useState('');
-  const [filtroHasta,     setFiltroHasta]     = useState('');
-  const [showNuevoTrat,   setShowNuevoTrat]   = useState(false);
-  const [tratKey,         setTratKey]         = useState(0);
 
-  // Buscador de paciente (cuando no viene de la agenda)
-  const [queryPaciente,   setQueryPaciente]   = useState('');
-  const [resultados,      setResultados]      = useState([]);
-  const [buscando,        setBuscando]        = useState(false);
-  const [pacienteId,      setPacienteId]      = useState(pacienteIdProp || null);
-  const [pacienteNombre,  setPacienteNombre]  = useState(pacienteNombreProp || '');
+  const [todosLosTratamientos, setTodosLosTratamientos] = useState([]);
+  const [loadingTodos,         setLoadingTodos]         = useState(false);
+  const [tratamientosPaciente, setTratamientosPaciente] = useState([]);
+  const [loadingPaciente,      setLoadingPaciente]      = useState(false);
+  const [pacienteId,           setPacienteId]           = useState(pacienteIdProp || null);
+  const [pacienteNombre,       setPacienteNombre]       = useState(pacienteNombreProp || '');
+  const [tratKey,              setTratKey]              = useState(0);
 
-  // Sincronizar con prop
+  const [expandedId,    setExpandedId]    = useState(null);
+  const [modalRx,       setModalRx]       = useState(null);
+  const [showNuevoTrat, setShowNuevoTrat] = useState(false);
+  const [exportMsg,     setExportMsg]     = useState('');
+
+  const [filtroTipo,     setFiltroTipo]     = useState('');
+  const [filtroDesde,    setFiltroDesde]    = useState('');
+  const [filtroHasta,    setFiltroHasta]    = useState('');
+  const [filtroPaciente, setFiltroPaciente] = useState('');
+
   useEffect(() => {
-    if (pacienteIdProp) { setPacienteId(pacienteIdProp); setPacienteNombre(pacienteNombreProp || ''); }
+    if (pacienteIdProp) {
+      setPacienteId(pacienteIdProp);
+      setPacienteNombre(pacienteNombreProp || '');
+    }
   }, [pacienteIdProp, pacienteNombreProp]);
 
-  // Búsqueda typeahead
   useEffect(() => {
-    if (pacienteId) return;
-    const q = queryPaciente.trim();
-    if (q.length < 2) { setResultados([]); return; }
-    const t = setTimeout(async () => {
-      setBuscando(true);
-      try {
-        const res = await buscarPacientes(q);
-        setResultados(res?.data || []);
-      } catch { setResultados([]); }
-      finally { setBuscando(false); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [queryPaciente, pacienteId]);
-
-  // Cargar tratamientos
-  useEffect(() => {
-    if (!pacienteId) { setTratamientos([]); return; }
-    setLoading(true);
-    fetch(`/api/tratamientos/pacientes/${pacienteId}/tratamientos`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+    setLoadingTodos(true);
+    fetch('/api/tratamientos/tratamientos', {
+      headers: { Authorization: `Bearer ${getToken()}` },
     })
-      .then((r) => r.json())
-      .then((d) => setTratamientos(d.tratamientos || []))
-      .catch(() => setTratamientos([]))
-      .finally(() => setLoading(false));
+      .then(r => r.json())
+      .then(d => setTodosLosTratamientos(d.tratamientos || []))
+      .catch(() => setTodosLosTratamientos([]))
+      .finally(() => setLoadingTodos(false));
+  }, [tratKey]);
+
+  useEffect(() => {
+    if (!pacienteId) { setTratamientosPaciente([]); return; }
+    setLoadingPaciente(true);
+    fetch(`/api/tratamientos/pacientes/${pacienteId}/tratamientos`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+      .then(r => r.json())
+      .then(d => setTratamientosPaciente(d.tratamientos || []))
+      .catch(() => setTratamientosPaciente([]))
+      .finally(() => setLoadingPaciente(false));
   }, [pacienteId, tratKey]);
 
+  const listaActiva = pacienteId ? tratamientosPaciente : todosLosTratamientos;
+  const loading     = pacienteId ? loadingPaciente : loadingTodos;
+
+  // ── CAMBIO: estadísticas calculadas desde listaActiva, no todosLosTratamientos ──
+  const hoy = new Date().toDateString();
+  const tratamientosHoy = listaActiva.filter(t => new Date(t.fecha).toDateString() === hoy);
+  const realizadosHoy   = tratamientosHoy.filter(t => t.estado === 'realizado').length;
+  const planificadosHoy = tratamientosHoy.filter(t => t.estado === 'planificado').length;
+  const costoTotal      = listaActiva.reduce((sum, t) => sum + (parseFloat(t.costo) || 0), 0);
+
+  const tiposUnicos = Array.from(new Set(listaActiva.map(t => t.tipo).filter(Boolean)));
+
+  const tratamientosFiltrados = listaActiva.filter(t => {
+    const pac = t.Paciente?.nombre || t.paciente_nombre || '';
+    return (
+      (!filtroTipo     || t.tipo === filtroTipo) &&
+      (!filtroDesde    || new Date(t.fecha) >= new Date(filtroDesde)) &&
+      (!filtroHasta    || new Date(t.fecha) <= new Date(filtroHasta)) &&
+      (!filtroPaciente || pac.toLowerCase().includes(filtroPaciente.toLowerCase()))
+    );
+  }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
   const handleExportPDF = async () => {
-    if (!pacienteId) { setExportMsg('No hay paciente seleccionado.'); setTimeout(() => setExportMsg(''), 2500); return; }
+    if (!pacienteId) { setExportMsg('Selecciona un paciente para exportar.'); setTimeout(()=>setExportMsg(''),2500); return; }
     setExportMsg('Generando PDF...');
     try {
       const res = await fetch(`/api/tratamientos/exportar-pdf/${pacienteId}`, {
-        method: 'GET', headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        method:'GET', headers:{ Authorization:`Bearer ${getToken()}` },
       });
       if (!res.ok) throw new Error('No se pudo generar el PDF');
-      const blob = await res.blob();
-      saveAs(blob, `historial_tratamientos_${pacienteId}.pdf`);
-      setExportMsg('¡PDF exportado correctamente!');
+      saveAs(await res.blob(), `historial_tratamientos_${pacienteId}.pdf`);
+      setExportMsg('PDF exportado correctamente');
     } catch { setExportMsg('Error al exportar PDF'); }
-    setTimeout(() => setExportMsg(''), 2500);
+    setTimeout(()=>setExportMsg(''),2500);
   };
 
-  const tiposUnicos   = Array.from(new Set(tratamientos.map((t) => t.tipo).filter(Boolean)));
-  const doctoresUnicos = Array.from(new Set(
-    tratamientos.map((t) => t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos||''}`.trim() : null).filter(Boolean)
-  ));
-
-  const tratamientosFiltrados = tratamientos.filter((t) => {
-    const doc = t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos||''}`.trim() : '';
-    return (
-      (!filtroTipo   || t.tipo === filtroTipo) &&
-      (!filtroDoctor || doc === filtroDoctor) &&
-      (!filtroDesde  || new Date(t.fecha) >= new Date(filtroDesde)) &&
-      (!filtroHasta  || new Date(t.fecha) <= new Date(filtroHasta))
-    );
-  });
-
-  const tratamientosOrdenados = [...tratamientosFiltrados].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-  // Todos los dientes marcados para el odontograma readonly
-  const dientesMarcados = tratamientos.flatMap((t) => {
-    try { return JSON.parse(t.dientes || '[]'); } catch { return []; }
+  const cardStyle = {
+    background: 'var(--color-background-secondary)',
+    borderRadius: 12,
+    padding: '20px 16px',
+    border: '0.5px solid var(--color-border-tertiary)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  };
+  const iconStyle = (bg) => ({
+    width: 36, height: 36, borderRadius: 8,
+    background: bg,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   });
 
   return (
     <div className="dm20-page">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="dm20-card" style={{ marginBottom: 20 }}>
+      {/* ── Header ── */}
+      <div className="dm20-card" style={{ marginBottom:20 }}>
         <div className="dm20-header">
           <div>
             <h2 style={{ margin:0, fontSize:22, fontWeight:900, color:'#173067' }}>
               <i className="fas fa-tooth" style={{ marginRight:10, color:'#2563eb' }}></i>
               Tratamientos
             </h2>
-            {pacienteNombre && (
-              <p style={{ margin:'4px 0 0', fontSize:14, color:'#6b7280', fontWeight:600 }}>
-                Paciente: <strong style={{ color:'#111827' }}>{pacienteNombre}</strong>
-              </p>
-            )}
+            <p style={{ margin:'4px 0 0', fontSize:13, color:'#6b7280' }}>
+              {pacienteNombre
+                ? <>Paciente: <strong style={{ color:'#111827' }}>{pacienteNombre}</strong></>
+                : 'Resumen clínico del día'}
+            </p>
           </div>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-            {pacienteId && (
-              <button
-                onClick={() => setShowNuevoTrat(true)}
-                style={{
-                  padding:'10px 18px', borderRadius:12,
-                  background:'linear-gradient(135deg,#2563eb,#3b82f6)',
-                  color:'#fff', border:'none', fontWeight:800, fontSize:14,
-                  cursor:'pointer', display:'flex', alignItems:'center', gap:8,
-                  boxShadow:'0 6px 16px rgba(37,99,235,0.22)',
-                }}>
-                <i className="fas fa-plus"></i> Nuevo tratamiento
-              </button>
-            )}
+            <button onClick={()=>setShowNuevoTrat(true)}
+              style={{ padding:'10px 18px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'#fff', border:'none', fontWeight:800, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 6px 16px rgba(37,99,235,0.22)' }}>
+              <i className="fas fa-plus"></i> Nuevo tratamiento
+            </button>
             <button onClick={handleExportPDF}
-              style={{
-                padding:'10px 18px', borderRadius:12,
-                background:'#fff', color:'#2563eb',
-                border:'1.5px solid #2563eb', fontWeight:700, fontSize:14,
-                cursor:'pointer', display:'flex', alignItems:'center', gap:8,
-              }}>
+              style={{ padding:'10px 18px', borderRadius:12, background:'#fff', color:'#2563eb', border:'1.5px solid #2563eb', fontWeight:700, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
               <i className="fas fa-file-pdf"></i> Exportar PDF
             </button>
           </div>
         </div>
+        {exportMsg && <div style={{ margin:'8px 0 0', color:'#2563eb', fontWeight:700, fontSize:13 }}>{exportMsg}</div>}
+      </div>
 
-        {exportMsg && <div style={{ margin:'8px 0', color:'#2563eb', fontWeight:700 }}>{exportMsg}</div>}
+      {/* ── Estadísticas ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
 
-        {/* ── Buscador de paciente (si no viene de la agenda) ── */}
-        {!pacienteId && (
-          <div style={{ marginTop:16 }}>
-            <label style={{ fontSize:13, fontWeight:700, color:'#374151', display:'block', marginBottom:6 }}>
-              Buscar paciente
-            </label>
-            <div style={{ position:'relative' }}>
-              <input
-                value={queryPaciente}
-                onChange={(e) => setQueryPaciente(e.target.value)}
-                placeholder="Nombre, teléfono o correo..."
-                style={{
-                  width:'100%', padding:'10px 14px', borderRadius:10,
-                  border:'1px solid #d1d5db', fontSize:14, boxSizing:'border-box',
-                }}
-              />
-              {buscando && <span style={{ position:'absolute', right:12, top:10, fontSize:12, color:'#6b7280' }}>Buscando...</span>}
-            </div>
-            {resultados.length > 0 && (
-              <div style={{ border:'1px solid #e5e7eb', borderRadius:10, overflow:'hidden', marginTop:4 }}>
-                {resultados.map((p) => (
-                  <div key={p.id} onClick={() => { setPacienteId(p.id); setPacienteNombre(p.nombre); setQueryPaciente(''); setResultados([]); }}
-                    style={{
-                      padding:'10px 14px', cursor:'pointer', fontSize:13,
-                      borderBottom:'1px solid #f3f4f6', background:'white',
-                      display:'flex', justifyContent:'space-between',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background='#eff6ff'}
-                    onMouseLeave={(e) => e.currentTarget.style.background='white'}>
-                    <strong>{p.nombre}</strong>
-                    <span style={{ color:'#6b7280' }}>{p.telefono || p.email || ''}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div style={cardStyle}>
+          <div style={iconStyle('#E6F1FB')}>
+            <i className="fas fa-calendar-day" style={{ fontSize:14, color:'#185FA5' }}></i>
           </div>
-        )}
+          <div>
+            <div style={{ fontSize:28, fontWeight:500, color:'var(--color-text-primary)', lineHeight:1 }}>
+              {tratamientosHoy.length}
+            </div>
+            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+              Tratamientos hoy
+            </div>
+            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>del día actual</div>
+          </div>
+        </div>
 
-        {/* ── Botón limpiar selección ── */}
+        <div style={cardStyle}>
+          <div style={iconStyle('#EAF3DE')}>
+            <i className="fas fa-check-circle" style={{ fontSize:14, color:'#3B6D11' }}></i>
+          </div>
+          <div>
+            <div style={{ fontSize:28, fontWeight:500, color:'#3B6D11', lineHeight:1 }}>
+              {realizadosHoy}
+            </div>
+            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+              Realizados hoy
+            </div>
+            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>completados</div>
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div style={iconStyle('#FAEEDA')}>
+            <i className="fas fa-clock" style={{ fontSize:14, color:'#854F0B' }}></i>
+          </div>
+          <div>
+            <div style={{ fontSize:28, fontWeight:500, color:'#854F0B', lineHeight:1 }}>
+              {planificadosHoy}
+            </div>
+            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+              Planificados hoy
+            </div>
+            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>pendientes</div>
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div style={iconStyle('#E1F5EE')}>
+            <i className="fas fa-dollar-sign" style={{ fontSize:14, color:'#0F6E56' }}></i>
+          </div>
+          <div>
+            <div style={{ fontSize:28, fontWeight:500, color:'#0F6E56', lineHeight:1 }}>
+              L. {costoTotal.toFixed(2)}
+            </div>
+            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+              Costo acumulado
+            </div>
+            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>total registrado</div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Filtros ── */}
+      <div style={{ background:'white', borderRadius:12, padding:'14px 20px', marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.05)', border:'1px solid #e9ecef', display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+        {!pacienteId && (
+          <input placeholder="Filtrar por paciente..."
+            value={filtroPaciente} onChange={e=>setFiltroPaciente(e.target.value)}
+            style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13, flex:1, minWidth:150 }} />
+        )}
+        <select value={filtroTipo} onChange={e=>setFiltroTipo(e.target.value)}
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }}>
+          <option value="">Tipo</option>
+          {tiposUnicos.map((t,i)=><option key={i} value={t}>{t}</option>)}
+        </select>
+        <input type="date" value={filtroDesde} onChange={e=>setFiltroDesde(e.target.value)}
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }} />
+        <input type="date" value={filtroHasta} onChange={e=>setFiltroHasta(e.target.value)}
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }} />
+        <button onClick={()=>{ setFiltroTipo(''); setFiltroDesde(''); setFiltroHasta(''); setFiltroPaciente(''); }}
+          style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #d1d5db', background:'#f9fafb', fontSize:13, cursor:'pointer', color:'#374151' }}>
+          Limpiar filtros
+        </button>
         {pacienteId && !pacienteIdProp && (
-          <button onClick={() => { setPacienteId(null); setPacienteNombre(''); setQueryPaciente(''); }}
-            style={{ marginTop:10, background:'none', border:'none', color:'#6b7280', cursor:'pointer', fontSize:12, textDecoration:'underline' }}>
-            Cambiar paciente
+          <button onClick={()=>{ setPacienteId(null); setPacienteNombre(''); }}
+            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #f87171', background:'#fef2f2', fontSize:13, cursor:'pointer', color:'#dc2626', fontWeight:700 }}>
+            <i className="fas fa-times" style={{ marginRight:4 }}></i>Ver todos
           </button>
         )}
       </div>
 
-      {/* ── Odontograma solo lectura ────────────────────────────────────────── */}
-      {pacienteId && tratamientos.length > 0 && (
-        <div className="dm20-card" style={{ marginBottom:20, padding:20 }}>
-          <h3 style={{ margin:'0 0 12px', fontSize:16, fontWeight:800, color:'#173067' }}>
-            <i className="fas fa-tooth" style={{ marginRight:8, color:'#2563eb' }}></i>
-            Dientes con tratamientos registrados
+      {/* ── Lista de tratamientos ── */}
+      <div className="dm20-card">
+        <div style={{ padding:'16px 20px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <h3 style={{ margin:0, fontSize:16, fontWeight:800, color:'#173067' }}>
+            {pacienteId ? `Tratamientos de ${pacienteNombre}` : 'Todos los tratamientos'}
           </h3>
-          <MiniOdontogramaReadonly dientesMarcados={dientesMarcados} />
+          <span style={{ fontSize:12, color:'#6b7280' }}>
+            {tratamientosFiltrados.length} resultado{tratamientosFiltrados.length!==1?'s':''}
+          </span>
         </div>
-      )}
 
-      {/* ── Tabla de tratamientos ───────────────────────────────────────────── */}
-      {pacienteId && (
-        <div className="dm20-card">
-          <div style={{ padding:'16px 20px 0' }}>
-            <h3 style={{ margin:'0 0 12px', fontSize:16, fontWeight:800, color:'#173067' }}>
-              Historial de tratamientos
-            </h3>
-          </div>
-
-          <div className="dm20-filters" style={{ padding:'0 20px 12px' }}>
-            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
-              <option value="">Tipo</option>
-              {tiposUnicos.map((t, i) => <option key={i} value={t}>{t}</option>)}
-            </select>
-            <select value={filtroDoctor} onChange={(e) => setFiltroDoctor(e.target.value)}>
-              <option value="">Doctor</option>
-              {doctoresUnicos.map((d, i) => <option key={i} value={d}>{d}</option>)}
-            </select>
-            <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
-            <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
-            <button type="button" onClick={() => { setFiltroTipo(''); setFiltroDoctor(''); setFiltroDesde(''); setFiltroHasta(''); }}>
-              Limpiar filtros
-            </button>
-          </div>
-
-          <div className="dm20-results">
-            {loading ? (
-              <div className="dm20-empty">Cargando tratamientos...</div>
-            ) : tratamientosOrdenados.length === 0 ? (
-              <div className="dm20-empty">No hay tratamientos registrados.</div>
-            ) : (
-              <table className="dm20-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Tratamiento</th>
-                    <th>Diente(s)</th>
-                    <th>Doctor</th>
-                    <th>Estado</th>
-                    <th>Costo</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tratamientosOrdenados.map((t) => (
+        <div className="dm20-results">
+          {loading ? (
+            <div className="dm20-empty">Cargando tratamientos...</div>
+          ) : tratamientosFiltrados.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'48px 20px' }}>
+              <div style={{ width:68, height:68, borderRadius:'50%', background:'linear-gradient(135deg,#dbeafe,#eff6ff)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', boxShadow:'0 4px 16px rgba(37,99,235,0.1)' }}>
+                <i className="fas fa-tooth" style={{ fontSize:26, color:'#2563eb', opacity:0.6 }}></i>
+              </div>
+              <h4 style={{ margin:'0 0 6px', fontSize:15, fontWeight:700, color:'#374151' }}>Sin tratamientos registrados</h4>
+              <p style={{ margin:'0 0 18px', fontSize:13, color:'#9ca3af' }}>
+                {pacienteId ? 'Este paciente aún no tiene tratamientos.' : 'No hay tratamientos para los filtros seleccionados.'}
+              </p>
+              <button onClick={()=>setShowNuevoTrat(true)}
+                style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', border:'none', fontWeight:700, fontSize:14, cursor:'pointer', boxShadow:'0 4px 14px rgba(37,99,235,0.2)' }}>
+                <i className="fas fa-plus" style={{ marginRight:8 }}></i>
+                Registrar primer tratamiento
+              </button>
+            </div>
+          ) : (
+            <table className="dm20-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  {!pacienteId && <th>Paciente</th>}
+                  <th>Tratamiento</th>
+                  <th>Diente(s)</th>
+                  <th>Estado</th>
+                  <th>Costo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {tratamientosFiltrados.map(t => {
+                  const est = ESTADO_STYLE[t.estado] || ESTADO_STYLE['planificado'];
+                  return (
                     <React.Fragment key={t.id}>
                       <tr>
                         <td>{t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}</td>
+                        {!pacienteId && <td style={{ fontWeight:600 }}>{t.Paciente?.nombre || t.paciente_nombre || '-'}</td>}
                         <td>{t.tipo || t.procedimiento || '-'}</td>
-                        <td>{t.diente || (t.dientes ? JSON.parse(t.dientes||'[]').join(', ') : '-')}</td>
-                        <td>{t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos||''}` : (dentistaInfo?.nombre || '-')}</td>
+                        <td>{t.diente || (t.dientes ? (() => { try { return JSON.parse(t.dientes).join(', '); } catch { return '-'; } })() : '-')}</td>
                         <td>
-                          <span style={{
-                            padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700,
-                            background: t.estado==='realizado' ? '#dcfce7' : t.estado==='en_proceso' ? '#fef9c3' : '#eff6ff',
-                            color: t.estado==='realizado' ? '#166534' : t.estado==='en_proceso' ? '#854d0e' : '#1d4ed8',
-                          }}>
-                            {t.estado || 'planificado'}
+                          <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:est.bg, color:est.color }}>
+                            {est.label}
                           </span>
                         </td>
                         <td>{t.costo ? `L. ${t.costo}` : '-'}</td>
                         <td>
-                          <button className="dm20-btn-details" onClick={() => setExpandedId(expandedId===t.id ? null : t.id)}>
+                          <button className="dm20-btn-details" onClick={()=>setExpandedId(expandedId===t.id?null:t.id)}>
                             {expandedId===t.id ? 'Ocultar' : 'Ver detalles'}
                           </button>
                         </td>
@@ -327,46 +325,44 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
 
                       {expandedId===t.id && (
                         <tr className="treatment-details-row">
-                          <td colSpan={7}>
-                            <div style={{ background:'#f7f7f7', borderRadius:8, padding:18, marginTop:8, boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
-                              <div style={{ fontSize:15, color:'#1a2c3e', marginBottom:6 }}>
-                                <strong>Diagnóstico:</strong> {t.diagnostico || '-'}<br/>
-                                <strong>Procedimiento:</strong> {t.procedimiento || t.tipo || '-'}<br/>
-                                <strong>Fecha:</strong> {t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}<br/>
-                                <strong>Diente(s):</strong> {t.diente || (t.dientes ? JSON.parse(t.dientes||'[]').join(', ') : '-')}<br/>
-                                <strong>Doctor:</strong> {t.Dentista ? `${t.Dentista.nombre} ${t.Dentista.apellidos||''}` : '-'}<br/>
-                                <strong>Costo:</strong> {t.costo ? `L. ${t.costo}` : '-'}<br/>
-                                <strong>Forma de pago:</strong> {t.forma_pago || '-'}<br/>
-                                {t.observaciones && <><strong>Observaciones:</strong> {t.observaciones}<br/></>}
-                                {t.firma_digital && <><strong>Firma:</strong> {t.firma_digital}<br/></>}
-                                {t.sesiones_totales > 1 && (
-                                  <><strong>Sesiones:</strong> {t.sesiones_completadas || 0} de {t.sesiones_totales} completadas<br/></>
-                                )}
+                          <td colSpan={pacienteId ? 6 : 7}>
+                            <div style={{ background:'#f7f7f7', borderRadius:8, padding:18, boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+                              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px 24px', fontSize:13, color:'#1a2c3e' }}>
+                                <div><strong>Diagnóstico:</strong> {t.diagnostico||'-'}</div>
+                                <div><strong>Procedimiento:</strong> {t.procedimiento||t.tipo||'-'}</div>
+                                <div><strong>Fecha:</strong> {t.fecha?new Date(t.fecha).toLocaleDateString():'-'}</div>
+                                <div><strong>Diente(s):</strong> {t.diente||(t.dientes?(() => { try { return JSON.parse(t.dientes).join(', '); } catch { return '-'; } })():'-')}</div>
+                                <div><strong>Doctor:</strong> {t.Dentista?`${t.Dentista.nombre} ${t.Dentista.apellidos||''}`:'-'}</div>
+                                <div><strong>Costo:</strong> {t.costo?`L. ${t.costo}`:'-'}</div>
+                                <div><strong>Forma de pago:</strong> {t.forma_pago||'-'}</div>
+                                {t.firma_digital && <div><strong>Firma:</strong> {t.firma_digital}</div>}
+                                {t.sesiones_totales > 1 && <div><strong>Sesiones:</strong> {t.sesiones_completadas||0} de {t.sesiones_totales} completadas</div>}
+                                {t.observaciones && <div style={{ gridColumn:'1/-1' }}><strong>Observaciones:</strong> {t.observaciones}</div>}
                               </div>
 
-                              {t.materiales && Array.isArray(t.materiales) && t.materiales.length > 0 && (
-                                <>
+                              {t.materiales && Array.isArray(t.materiales) && t.materiales.length>0 && (
+                                <div style={{ marginTop:10 }}>
                                   <strong>Materiales usados:</strong>
                                   <ul style={{ margin:'4px 0 0 18px' }}>
-                                    {t.materiales.map((m, i) => <li key={i}>{m}</li>)}
+                                    {t.materiales.map((m,i)=><li key={i} style={{ fontSize:13 }}>{m}</li>)}
                                   </ul>
-                                </>
+                                </div>
                               )}
 
-                              {t.radiografias && Array.isArray(t.radiografias) && t.radiografias.length > 0 && (
+                              {t.radiografias && Array.isArray(t.radiografias) && t.radiografias.length>0 && (
                                 <div style={{ marginTop:10 }}>
                                   <strong>Radiografías:</strong>
-                                  <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:6 }}>
-                                    {t.radiografias.map((rx, i) => rx.url ? (
-                                      <img key={i} src={rx.url} alt={rx.nombre || `Radiografía ${i+1}`}
+                                  <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:6 }}>
+                                    {t.radiografias.map((rx,i) => rx.url ? (
+                                      <img key={i} src={rx.url} alt={rx.nombre||`Radiografía ${i+1}`}
                                         style={{ width:60, height:60, objectFit:'cover', borderRadius:8, cursor:'pointer', border:'1px solid #e9ecef' }}
-                                        onClick={() => setModalRx(rx)} />
+                                        onClick={()=>setModalRx(rx)} />
                                     ) : null)}
                                   </div>
                                 </div>
                               )}
 
-                              {t.sesiones && Array.isArray(t.sesiones) && t.sesiones.length > 0 && (
+                              {t.sesiones && Array.isArray(t.sesiones) && t.sesiones.length>0 && (
                                 <MultiSesionViewer sesiones={t.sesiones} />
                               )}
                             </div>
@@ -374,37 +370,28 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
                         </tr>
                       )}
                     </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* ── Estado vacío sin paciente ─────────────────────────────────────── */}
-      {!pacienteId && !queryPaciente && (
-        <div style={{ textAlign:'center', padding:'40px 20px', color:'#9ca3af' }}>
-          <i className="fas fa-tooth" style={{ fontSize:48, marginBottom:16, display:'block', opacity:0.3 }}></i>
-          <p style={{ fontSize:16, margin:0 }}>Selecciona un paciente para ver sus tratamientos</p>
-          <p style={{ fontSize:13, margin:'6px 0 0' }}>Puedes venir desde Mi Agenda o buscar un paciente arriba</p>
-        </div>
-      )}
-
-      {/* ── Modal nuevo tratamiento ───────────────────────────────────────── */}
+      {/* ── CAMBIO: se pasa pacienteNombre también para que el modal lo muestre ── */}
       <NuevoTratamientoModal
         open={showNuevoTrat}
-        onClose={() => setShowNuevoTrat(false)}
-        onCreated={() => { setShowNuevoTrat(false); setTratKey((k) => k+1); }}
+        onClose={()=>setShowNuevoTrat(false)}
+        onCreated={(data)=>{ setShowNuevoTrat(false); setTratKey(k=>k+1); }}
         pacienteId={pacienteId}
+        pacienteNombre={pacienteNombre}
+        onPacienteSeleccionado={(id, nombre) => { setPacienteId(id); setPacienteNombre(nombre); }}
       />
 
       {modalRx && (
         <VisualizadorDocumentos
-          open={!!modalRx}
-          documentos={[modalRx]}
-          initialIndex={0}
-          onClose={() => setModalRx(null)}
+          open={!!modalRx} documentos={[modalRx]} initialIndex={0}
+          onClose={()=>setModalRx(null)}
         />
       )}
     </div>
