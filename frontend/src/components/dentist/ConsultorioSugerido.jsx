@@ -1,24 +1,69 @@
 import React from "react";
 
-// Componente para mostrar y seleccionar consultorios sugeridos según el procedimiento
-const ConsultorioSugerido = ({ procedimiento, onSelectConsultorio, consultorios, loading }) => {
+const ConsultorioSugerido = ({
+  procedimiento,
+  onSelectConsultorio,
+  consultorios,
+  loading,
+  selectedConsultorio
+}) => {
   return (
     <div>
-      <h4>Consultorios sugeridos para "{procedimiento}"</h4>
+
+      {/* Título */}
+      <h4>Selecciona un consultorio disponible</h4>
+
       {loading ? (
         <p>Cargando consultorios...</p>
       ) : consultorios && consultorios.length > 0 ? (
-        <ul>
-          {consultorios.map((c) => (
-            <li key={c.id}>
-              <button onClick={() => onSelectConsultorio(c)}>
-                <strong>{c.nombre}</strong> - Equipamiento: {c.equipamiento.join(", ")} - {c.disponible ? "Disponible" : "Ocupado"}
-              </button>
-            </li>
-          ))}
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {consultorios.map((c) => {
+
+            const noDisponible =
+              c.estado === "ocupado" ||
+              c.estado === "mantenimiento" ||
+              c.disponible === false;
+
+            const isSelected = selectedConsultorio?.id === c.id;
+
+            return (
+              <li key={c.id} style={{ marginBottom: "10px" }}>
+                <button
+                  onClick={() => !noDisponible && onSelectConsultorio(c)}
+                  disabled={noDisponible}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    cursor: noDisponible ? "not-allowed" : "pointer",
+                    background: isSelected
+                      ? "#d1e7dd"
+                      : noDisponible
+                      ? "#f8d7da"
+                      : "#fff",
+                    border: isSelected
+                      ? "2px solid #0f5132"
+                      : "1px solid #ccc",
+                    textAlign: "left",
+                    opacity: noDisponible ? 0.6 : 1
+                  }}
+                >
+                  <strong>{c.nombre}</strong>
+
+                  {" - "} Equipamiento:{" "}
+                  {Array.isArray(c.equipamiento)
+                    ? c.equipamiento.join(", ")
+                    : c.equipamiento || "No especificado"}
+
+                  {" - "} Estado:{" "}
+                  {c.estado || (c.disponible ? "Disponible" : "Ocupado")}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       ) : (
-        <p>No hay consultorios sugeridos para este procedimiento.</p>
+        <p>No hay consultorios disponibles.</p>
       )}
     </div>
   );
