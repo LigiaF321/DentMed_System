@@ -52,7 +52,7 @@ app.use("/api/admin/seguridad", alertasSeguridadRoutes);
 app.use("/api/admin/kardex", kardexRoutes);
 app.use("/api/admin/materiales", materialesRoutes);
 app.use("/api/admin/reportes", reportesConsumoRoutes);
-app.use("/api/auditoria", auditoriaRoutes);
+app.use("/api/admin/auditoria", auditoriaRoutes);
 
 app.use("/api/restauracion", restauracionRoutes);
 app.use("/api/dentistas", dentistaRoutes);
