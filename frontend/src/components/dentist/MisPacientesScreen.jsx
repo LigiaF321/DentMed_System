@@ -47,6 +47,7 @@ const exportarExpedientePDF = (paciente) => {
   const edad = paciente.edad ?? '-';
   const sexo = paciente.sexo || paciente.genero || 'No especificado';
   const tel = paciente.telefono || 'No registrado';
+  const email = paciente.email || paciente.correo || paciente.correo_electronico || 'No registrado';
   const dir = paciente.direccion || 'No registrada';
   const seguro = paciente.seguro_medico || paciente.aseguradora || 'No registrado';
   const contactoEmerg = paciente.contacto_emergencia || paciente.nombre_contacto_emergencia || 'No registrado';
@@ -164,6 +165,7 @@ const exportarExpedientePDF = (paciente) => {
   <div class="section">
     <div class="section-title">Información Personal</div>
     <div class="grid-2">
+      <div class="field"><div class="field-label">Correo electrónico</div><div class="field-value">${email}</div></div>
       <div class="field"><div class="field-label">Teléfono</div><div class="field-value">${tel}</div></div>
       <div class="field"><div class="field-label">Dirección</div><div class="field-value">${dir}</div></div>
       <div class="field"><div class="field-label">Seguro médico</div><div class="field-value">${seguro}</div></div>
