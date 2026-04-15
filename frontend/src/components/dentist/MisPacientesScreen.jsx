@@ -15,7 +15,6 @@ const filtrosIniciales = {
   edad_max: '',
   fecha_ultima_visita_desde: '',
   fecha_ultima_visita_hasta: '',
-  id_dentista: '',
   activo: '',
 };
 
@@ -45,19 +44,19 @@ const formatearFecha = (valor) => {
 // ── Exportar expediente como PDF ──────────────────────────────────────────────
 const exportarExpedientePDF = (paciente) => {
   const nombre = paciente.paciente_nombre || paciente.nombre_completo || paciente.nombre || 'Paciente';
-  const edad   = paciente.edad ?? '-';
-  const sexo   = paciente.sexo || paciente.genero || 'No especificado';
-  const tel    = paciente.telefono || 'No registrado';
-  const dir    = paciente.direccion || 'No registrada';
+  const edad = paciente.edad ?? '-';
+  const sexo = paciente.sexo || paciente.genero || 'No especificado';
+  const tel = paciente.telefono || 'No registrado';
+  const dir = paciente.direccion || 'No registrada';
   const seguro = paciente.seguro_medico || paciente.aseguradora || 'No registrado';
   const contactoEmerg = paciente.contacto_emergencia || paciente.nombre_contacto_emergencia || 'No registrado';
-  const telEmerg      = paciente.telefono_emergencia || paciente.contacto_emergencia_telefono || 'No registrado';
+  const telEmerg = paciente.telefono_emergencia || paciente.contacto_emergencia_telefono || 'No registrado';
 
   const enfermedades = (paciente.enfermedades || paciente.condiciones_cronicas || '').toString() || 'Ninguna';
   const medicamentos = (paciente.medicamentos || paciente.medicamentos_actuales || '').toString() || 'Ninguno';
-  const alergias     = (paciente.alergias || '').toString() || 'Ninguna';
+  const alergias = (paciente.alergias || '').toString() || 'Ninguna';
 
-  const fecha = new Date().toLocaleDateString('es-HN', { day:'2-digit', month:'long', year:'numeric' });
+  const fecha = new Date().toLocaleDateString('es-HN', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const html = `
 <!DOCTYPE html>
@@ -231,11 +230,11 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
     contacto_emergencia: '', telefono_emergencia: '', alergias: '',
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setForm({ nombre:'', telefono:'', email:'', fecha_nacimiento:'', sexo:'', direccion:'', seguro_medico:'', contacto_emergencia:'', telefono_emergencia:'', alergias:'' });
+      setForm({ nombre: '', telefono: '', email: '', fecha_nacimiento: '', sexo: '', direccion: '', seguro_medico: '', contacto_emergencia: '', telefono_emergencia: '', alergias: '' });
       setError('');
     }
   }, [open]);
@@ -268,78 +267,78 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
   if (!open) return null;
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, backdropFilter:'blur(3px)', padding:16 }}>
-      <div style={{ background:'white', borderRadius:20, width:'100%', maxWidth:600, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 24px 48px rgba(0,0,0,0.2)' }}>
-        <div style={{ padding:'20px 24px 16px', borderBottom:'1px solid #e9ecef', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, background:'white', zIndex:1 }}>
-          <h3 style={{ margin:0, fontSize:18, fontWeight:700, color:'#111827' }}>
-            <i className="fas fa-user-plus" style={{ marginRight:8, color:'#2563eb' }}></i>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, backdropFilter: 'blur(3px)', padding: 16 }}>
+      <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' }}>
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#111827' }}>
+            <i className="fas fa-user-plus" style={{ marginRight: 8, color: '#2563eb' }}></i>
             Nuevo paciente
           </h3>
-          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#6b7280' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#6b7280' }}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding:'20px 24px 24px', display:'flex', flexDirection:'column', gap:14 }}>
-          <p style={{ margin:0, fontSize:12, fontWeight:700, color:'#2563eb', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'2px solid #e0ebff', paddingBottom:6 }}>
+        <form onSubmit={handleSubmit} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos personales
           </p>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <div style={{ gridColumn:'1/-1', display:'flex', flexDirection:'column', gap:4 }}>
-              <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Nombre completo <span style={{ color:'#dc2626' }}>*</span></label>
-              <input name="nombre" value={form.nombre} onChange={handleChange} style={{ padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Nombre completo <span style={{ color: '#dc2626' }}>*</span></label>
+              <input name="nombre" value={form.nombre} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
             </div>
             {[
-              { label:'Teléfono', name:'telefono', type:'text' },
-              { label:'Correo electrónico', name:'email', type:'email' },
-              { label:'Fecha de nacimiento', name:'fecha_nacimiento', type:'date' },
+              { label: 'Teléfono', name: 'telefono', type: 'text' },
+              { label: 'Correo electrónico', name: 'email', type: 'email' },
+              { label: 'Fecha de nacimiento', name: 'fecha_nacimiento', type: 'date' },
             ].map(f => (
-              <div key={f.name} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>{f.label}</label>
-                <input type={f.type} name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14 }} />
+              <div key={f.name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{f.label}</label>
+                <input type={f.type} name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
               </div>
             ))}
-            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-              <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Sexo</label>
-              <select name="sexo" value={form.sexo} onChange={handleChange} style={{ padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Sexo</label>
+              <select name="sexo" value={form.sexo} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }}>
                 <option value="">Seleccione</option>
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>
-            <div style={{ gridColumn:'1/-1', display:'flex', flexDirection:'column', gap:4 }}>
-              <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>Dirección</label>
-              <input name="direccion" value={form.direccion} onChange={handleChange} style={{ padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14 }} />
+            <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Dirección</label>
+              <input name="direccion" value={form.direccion} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
             </div>
           </div>
 
-          <p style={{ margin:0, fontSize:12, fontWeight:700, color:'#2563eb', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'2px solid #e0ebff', paddingBottom:6 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos médicos
           </p>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {[
-              { label:'Seguro médico', name:'seguro_medico' },
-              { label:'Alergias conocidas', name:'alergias' },
-              { label:'Contacto de emergencia', name:'contacto_emergencia' },
-              { label:'Teléfono emergencia', name:'telefono_emergencia' },
+              { label: 'Seguro médico', name: 'seguro_medico' },
+              { label: 'Alergias conocidas', name: 'alergias' },
+              { label: 'Contacto de emergencia', name: 'contacto_emergencia' },
+              { label: 'Teléfono emergencia', name: 'telefono_emergencia' },
             ].map(f => (
-              <div key={f.name} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>{f.label}</label>
-                <input name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding:'9px 12px', border:'1px solid #d1d5db', borderRadius:10, fontSize:14 }} />
+              <div key={f.name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{f.label}</label>
+                <input name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
               </div>
             ))}
           </div>
 
           {error && (
-            <div style={{ background:'#fef2f2', border:'1px solid #fecaca', color:'#dc2626', borderRadius:10, padding:'10px 14px', fontSize:13, fontWeight:600 }}>
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>
               {error}
             </div>
           )}
 
-          <div style={{ display:'flex', justifyContent:'flex-end', gap:10, paddingTop:4 }}>
-            <button type="button" onClick={onClose} style={{ padding:'10px 22px', borderRadius:12, border:'none', background:'#f1f5f9', color:'#374151', fontWeight:700, cursor:'pointer', fontSize:14 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
               Cancelar
             </button>
-            <button type="submit" disabled={saving} style={{ padding:'10px 22px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', fontWeight:800, fontSize:14, cursor:'pointer', opacity: saving ? 0.6 : 1 }}>
+            <button type="submit" disabled={saving} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#2563eb,#3b82f6)', color: 'white', fontWeight: 800, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
               {saving ? 'Guardando...' : 'Guardar paciente'}
             </button>
           </div>
@@ -362,7 +361,8 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   const [backendRecientes, setBackendRecientes] = useState([]);
   const [dentistaInicializado, setDentistaInicializado] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
-  const [showNuevoPaciente,    setShowNuevoPaciente]    = useState(false);
+  const [showNuevoPaciente, setShowNuevoPaciente] = useState(false);
+  const [reloadFlag, setReloadFlag] = useState(0);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
 
@@ -370,12 +370,6 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     if (pacienteInicial) setPacienteSeleccionado(pacienteInicial);
   }, [pacienteInicial]);
 
-  useEffect(() => {
-    if (dentistaInfo?.id && !dentistaInicializado) {
-      setFiltros((prev) => ({ ...prev, id_dentista: String(dentistaInfo.id) }));
-      setDentistaInicializado(true);
-    }
-  }, [dentistaInfo, dentistaInicializado]);
 
   useEffect(() => {
     const cargarRecientes = async () => {
@@ -388,17 +382,50 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   }, []);
 
   useEffect(() => {
-    const hasSearch  = q.trim().length > 0;
+    const hasSearch = q.trim().length > 0;
     const hasFilters = Object.values(filtros).some((v) => String(v).trim() !== '');
 
-    if (!hasSearch && !hasFilters) { setRows([]); setTotal(0); return; }
+    if (!hasSearch && !hasFilters) {
+      const cargar = async () => {
+        setLoading(true);
+        try {
+          const data = await buscarPacientes({
+            q: '',
+            page,
+            limit,
+            filtros: {}
+          });
+
+          setRows(data?.data || []);
+          setTotal(data?.total || 0);
+        } catch (error) {
+          console.error('Error cargando pacientes iniciales:', error);
+          setRows([]);
+          setTotal(0);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      cargar();
+      return;
+    }
 
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await buscarPacientes({ q, page, limit, filtros });
+        const { id_dentista, ...filtrosSinDentista } = filtros;
+
+        const data = await buscarPacientes({
+          q,
+          page,
+          limit,
+          filtros: filtrosSinDentista
+        });
+
         setRows(data?.data || []);
         setTotal(data?.total || 0);
+
         if (hasSearch || hasFilters) {
           const entry = { q: q.trim(), filtros, timestamp: new Date().toISOString() };
           guardarBusquedaReciente(entry);
@@ -406,12 +433,15 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
         }
       } catch (error) {
         console.error('Error buscando pacientes:', error);
-        setRows([]); setTotal(0);
-      } finally { setLoading(false); }
+        setRows([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [q, page, limit, filtros]);
+  }, [q, page, limit, filtros, reloadFlag]);
 
   const handleFiltroChange = (field, value) => { setPage(1); setFiltros((prev) => ({ ...prev, [field]: value })); };
 
@@ -447,21 +477,21 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
       <div className="dm20-page">
         {/* Breadcrumb + botón exportar */}
         <div style={{
-          display:'flex', alignItems:'center', gap:12, marginBottom:20,
-          padding:'12px 20px', background:'white', borderRadius:16,
-          boxShadow:'0 2px 8px rgba(0,0,0,0.06)', border:'1px solid #e9ecef',
-          flexWrap:'wrap',
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
+          padding: '12px 20px', background: 'white', borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e9ecef',
+          flexWrap: 'wrap',
         }}>
           <button
             onClick={() => setPacienteSeleccionado(null)}
-            style={{ background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'#2563eb', fontWeight:700, fontSize:14 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#2563eb', fontWeight: 700, fontSize: 14 }}
           >
             <i className="fas fa-arrow-left"></i> Volver a lista
           </button>
-          <span style={{ color:'#d1d5db' }}>|</span>
-          <span style={{ fontSize:14, color:'#6b7280' }}>Mis Pacientes</span>
-          <span style={{ color:'#d1d5db' }}>›</span>
-          <span style={{ fontSize:14, fontWeight:700, color:'#111827', flex:1 }}>
+          <span style={{ color: '#d1d5db' }}>|</span>
+          <span style={{ fontSize: 14, color: '#6b7280' }}>Mis Pacientes</span>
+          <span style={{ color: '#d1d5db' }}>›</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#111827', flex: 1 }}>
             {pacienteSeleccionado.paciente_nombre || pacienteSeleccionado.nombre_completo || 'Expediente'}
           </span>
 
@@ -469,28 +499,28 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <button
             onClick={() => exportarExpedientePDF(pacienteSeleccionado)}
             style={{
-              padding:'8px 16px', borderRadius:10,
-              background:'white', color:'#dc2626',
-              border:'1.5px solid #dc2626', fontWeight:700, fontSize:13,
-              cursor:'pointer', display:'flex', alignItems:'center', gap:6,
-              transition:'all 0.15s',
+              padding: '8px 16px', borderRadius: 10,
+              background: 'white', color: '#dc2626',
+              border: '1.5px solid #dc2626', fontWeight: 700, fontSize: 13,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.15s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background='#dc2626'; e.currentTarget.style.color='white'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background='white'; e.currentTarget.style.color='#dc2626'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#dc2626'; e.currentTarget.style.color = 'white'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#dc2626'; }}
           >
             <i className="fas fa-file-pdf"></i> Exportar expediente
           </button>
         </div>
 
         {/* Odontograma */}
-        <div style={{ marginBottom:20 }}>
+        <div style={{ marginBottom: 20 }}>
           <Odontograma paciente={pacienteSeleccionado} />
         </div>
 
         {/* Expediente completo — modoPanel=false: edición habilitada */}
         <PatientTabs
           paciente={pacienteSeleccionado}
-          onVerTodos={() => {}}
+          onVerTodos={() => { }}
           modoPanel={false}
         />
       </div>
@@ -509,11 +539,11 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <button
             onClick={() => setShowNuevoPaciente(true)}
             style={{
-              padding:'10px 18px', borderRadius:12,
-              background:'linear-gradient(135deg,#2563eb,#3b82f6)',
-              color:'#fff', border:'none', fontWeight:800, fontSize:14,
-              cursor:'pointer', display:'flex', alignItems:'center', gap:8,
-              boxShadow:'0 6px 16px rgba(37,99,235,0.22)', whiteSpace:'nowrap',
+              padding: '10px 18px', borderRadius: 12,
+              background: 'linear-gradient(135deg,#2563eb,#3b82f6)',
+              color: '#fff', border: 'none', fontWeight: 800, fontSize: 14,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 6px 16px rgba(37,99,235,0.22)', whiteSpace: 'nowrap',
             }}
           >
             <i className="fas fa-user-plus"></i> Nuevo paciente
@@ -535,7 +565,6 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <input type="number" placeholder="Edad máx." value={filtros.edad_max} onChange={(e) => handleFiltroChange('edad_max', e.target.value)} />
           <input type="date" value={filtros.fecha_ultima_visita_desde} onChange={(e) => handleFiltroChange('fecha_ultima_visita_desde', e.target.value)} />
           <input type="date" value={filtros.fecha_ultima_visita_hasta} onChange={(e) => handleFiltroChange('fecha_ultima_visita_hasta', e.target.value)} />
-          <input type="number" placeholder="ID dentista" value={filtros.id_dentista} onChange={(e) => handleFiltroChange('id_dentista', e.target.value)} />
           <select value={filtros.activo} onChange={(e) => handleFiltroChange('activo', e.target.value)}>
             <option value="">Estado</option>
             <option value="true">Activo</option>
@@ -599,10 +628,10 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
                       <button
                         onClick={() => handleSelectPaciente(paciente)}
                         style={{
-                          padding:'5px 14px', borderRadius:8,
-                          border:'1.5px solid #2563eb', background:'transparent',
-                          color:'#2563eb', fontWeight:700, fontSize:12,
-                          cursor:'pointer', whiteSpace:'nowrap',
+                          padding: '5px 14px', borderRadius: 8,
+                          border: '1.5px solid #2563eb', background: 'transparent',
+                          color: '#2563eb', fontWeight: 700, fontSize: 12,
+                          cursor: 'pointer', whiteSpace: 'nowrap',
                         }}
                       >
                         Ver expediente
@@ -625,7 +654,11 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
       <NuevoPacienteModal
         open={showNuevoPaciente}
         onClose={() => setShowNuevoPaciente(false)}
-        onCreado={() => { setShowNuevoPaciente(false); setPage(1); }}
+        onCreado={() => {
+          setShowNuevoPaciente(false);
+          setPage(1);
+          setReloadFlag(prev => prev + 1);
+        }}
       />
     </div>
   );
