@@ -231,6 +231,24 @@
   font-size: 13px;
 }
 
+.info-input.input-error {
+  border-color: #dc2626;
+  background: #fff5f5;
+}
+
+.info-field.has-error {
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.info-error {
+  display: block;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .history-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(150px, 1fr));

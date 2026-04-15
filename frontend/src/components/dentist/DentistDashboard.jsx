@@ -12,6 +12,7 @@ import PatientTabs from './PatientTabs';
 import TreatmentHistory from './TreatmentHistory';
 import NuevaCitaModal from './NuevaCitaModal';
 import MisPacientesScreen from './MisPacientesScreen';
+import CitasScreen from './CitasScreen';
 import BloqueoModal from './BloqueoModal';
 import ReprogramarCitaModal from './ReprogramarCitaModal';
 import bloquesService from '../../services/bloques.service';
@@ -159,8 +160,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [bloqueoToDelete, setBloqueoToDelete] = useState(null);
-
-  // ── HU20 / HU21: paciente para abrir expediente desde Mi Agenda ──────────
   const [pacienteExpediente, setPacienteExpediente] = useState(null);
 
   const [metrics, setMetrics] = useState({
@@ -292,6 +291,17 @@ const DentistDashboard = ({ userData, onLogout }) => {
     mostrarToast('Cita cancelada correctamente');
   };
 
+  const handleCitaActualizada = (citaActualizada) => {
+    setCitas((prev) => {
+      const a = prev.map((c) => c.id === citaActualizada.id ? { ...c, ...citaActualizada } : c);
+      setMetrics(calcularMetricas(a));
+      return a;
+    });
+    if (selectedCita?.id === citaActualizada.id) {
+      setSelectedCita((prev) => ({ ...prev, ...citaActualizada }));
+    }
+  };
+
   const handleSelectCita = (cita) => {
     setSelectedCita(cita);
     setAgendaDate(new Date(cita.fecha_hora));
@@ -402,7 +412,6 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const closeModal = () => { setShowModal(false); setSelectedEvent(null); };
 
-  // ── Función para navegar al expediente completo ──────────────────────────
   const handleVerExpediente = () => {
     if (!selectedCita) return;
     setPacienteExpediente({
@@ -493,10 +502,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const dentistName = dentistaInfo?.nombre || userData?.username || 'Doctor(a)';
   const topbarMeta = {
-    agenda:       { title: 'Mi Agenda',    subtitle: `Dr. ${dentistName}` },
-    pacientes:    { title: 'Mis Pacientes', subtitle: `Gestión clínica de Dr. ${dentistName}` },
-    tratamientos: { title: 'Tratamientos', subtitle: `Seguimiento clínico de Dr. ${dentistName}` },
-    notas:        { title: 'Notas',        subtitle: `Registro rápido de Dr. ${dentistName}` },
+    agenda:       { title: 'Mi Agenda',          subtitle: `Dr. ${dentistName}` },
+    citas:        { title: 'Citas',               subtitle: `Gestión de citas de Dr. ${dentistName}` },
+    pacientes:    { title: 'Mis Pacientes',        subtitle: `Gestión clínica de Dr. ${dentistName}` },
+    tratamientos: { title: 'Tratamientos',         subtitle: `Seguimiento clínico de Dr. ${dentistName}` },
+    notas:        { title: 'Notas',               subtitle: `Registro rápido de Dr. ${dentistName}` },
   }[activeView] || { title: 'Panel del Doctor', subtitle: `Dr. ${dentistName}` };
 
   const topDate = new Date().toLocaleDateString('es-ES', {
@@ -575,16 +585,15 @@ const DentistDashboard = ({ userData, onLogout }) => {
               </div>
 
               <div className="dashboard-right-column">
+                {/* AppointmentsList ahora solo muestra resumen */}
                 <AppointmentsList
                   citas={citasAgendaSeleccionada}
                   onSelectCita={handleSelectCita}
                   selectedCitaId={selectedCita?.id}
                   selectedDate={agendaDate}
-                  onCitaCancelada={handleCitaCancelada}
+                  onVerDetalles={() => setActiveView('citas')}
                 />
                 <Odontograma paciente={selectedCita} />
-
-                {/* PatientTabs: "Editar" y "Ver expediente" redirigen — el botón está DENTRO de PatientTabs */}
                 <PatientTabs
                   paciente={selectedCita}
                   onVerTodos={() => setActiveView('tratamientos')}
@@ -593,6 +602,17 @@ const DentistDashboard = ({ userData, onLogout }) => {
               </div>
             </div>
           </>
+        );
+
+      // ── NUEVA VISTA: Citas ───────────────────────────────────────────────────────────────────────
+      case 'citas':
+        return (
+          <CitasScreen
+            citas={citas}
+            dentistaInfo={dentistaInfo}
+            onCitaActualizada={handleCitaActualizada}
+            onCitaCancelada={handleCitaCancelada}
+          />
         );
 
       case 'pacientes':
@@ -647,7 +667,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
             <button className="btn-bloquear-horario" onClick={() => setShowBloqueoModal(true)}>
               <i className="fas fa-lock"></i> Bloquear horario
             </button>
-            <button className="new-appointment-btn" onClick={() => setShowNuevaCitaModal(true)}>
+            <button className="btn-bloquear-horario" onClick={() => setShowNuevaCitaModal(true)}>
               <i className="fas fa-plus"></i> Nueva cita
             </button>
           </div>

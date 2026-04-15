@@ -28,7 +28,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("🔌 Usuario desconectado");
   });
-});
+});    
 
 
 server.listen(PORT, async () => {
