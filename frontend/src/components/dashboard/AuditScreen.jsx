@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./AuditScreen.css";
+import UsuarioAutocomplete from "./UsuarioAutocomplete";
 
 export default function AuditScreen() {
 
@@ -66,6 +67,8 @@ export default function AuditScreen() {
   const [cursor, setCursor] = useState(null);
   const [nextCursor, setNextCursor] = useState(null);
   const [loading, setLoading] = useState(false);
+  // Estado para los cursores previos de paginación
+  const [prevCursors, setPrevCursors] = useState([]);
 
   // Para selects dinámicos
   const [usuarios, setUsuarios] = useState([]);
@@ -80,7 +83,7 @@ export default function AuditScreen() {
   // Cargar filtros dinámicos (usuarios, acciones, módulos)
   useEffect(() => {
     fetch("/api/admin/auditoria/usuarios", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(r => r.json()).then(data => setUsuarios(data.usuarios || []));
+      .then(r => r.json()).then(data => setUsuarios(data || []));
     fetch("/api/admin/auditoria/acciones", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then(r => r.json()).then(data => setAcciones(data.acciones || []));
     fetch("/api/admin/auditoria/modulos", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
@@ -129,7 +132,7 @@ export default function AuditScreen() {
 
     // Buscar (filtrar resultados)
   const handleBuscar = () => {
-    let filtrados = auditResults.filter(ev => {
+    let filtrados = resultados.filter(ev => {
       return (
         (!filtros.usuario || ev.usuario === filtros.usuario) &&
         (!filtros.usuarioBusqueda || ev.usuario.toLowerCase().includes(filtros.usuarioBusqueda.toLowerCase())) &&
@@ -261,6 +264,13 @@ export default function AuditScreen() {
     boxShadow: '0 2px 8px rgba(79,70,229,0.07)'
   };
 
+  // Variables de fechas para los botones de período rápido
+  const hoy = new Date().toISOString().slice(0, 10);
+  const fechaAyer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const fecha7 = new Date(Date.now() - 86400000 * 6).toISOString().slice(0, 10);
+  const fecha30 = new Date(Date.now() - 86400000 * 29).toISOString().slice(0, 10);
+  const primerDiaMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+
   return (
     <div className="dm2-page">
       <div className="dm2-card">
@@ -277,9 +287,14 @@ export default function AuditScreen() {
                 <label>Usuario</label>
                 <select style={inputStyle} name="usuario" value={filtros.usuario} onChange={handleFiltroChange}>
                   <option value="">TODOS LOS USUARIOS</option>
-                  {usuarios.map((u) => (<option key={u.id || u.usuario_id} value={u.usuario_id}>{u.usuario_nombre || u.username}</option>))}
+                  {usuarios.map((u) => (
+                    <option key={u.usuario_id || u.id}
+                            value={u.usuario_id || u.id}>
+                      {u.usuario_nombre || u.username}
+                      {u.nombre_completo ? ` - ${u.nombre_completo}` : ""}
+                    </option>
+                  ))}
                 </select>
-                <input type="text" name="usuarioBusqueda" placeholder="Buscar usuario..." style={inputStyle} value={filtros.usuarioBusqueda} onChange={handleFiltroChange} />
               </div>
               <div className="audit-filter">
                 <label>Rol</label>
@@ -532,14 +547,11 @@ export default function AuditScreen() {
             <button
               className="audit-btn-primary"
               type="button"
+              disabled={!filtros.usuario}
               onClick={() => {
-                if (filtros.usuario) {
-                  setTimelineOpen(true);
-                  setTimelineUser(usuarios.find(u => u.usuario_id === filtros.usuario));
-                  cargarLineaTiempo(filtros.usuario);
-                } else {
-                  alert("Selecciona un usuario para ver la línea de tiempo");
-                }
+                setTimelineOpen(true);
+                setTimelineUser(usuarios.find(u => u.usuario_id === filtros.usuario));
+                cargarLineaTiempo(filtros.usuario);
               }}
             >
               VER LÍNEA DE TIEMPO
