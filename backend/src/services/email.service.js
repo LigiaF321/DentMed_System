@@ -68,7 +68,7 @@ async function sendPasswordResetCodeEmail({ to, code }) {
     };
 
   } catch (error) {
-    console.error("❌ ERROR AL ENVIAR EMAIL:");
+    console.error("ERROR AL ENVIAR EMAIL:");
     console.error("CODE:", error.code);
     console.error("MESSAGE:", error.message);
     console.error("FULL:", error);
