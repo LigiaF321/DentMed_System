@@ -1089,15 +1089,17 @@ export default function NuevaCitaModal({
                   autoComplete="off"
                 />
 
-                {equiposRequeridos.length > 0 ? (
-                  <div className="dm26-filter-info">
-                    <i className="fas fa-filter"></i>
-                    <span>
-                      Filtrando consultorios compatibles con:{" "}
-                      <strong>{equiposRequeridos.join(", ")}</strong>
-                    </span>
-                  </div>
-                ) : null}
+                {/*
+{equiposRequeridos.length > 0 ? (
+  <div className="dm26-filter-info">
+    <i className="fas fa-filter"></i>
+    <span>
+      Filtrando consultorios compatibles con:{" "}
+      <strong>{equiposRequeridos.join(", ")}</strong>
+    </span>
+  </div>
+) : null}
+*/}
               </div>
             </div>
 
