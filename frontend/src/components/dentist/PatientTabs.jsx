@@ -149,6 +149,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
     nombre:             getValue(source, ['nombre_completo', 'paciente_nombre', 'nombre']),
     edad:               getValue(source, ['edad'], '-'),
     sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
+    email:              getValue(source, ['email', 'correo', 'correo_electronico'], 'No registrado'),
     direccion:          getValue(source, ['direccion'], 'No registrada'),
     telefono:           getValue(source, ['telefono'], 'No registrado'),
     seguroMedico:       getValue(source, ['seguro_medico', 'aseguradora', 'seguro'], 'No registrado'),
@@ -268,6 +269,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
               {renderField('Nombre',              infoPersonal.nombre,             'nombre',              !modoPanel && editModes[TAB_INFO])}
               {renderField('Edad',                String(infoPersonal.edad),       'edad',                !modoPanel && editModes[TAB_INFO])}
               {renderField('Sexo',                infoPersonal.sexo,               'sexo',                !modoPanel && editModes[TAB_INFO])}
+              {renderField('Correo electrónico',  infoPersonal.email,              'email',               !modoPanel && editModes[TAB_INFO])}
               {renderField('Teléfono',            infoPersonal.telefono,           'telefono',            !modoPanel && editModes[TAB_INFO])}
               {renderField('Dirección',           infoPersonal.direccion,          'direccion',           !modoPanel && editModes[TAB_INFO])}
               {renderField('Seguro médico',       infoPersonal.seguroMedico,       'seguro_medico',       !modoPanel && editModes[TAB_INFO])}
