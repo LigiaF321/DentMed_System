@@ -266,6 +266,20 @@
   cursor: not-allowed;
 }
 
+.dm17-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #7f8c8d;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.dm17-close-btn:hover {
+  color: #1a2c3e;
+}
+
 /* Estilos para checkbox */
 .checkbox-group {
   display: flex;

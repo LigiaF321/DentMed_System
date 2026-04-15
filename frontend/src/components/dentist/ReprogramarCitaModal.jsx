@@ -25,7 +25,7 @@ const ReprogramarCitaModal = ({
   const [horariosAlternativos, setHorariosAlternativos] = useState([]);
   const [mostrarAlternativas, setMostrarAlternativas] = useState(false);
   const [horarioSeleccionadoAlt, setHorarioSeleccionadoAlt] = useState(null);
-  const [notificarPaciente, setNotificarPaciente] = useState(true);
+  const [horaSeleccionada, setHoraSeleccionada] = useState(nuevaHora);
 
   const formatoFecha = (fecha) => {
     if (!fecha) return '';
@@ -56,7 +56,7 @@ const ReprogramarCitaModal = ({
     });
   };
 
-  const handleConfirmar = async (fechaParam = nuevaFecha, horaParam = nuevaHora) => {
+  const handleConfirmar = async (fechaParam = nuevaFecha, horaParam = horaSeleccionada) => {
     setError('');
 
     if (!motivoSeleccionado) {
@@ -72,7 +72,6 @@ const ReprogramarCitaModal = ({
         hora: horaParam,
         duracion: cita.duracion_estimada || 30,
         motivo_reprogramacion: motivoSeleccionado,
-        notificar_paciente: notificarPaciente,
       };
 
       const response = await reprogramarCita(cita.id, payload);
@@ -101,7 +100,7 @@ const ReprogramarCitaModal = ({
       <div className="modal-content reprogramar-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Confirmación de Reprogramación</h3>
-          <button className="close-btn" onClick={onCancel}>
+          <button type="button" className="dm17-close-btn" onClick={onCancel}>
             <i className="fas fa-times"></i>
           </button>
         </div>
@@ -146,7 +145,7 @@ const ReprogramarCitaModal = ({
                     <p>
                       <i className="fas fa-clock"></i>
                       {' '}
-                      {nuevaHora}
+                      {horaSeleccionada}
                     </p>
                     <p>
                       <i className="fas fa-user"></i>
@@ -173,19 +172,16 @@ const ReprogramarCitaModal = ({
                 </select>
               </div>
 
-              <div className="checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={notificarPaciente}
-                    onChange={(e) => setNotificarPaciente(e.target.checked)}
-                  />
-                  <span className="checkbox-label">
-                    <i className="fas fa-bell"></i>
-                    {' '}
-                    Notificar al paciente por correo electrónico
-                  </span>
-                </label>
+              <div className="form-group">
+                <label htmlFor="hora-requerida">Cambiar hora de la cita</label>
+                <input
+                  id="hora-requerida"
+                  type="time"
+                  value={horaSeleccionada}
+                  onChange={(e) => setHoraSeleccionada(e.target.value)}
+                  className="form-control"
+                  style={{ cursor: 'pointer' }}
+                />
               </div>
             </>
           ) : (
@@ -239,19 +235,16 @@ const ReprogramarCitaModal = ({
                 </select>
               </div>
 
-              <div className="checkbox-group checkbox-group-alt">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={notificarPaciente}
-                    onChange={(e) => setNotificarPaciente(e.target.checked)}
-                  />
-                  <span className="checkbox-label">
-                    <i className="fas fa-bell"></i>
-                    {' '}
-                    Notificar al paciente por correo electrónico
-                  </span>
-                </label>
+              <div className="form-group">
+                <label htmlFor="hora-alternativa">Cambiar hora de la cita</label>
+                <input
+                  id="hora-alternativa"
+                  type="time"
+                  value={horaSeleccionada}
+                  onChange={(e) => setHoraSeleccionada(e.target.value)}
+                  className="form-control"
+                  style={{ cursor: 'pointer' }}
+                />
               </div>
             </div>
           )}
@@ -276,7 +269,7 @@ const ReprogramarCitaModal = ({
               </button>
               <button
                 className="btn btn-primary"
-                onClick={() => handleConfirmar(nuevaFecha, nuevaHora)}
+                onClick={() => handleConfirmar(nuevaFecha)}
                 disabled={loading}
               >
                 {loading ? (
