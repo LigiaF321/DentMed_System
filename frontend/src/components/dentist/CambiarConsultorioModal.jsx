@@ -10,6 +10,9 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
   const [selected, setSelected] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Paginación
+  const [pagina, setPagina] = useState(1);
+  const [tamanoPagina, setTamanoPagina] = useState(5);
 
   useEffect(() => {
     if (!open || !cita) return;
@@ -17,8 +20,7 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     setLoading(true);
     setError("");
     setSelected(null);
-
-    // 🔥 Traer todos los consultorios
+    setPagina(1); // Reiniciar página al abrir
     obtenerConsultorios()
       .then((res) => setConsultorios(res.data || []))
       .catch(() => setConsultorios([]))
@@ -81,6 +83,10 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     }
   };
 
+  // Paginación de consultorios
+  const totalPaginas = Math.ceil(consultorios.length / tamanoPagina);
+  const consultoriosPagina = consultorios.slice((pagina - 1) * tamanoPagina, pagina * tamanoPagina);
+
   if (!open || !cita) return null;
 
   return (
@@ -110,11 +116,40 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
 
           {/* ✅ Lista de consultorios */}
           <ConsultorioSugerido
-            procedimiento={null} // ya no se usa
-            consultorios={consultorios}
+            procedimiento={null}
+            consultorios={consultoriosPagina}
             loading={loading}
             onSelectConsultorio={setSelected}
+            selectedConsultorio={selected}
           />
+
+          {/* Paginación */}
+          {consultorios.length > tamanoPagina && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '12px 0' }}>
+              <button
+                className="dm17-btn"
+                disabled={pagina === 1}
+                onClick={() => setPagina(p => Math.max(1, p - 1))}
+              >Anterior</button>
+              <span>Página {pagina} de {totalPaginas}</span>
+              <button
+                className="dm17-btn"
+                disabled={pagina === totalPaginas}
+                onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              >Siguiente</button>
+              <select
+                value={tamanoPagina}
+                onChange={e => { setTamanoPagina(Number(e.target.value)); setPagina(1); }}
+                style={{ marginLeft: 8 }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span>por página</span>
+            </div>
+          )}
 
           {/* Error */}
           {error && <div className="dm17-error">{error}</div>}

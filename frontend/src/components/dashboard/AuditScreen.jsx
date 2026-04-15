@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./AuditScreen.css";
-import TimelineScreen from "./TimelineScreen";
 
 export default function AuditScreen() {
-  // Exportar a CSV
+
+  // Exportar a CSV con datos reales
   const exportarCSV = () => {
     const encabezados = ["Fecha y Hora","Usuario","Rol","Acción","Módulo","Detalle","IP"];
-    const filas = resultadosFiltrados.map(ev => [ev.fecha, ev.usuario, ev.rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
+    const filas = resultados.map(ev => [ev.fecha_hora, ev.usuario_nombre, ev.usuario_rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
     let csv = encabezados.join(",") + "\n";
     filas.forEach(fila => {
       csv += fila.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
@@ -22,11 +22,11 @@ export default function AuditScreen() {
     URL.revokeObjectURL(url);
   };
 
-  // Exportar a PDF (jsPDF)
+
+  // Exportar a PDF (jsPDF) con datos reales
   const exportarPDF = async () => {
     const encabezados = ["Fecha y Hora","Usuario","Rol","Acción","Módulo","Detalle","IP"];
-    const filas = resultadosFiltrados.map(ev => [ev.fecha, ev.usuario, ev.rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
-    // Cargar jsPDF dinámicamente si no está en window
+    const filas = resultados.map(ev => [ev.fecha_hora, ev.usuario_nombre, ev.usuario_rol, ev.accion, ev.modulo, ev.detalle, ev.ip]);
     let jsPDF = window.jspdf && window.jspdf.jsPDF;
     if (!jsPDF) {
       jsPDF = (await import('jspdf')).jsPDF;
@@ -47,32 +47,10 @@ export default function AuditScreen() {
     doc.save('auditoria.pdf');
   };
 
-  // Datos simulados de resultados (debe ir antes de los hooks que lo usan)
-  const auditResults = [
-    {
-      fecha: "21/02/2026 10:35:22",
-      usuario: "jperez",
-      rol: "Dentista",
-      accion: "Crear cita",
-      modulo: "Citas",
-      detalle: "Paciente: María González",
-      ip: "10.0.0.12"
-    },
-    {
-      fecha: "20/02/2026 09:15:10",
-      usuario: "admin",
-      rol: "Admin",
-      accion: "Configurar",
-      modulo: "Horarios",
-      detalle: "Cambio horario sábado",
-      ip: "10.0.0.5"
-    }
-  ];
-
-  // Estados para filtros
-  const [filtros, setFiltros] = React.useState({
-    usuario: '', // select
-    usuarioBusqueda: '', // input
+  // Estados para filtros y datos
+  const [filtros, setFiltros] = useState({
+    usuario: '',
+    usuarioBusqueda: '',
     rol: '',
     fechaDesde: '',
     fechaHasta: '',
@@ -82,7 +60,66 @@ export default function AuditScreen() {
     ip: '',
     termino: ''
   });
-  const [resultadosFiltrados, setResultadosFiltrados] = React.useState(auditResults);
+  const [resultados, setResultados] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limite, setLimite] = useState(25);
+  const [cursor, setCursor] = useState(null);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Para selects dinámicos
+  const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState(["admin", "dentista", "sistema"]);
+  const [acciones, setAcciones] = useState([]);
+  const [modulos, setModulos] = useState([]);
+  const [resultadosOpc, setResultadosOpc] = useState(["exito", "fallido", "bloqueado", "advertencia"]);
+
+  // Token JWT (ajusta según tu auth)
+  const token = localStorage.getItem("token");
+
+  // Cargar filtros dinámicos (usuarios, acciones, módulos)
+  useEffect(() => {
+    fetch("/api/admin/auditoria/usuarios", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json()).then(data => setUsuarios(data.usuarios || []));
+    fetch("/api/admin/auditoria/acciones", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json()).then(data => setAcciones(data.acciones || []));
+    fetch("/api/admin/auditoria/modulos", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json()).then(data => setModulos(data.modulos || []));
+  }, []);
+
+  // Cargar auditoría
+  const cargarAuditoria = (params = {}) => {
+    setLoading(true);
+    const query = new URLSearchParams({
+      usuario_id: filtros.usuario,
+      usuario_nombre: filtros.usuarioBusqueda,
+      rol: filtros.rol,
+      fecha_desde: filtros.fechaDesde,
+      fecha_hasta: filtros.fechaHasta,
+      accion: filtros.accion,
+      modulo: filtros.modulo,
+      resultado: filtros.resultado,
+      ip: filtros.ip,
+      busqueda: filtros.termino,
+      limite,
+      cursor: params.cursor || '',
+    });
+    fetch(`/api/admin/auditoria?${query.toString()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+      .then(r => r.json())
+      .then(data => {
+        setResultados(data.registros || []);
+        setTotal(data.total || 0);
+        setNextCursor(data.nextCursor || null);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    cargarAuditoria();
+    // eslint-disable-next-line
+  }, [limite]);
 
     // Manejar cambios en los filtros
   const handleFiltroChange = (e) => {
@@ -209,26 +246,7 @@ export default function AuditScreen() {
     }
   ];
 
-  // Filtros simulados
-  const usuarios = [
-    { id: "all", username: "TODOS LOS USUARIOS", nombre: "" },
-    { id: "admin1", username: "admin1", nombre: "Juan Pérez (Admin)" },
-    { id: "dentista1", username: "dentista1", nombre: "Ana López (Dentista)" },
-    { id: "sistema", username: "Sistema", nombre: "Acciones automáticas" },
-  ];
-  const roles = ["TODOS", "Administrador", "Dentista", "Sistema"];
-  const acciones = [
-    { group: "SESIÓN", items: ["Inicio sesión", "Cierre sesión", "Intento fallido"] },
-    { group: "CITAS", items: ["Crear cita", "Editar cita", "Cancelar cita", "Ver cita"] },
-    { group: "DENTISTAS", items: ["Crear dentista", "Editar dentista", "Inhabilitar dentista", "Eliminar dentista"] },
-    { group: "INSUMOS", items: ["Crear insumo", "Editar insumo", "Activar/Inactivar insumo"] },
-    { group: "INVENTARIO", items: ["Entrada", "Salida", "Ajuste"] },
-    { group: "CONFIGURACIÓN", items: ["Cambiar parámetros", "Configurar horarios"] },
-    { group: "REPORTES", items: ["Generar reporte", "Exportar reporte"] },
-    { group: "SEGURIDAD", items: ["Alerta generada", "Alerta silenciada", "IP bloqueada"] },
-  ];
-  const modulos = ["TODOS", "Login", "Dashboard", "Dentistas", "Citas", "Pacientes", "Inventario", "Insumos", "Reportes", "Configuración", "Seguridad", "Auditoría"];
-  const resultados = ["TODOS", "Éxito", "Fallido", "Bloqueado", "Advertencia"];
+  // Los selects ahora se llenan dinámicamente
 
   // Inputs y selects modernos, redondeados y suaves
   const inputStyle = {
@@ -259,7 +277,7 @@ export default function AuditScreen() {
                 <label>Usuario</label>
                 <select style={inputStyle} name="usuario" value={filtros.usuario} onChange={handleFiltroChange}>
                   <option value="">TODOS LOS USUARIOS</option>
-                  {usuarios.map((u) => (<option key={u.id} value={u.username}>{u.username}</option>))}
+                  {usuarios.map((u) => (<option key={u.id || u.usuario_id} value={u.usuario_id}>{u.usuario_nombre || u.username}</option>))}
                 </select>
                 <input type="text" name="usuarioBusqueda" placeholder="Buscar usuario..." style={inputStyle} value={filtros.usuarioBusqueda} onChange={handleFiltroChange} />
               </div>
@@ -283,11 +301,46 @@ export default function AuditScreen() {
               <div className="audit-filter-period">
                 <label>Período rápido</label>
                 <div className="audit-period-btns">
-                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para HOY */}}>HOY</button>
-                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para AYER */}}>AYER</button>
-                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para 7 días */}}>ÚLTIMOS 7 DÍAS</button>
-                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para 30 días */}}>ÚLTIMOS 30 DÍAS</button>
-                  <button className="audit-btn-primary" type="button" onClick={() => {/* lógica para este mes */}}>ESTE MES</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {
+                    setFiltros((prev) => ({
+                      ...prev,
+                      fechaDesde: hoy,
+                      fechaHasta: hoy,
+                    }));
+                    cargarAuditoria();
+                  }}>HOY</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {
+                    setFiltros((prev) => ({
+                      ...prev,
+                      fechaDesde: fechaAyer,
+                      fechaHasta: fechaAyer,
+                    }));
+                    cargarAuditoria();
+                  }}>AYER</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {
+                    setFiltros((prev) => ({
+                      ...prev,
+                      fechaDesde: fecha7,
+                      fechaHasta: hoy,
+                    }));
+                    cargarAuditoria();
+                  }}>ÚLTIMOS 7 DÍAS</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {
+                    setFiltros((prev) => ({
+                      ...prev,
+                      fechaDesde: fecha30,
+                      fechaHasta: hoy,
+                    }));
+                    cargarAuditoria();
+                  }}>ÚLTIMOS 30 DÍAS</button>
+                  <button className="audit-btn-primary" type="button" onClick={() => {
+                    setFiltros((prev) => ({
+                      ...prev,
+                      fechaDesde: primerDiaMes,
+                      fechaHasta: hoy,
+                    }));
+                    cargarAuditoria();
+                  }}>ESTE MES</button>
                 </div>
               </div>
             </div>
@@ -296,10 +349,8 @@ export default function AuditScreen() {
                 <label>Acción</label>
                 <select style={inputStyle} name="accion" value={filtros.accion} onChange={handleFiltroChange}>
                   <option value="">TODAS</option>
-                  {acciones.map((group) => (
-                    <optgroup key={group.group} label={group.group}>
-                      {group.items.map((item) => (<option key={item} value={item}>{item}</option>))}
-                    </optgroup>
+                  {acciones.map((accion) => (
+                    <option key={accion} value={accion}>{accion}</option>
                   ))}
                 </select>
               </div>
@@ -316,7 +367,7 @@ export default function AuditScreen() {
                 <label>Resultado</label>
                 <select style={inputStyle} name="resultado" value={filtros.resultado} onChange={handleFiltroChange}>
                   <option value="">TODOS</option>
-                  {resultados.map((r) => (<option key={r} value={r}>{r}</option>))}
+                  {resultadosOpc.map((r) => (<option key={r} value={r}>{r}</option>))}
                 </select>
               </div>
               <div className="audit-filter">
@@ -363,25 +414,61 @@ export default function AuditScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {resultadosFiltrados.map((ev, idx) => (
-                    <tr key={idx}>
-                      <td>{ev.fecha}</td>
-                      <td>{ev.usuario}</td>
-                      <td>{ev.rol}</td>
+                  {resultados.map((ev, idx) => (
+                    <tr key={ev.id || idx}>
+                      <td>{ev.fecha_hora}</td>
+                      <td>{ev.usuario_nombre}</td>
+                      <td>{ev.usuario_rol}</td>
                       <td>{ev.accion}</td>
                       <td>{ev.modulo}</td>
                       <td>{ev.detalle}</td>
                       <td>{ev.ip}</td>
                       <td>
                         <button className="audit-btn-primary" onClick={() => { setModalData(ev); setModalOpen(true); }}>Ver</button>
-                        <button className="audit-btn-primary">Copiar</button>
+                        <button className="audit-btn-primary" onClick={() => navigator.clipboard.writeText(JSON.stringify(ev))}>Copiar</button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {/* Paginación solo abajo, centrada */}
+            {/* Paginación funcional */}
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <div className="audit-table-page-controls">
+                <button
+                  className="audit-page-btn"
+                  disabled={prevCursors?.length === 0}
+                  onClick={() => {
+                    if (prevCursors && prevCursors.length > 0) {
+                      const prev = [...prevCursors];
+                      const lastCursor = prev.pop();
+                      setPrevCursors(prev);
+                      cargarAuditoria({ cursor: lastCursor });
+                    }
+                  }}
+                >{'<'}</button>
+                <button
+                  className="audit-page-btn"
+                  disabled={!nextCursor}
+                  onClick={() => {
+                    setPrevCursors([...(prevCursors || []), cursor]);
+                    cargarAuditoria({ cursor: nextCursor });
+                  }}
+                >{'>'}</button>
+                <select
+                  className="audit-page-size"
+                  value={limite}
+                  onChange={e => { setLimite(Number(e.target.value)); setCursor(null); setPrevCursors([]); }}
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                  <option value={500}>500</option>
+                </select>
+                <span>registros por página</span>
+              </div>
+            </div>
           </div>
           {/* Leyenda de roles */}
           <div className="audit-legend">
@@ -442,79 +529,99 @@ export default function AuditScreen() {
           )}
           {/* Botón VER LÍNEA DE TIEMPO principal */}
           <div style={{ marginTop: 16 }}>
-            <button className="audit-btn-primary" type="button" onClick={() => setTimelineOpen(true)}>VER LÍNEA DE TIEMPO</button>
+            <button
+              className="audit-btn-primary"
+              type="button"
+              onClick={() => {
+                if (filtros.usuario) {
+                  setTimelineOpen(true);
+                  setTimelineUser(usuarios.find(u => u.usuario_id === filtros.usuario));
+                  cargarLineaTiempo(filtros.usuario);
+                } else {
+                  alert("Selecciona un usuario para ver la línea de tiempo");
+                }
+              }}
+            >
+              VER LÍNEA DE TIEMPO
+            </button>
           </div>
           {/* Vista de línea de tiempo */}
           {timelineOpen && (
             <div className="audit-timeline-section" style={{ background: '#f7f8ff', borderRadius: '18px', padding: '24px', margin: '24px 0', boxShadow: '0 2px 16px rgba(23,96,74,0.06)' }}>
               <div className="audit-timeline-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
                 <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.15rem', color: '#17604a' }}>Línea de tiempo de actividad - <span style={{ color: '#d42674' }}>Dr. Juan Pérez (jperez)</span></div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.15rem', color: '#17604a' }}>
+                    Línea de tiempo de actividad - <span style={{ color: '#d42674' }}>{timelineUser?.usuario_nombre || ''}</span>
+                  </div>
                   <div style={{ marginTop: '6px', fontSize: '1rem', color: '#34495e' }}>
-                    <span>Desde:</span> <input type="date" value="2026-02-01" style={{ marginRight: '8px', borderRadius: '8px', border: '1px solid #ccd6e0', padding: '4px 10px' }} />
-                    <span>Hasta:</span> <input type="date" style={{ marginRight: '18px', borderRadius: '8px', border: '1px solid #ccd6e0', padding: '4px 10px' }} />
-                    <button className="audit-period-btn" style={{ marginRight: '6px' }}>HOY</button>
-                    <button className="audit-period-btn" style={{ marginRight: '6px' }}>ÚLTIMOS 7 DÍAS</button>
-                    <button className="audit-period-btn">ESTE MES</button>
+                    <span>Desde:</span>
+                    <input
+                      type="date"
+                      value={timelineFechaDesde}
+                      style={{ marginRight: '8px', borderRadius: '8px', border: '1px solid #ccd6e0', padding: '4px 10px' }}
+                      onChange={e => {
+                        setTimelineFechaDesde(e.target.value);
+                        cargarLineaTiempo(timelineUser.usuario_id, e.target.value, timelineFechaHasta);
+                      }}
+                    />
+                    <span>Hasta:</span>
+                    <input
+                      type="date"
+                      value={timelineFechaHasta}
+                      style={{ marginRight: '18px', borderRadius: '8px', border: '1px solid #ccd6e0', padding: '4px 10px' }}
+                      onChange={e => {
+                        setTimelineFechaHasta(e.target.value);
+                        cargarLineaTiempo(timelineUser.usuario_id, timelineFechaDesde, e.target.value);
+                      }}
+                    />
+                    <button className="audit-period-btn" style={{ marginRight: '6px' }} onClick={() => {
+                      setTimelineFechaDesde(fechaHoy);
+                      setTimelineFechaHasta(fechaHoy);
+                      cargarLineaTiempo(timelineUser.usuario_id, fechaHoy, fechaHoy);
+                    }}>HOY</button>
+                    <button className="audit-period-btn" style={{ marginRight: '6px' }} onClick={() => {
+                      setTimelineFechaDesde(fechaAyer);
+                      setTimelineFechaHasta(fechaAyer);
+                      cargarLineaTiempo(timelineUser.usuario_id, fechaAyer, fechaAyer);
+                    }}>AYER</button>
+                    <button className="audit-period-btn" style={{ marginRight: '6px' }} onClick={() => {
+                      setTimelineFechaDesde(fecha7);
+                      setTimelineFechaHasta(fechaHoy);
+                      cargarLineaTiempo(timelineUser.usuario_id, fecha7, fechaHoy);
+                    }}>ÚLTIMOS 7 DÍAS</button>
+                    <button className="audit-period-btn" style={{ marginRight: '6px' }} onClick={() => {
+                      setTimelineFechaDesde(fecha30);
+                      setTimelineFechaHasta(fechaHoy);
+                      cargarLineaTiempo(timelineUser.usuario_id, fecha30, fechaHoy);
+                    }}>ÚLTIMOS 30 DÍAS</button>
+                    <button className="audit-period-btn" onClick={() => {
+                      setTimelineFechaDesde(primerDiaMes);
+                      setTimelineFechaHasta(fechaHoy);
+                      cargarLineaTiempo(timelineUser.usuario_id, primerDiaMes, fechaHoy);
+                    }}>ESTE MES</button>
                   </div>
                 </div>
                 <button className="audit-btn-secondary" style={{ fontWeight: 'bold', fontSize: '1rem', padding: '10px 24px', borderRadius: '12px' }} onClick={() => setTimelineOpen(false)}>VOLVER A TABLA</button>
               </div>
-              <div className="audit-timeline-graph" style={{ margin: '24px 0', background: '#fff', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', padding: '18px' }}>
-                {/* Gráfica tipo línea simulada */}
-                <svg width="100%" height="120" viewBox="0 0 400 120">
-                  <polyline points="20,100 60,80 100,90 140,70 180,90 220,80 260,100" fill="none" stroke="#17604a" strokeWidth="3" />
-                  {/* Ejes y etiquetas */}
-                  <line x1="20" y1="100" x2="260" y2="100" stroke="#bbb" strokeWidth="2" />
-                  <line x1="20" y1="100" x2="20" y2="20" stroke="#bbb" strokeWidth="2" />
-                  <text x="20" y="115" fontSize="13" fill="#888">01/02</text>
-                  <text x="60" y="115" fontSize="13" fill="#888">07/02</text>
-                  <text x="100" y="115" fontSize="13" fill="#888">14/02</text>
-                  <text x="140" y="115" fontSize="13" fill="#888">21/02</text>
-                  <text x="180" y="115" fontSize="13" fill="#888">28/02</text>
-                </svg>
-              </div>
-              {/* Tabla de eventos y controles de paginación */}
               <div className="audit-timeline-events">
-                <table className="audit-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Hora</th>
-                      <th>Acción</th>
-                      <th>Módulo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {timelineEvents.map((ev, idx) => (
-                      <tr key={idx}>
-                        <td>{ev.fecha}</td>
-                        <td>{ev.hora}</td>
-                        <td>{ev.accion}</td>
-                        <td>{ev.modulo}</td>
+                {timelineLoading ? <div>Cargando...</div> : (
+                  <table className="audit-table">
+                    <thead>
+                      <tr>
+                        <th>Periodo</th>
+                        <th>Cantidad</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {/* Paginación solo en la tabla principal, no aquí */}
-                <div className="audit-timeline-update">Última actualización: 21/02/2026 11:30 AM</div>
-              </div>
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-                <div className="audit-table-page-controls">
-                  <button className="audit-page-btn">{'|<'}</button>
-                  <button className="audit-page-btn">{'<'}</button>
-                  <button className="audit-page-btn active">1</button>
-                  <button className="audit-page-btn">{'>'}</button>
-                  <button className="audit-page-btn">{'>|'}</button>
-                  <select className="audit-page-size">
-                    <option>25</option>
-                    <option>50</option>
-                    <option>100</option>
-                    <option>200</option>
-                    <option>500</option>
-                  </select>
-                  <span>registros por página</span>
-                </div>
+                    </thead>
+                    <tbody>
+                      {timelineEvents.map((ev, idx) => (
+                        <tr key={ev.periodo || idx}>
+                          <td>{ev.periodo}</td>
+                          <td>{ev.cantidad}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}
