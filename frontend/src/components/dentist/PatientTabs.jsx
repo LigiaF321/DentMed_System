@@ -29,6 +29,12 @@ const formatDateTime = (value) => {
   return date.toLocaleString('es-HN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 };
 
+const isValidEmail = (value) => {
+  const normalized = String(value || '').trim();
+  if (!normalized || normalized === 'No registrado') return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
+};
+
 // ── Resumen de tratamientos (últimos 3) ───────────────────────────────────────
 const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
   const [items,   setItems]   = useState([]);
@@ -103,6 +109,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
   const [detallePaciente, setDetallePaciente] = useState(null);
   const [loadingDetalle,  setLoadingDetalle]  = useState(false);
   const [notaDocumentos,  setNotaDocumentos]  = useState('');
+  const [fieldErrors,     setFieldErrors]     = useState({});
 
   const patientId = useMemo(() => {
     if (!paciente) return null;
@@ -131,6 +138,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
   useEffect(() => {
     setEditModes({ [TAB_INFO]: false, [TAB_HISTORIAL]: false, [TAB_TRATAMIENTOS]: false, [TAB_DOCUMENTOS]: false });
     setNotaDocumentos('');
+    setFieldErrors({});
   }, [patientId]);
 
   if (!paciente) {
@@ -170,14 +178,44 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
 
   const ultimaActualizacion = source?.updated_at || source?.updatedAt || source?.fecha_actualizacion || source?.created_at || source?.createdAt;
 
-  const toggleEdit  = (tab) => setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
+  const toggleEdit = (tab) => {
+    if (tab === TAB_INFO && editModes[TAB_INFO]) {
+      const emailValue = getValue(detallePaciente || source, ['email', 'correo', 'correo_electronico'], '');
+      if (!isValidEmail(emailValue)) {
+        setFieldErrors((prev) => ({ ...prev, email: 'Ingresa un correo electrónico válido.' }));
+        return;
+      }
+    }
+
+    setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
+  };
+
   const updateField = (field, value) => setDetallePaciente((p) => ({ ...(p || source), [field]: value }));
 
+  const handleFieldChange = (field, value) => {
+    updateField(field, value);
+
+    if (field === 'email') {
+      const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
+      setFieldErrors((prev) => ({ ...prev, email: nextError }));
+    }
+  };
+
   const renderField = (label, value, fieldName, canEdit) => (
-    <div className="info-field" key={label}>
+    <div className={`info-field ${fieldErrors[fieldName] ? 'has-error' : ''}`} key={label}>
       <span className="info-label">{label}</span>
       {canEdit
-        ? <input className="info-input" value={value || ''} onChange={(e) => updateField(fieldName, e.target.value)} />
+        ? (
+          <>
+            <input
+              className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
+              type={fieldName === 'email' ? 'email' : 'text'}
+              value={value || ''}
+              onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+            />
+            {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
+          </>
+        )
         : <span className="info-value">{value || '-'}</span>}
     </div>
   );
