@@ -3,7 +3,19 @@ const nodemailer = require("nodemailer");
 // ========================
 // TRANSPORTER SMTP
 // ========================
+function getMissingSmtpConfig() {
+  const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"];
+  return required.filter((key) => !String(process.env[key] || "").trim());
+}
+
 function createTransporter() {
+  const missing = getMissingSmtpConfig();
+  if (missing.length) {
+    throw new Error(
+      `Configuracion SMTP incompleta. Faltan: ${missing.join(", ")}`
+    );
+  }
+
   const port = Number(process.env.SMTP_PORT);
 
   return nodemailer.createTransport({
