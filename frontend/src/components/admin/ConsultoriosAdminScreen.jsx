@@ -12,7 +12,6 @@ import "./ConsultoriosAdminScreen.css";
 
 const ESTADOS_CONSULTORIO = [
   { value: "disponible", label: "Disponible" },
-  { value: "ocupado", label: "Ocupado" },
   { value: "mantenimiento", label: "Mantenimiento" },
   { value: "limpieza", label: "Limpieza" },
 ];
