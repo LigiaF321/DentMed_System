@@ -634,7 +634,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
                           cursor: 'pointer', whiteSpace: 'nowrap',
                         }}
                       >
-                        Ver expediente
+                        Ver expedientes.
                       </button>
                     </td>
                   </tr>
