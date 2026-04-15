@@ -604,7 +604,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
           </>
         );
 
-      // ── NUEVA VISTA: Citas ──────────────────────────────────────────────
+      // ── NUEVA VISTA: Citas ───────────────────────────────────────────────────────────────────────
       case 'citas':
         return (
           <CitasScreen
