@@ -54,9 +54,9 @@ const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
 
   return (
     <div style={{ marginTop: 8 }}>
-      {loading && <p style={{ fontSize: 12, color: '#6b7280' }}>Cargando...</p>}
+      {loading && <p className="dentista-texto-xpequeno" style={{ color: '#6b7280' }}>Cargando...</p>}
       {!loading && items.length === 0 && (
-        <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0' }}>Sin tratamientos registrados.</p>
+        <p className="dentista-texto-xpequeno" style={{ color: '#9ca3af', margin: '8px 0' }}>Sin tratamientos registrados.</p>
       )}
       {items.map((t) => (
         <div key={t.id} style={{
@@ -65,26 +65,18 @@ const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.tipo || t.procedimiento || '-'}</div>
-            <div style={{ fontSize: 11, color: '#6b7280' }}>
+            <div className="dentista-label" style={{ fontWeight: 700, color: '#111827' }}>{t.tipo || t.procedimiento || '-'}</div>
+            <div className="dentista-texto-xpequeno" style={{ color: '#6b7280' }}>
               {t.fecha ? new Date(t.fecha).toLocaleDateString() : '-'}
               {t.diente ? ` · Diente ${t.diente}` : ''}
             </div>
           </div>
-          <span style={{
-            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-            background: t.estado === 'realizado' ? '#dcfce7' : '#fef9c3',
-            color: t.estado === 'realizado' ? '#166534' : '#854d0e',
-          }}>
+          <span className="dentista-texto-xpequeno" style={{ fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: t.estado === 'realizado' ? '#dcfce7' : '#fef9c3', color: t.estado === 'realizado' ? '#166534' : '#854d0e' }}>
             {t.estado || 'planificado'}
           </span>
         </div>
       ))}
-      <button onClick={onVerTodos} style={{
-        width: '100%', marginTop: 6, padding: '8px 0', borderRadius: 8,
-        border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb',
-        fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-      }}
+      <button onClick={onVerTodos} className="dentista-label" style={{ width: '100%', marginTop: 6, padding: '8px 0', borderRadius: 8, border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}
         onMouseEnter={(e) => { e.target.style.background = '#2563eb'; e.target.style.color = '#fff'; }}
         onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2563eb'; }}
       >
@@ -203,7 +195,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
 
   const renderField = (label, value, fieldName, canEdit) => (
     <div className={`info-field ${fieldErrors[fieldName] ? 'has-error' : ''}`} key={label}>
-      <span className="info-label">{label}</span>
+      <span className="info-label dentista-label">{label}</span>
       {canEdit
         ? (
           <>

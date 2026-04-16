@@ -120,10 +120,10 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
             borderRadius: 12, padding: '12px 28px',
             boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
           }}>
-            <div style={{ fontSize: 11, color: s.color, marginBottom: 4, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <div className="dentista-label" style={{ color: s.color, marginBottom: 4, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
               {s.label}
             </div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: s.color }}>{s.value}</div>
+            <div className="dentista-titulo" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -139,18 +139,18 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
           placeholder="Buscar paciente..."
           value={filtroPaciente}
           onChange={e => setFiltroPaciente(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13, flex: 1, minWidth: 150 }}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', flex: 1, minWidth: 150 }} className="dentista-texto-pequeno"
         />
         <input
           type="date"
           value={filtroFecha}
           onChange={e => setFiltroFecha(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13 }}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db' }} className="dentista-texto-pequeno"
         />
         <select
           value={filtroEstado}
           onChange={e => setFiltroEstado(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13 }}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db' }} className="dentista-texto-pequeno"
         >
           <option value="">Todos los estados</option>
           <option value="pendiente">Pendiente</option>
@@ -162,7 +162,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
         </select>
         <button
           onClick={() => { setFiltroPaciente(''); setFiltroFecha(''); setFiltroEstado(''); }}
-          style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#f9fafb', fontSize: 13, cursor: 'pointer', color: '#374151' }}
+          style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer', color: '#374151' }} className="dentista-texto-pequeno"
         >
           Limpiar
         </button>
@@ -172,7 +172,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {citasFiltradas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af', background: 'white', borderRadius: 12, border: '1px solid #e9ecef' }}>
-            <i className="fas fa-calendar-times" style={{ fontSize: 36, marginBottom: 12, display: 'block', opacity: 0.4 }}></i>
+            <i className="fas fa-calendar-times dentista-titulo" style={{ marginBottom: 12, display: 'block', opacity: 0.4 }}></i>
             <p style={{ margin: 0 }}>No hay citas que coincidan con los filtros</p>
           </div>
         ) : (
@@ -194,34 +194,34 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                 <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
 
                   <div style={{ minWidth: 130 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#111827' }}>
+                    <div className="dentista-label" style={{ fontWeight: 800, color: '#111827' }}>
                       {formatFechaHora(cita.fecha_hora)}
                     </div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                    <div className="dentista-texto-pequeno" style={{ color: '#6b7280', marginTop: 2 }}>
                       <i className="fas fa-clock" style={{ marginRight: 4 }}></i>
                       {formatDuracion(cita.duracion_estimada)}
                     </div>
                   </div>
 
                   <div style={{ flex: 1, minWidth: 120 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
+                    <div className="dentista-label" style={{ fontWeight: 700, color: '#111827' }}>
                       {cita.paciente_nombre || 'Paciente'}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    <div className="dentista-texto-pequeno" style={{ color: '#6b7280', marginTop: 2 }}>
                       {cita.motivo || 'Consulta general'}
                     </div>
                   </div>
 
                   {cita.id_consultorio && (
-                    <div style={{ fontSize: 12, color: '#6b7280', minWidth: 80 }}>
+                    <div className="dentista-texto-pequeno" style={{ color: '#6b7280', minWidth: 80 }}>
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>
                       Consul. {cita.id_consultorio}
                     </div>
                   )}
 
-                  <span style={{
+                  <span className="dentista-label" style={{
                     background: estObj.bg, color: estObj.color,
-                    padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+                    padding: '4px 12px', borderRadius: 20, fontWeight: 700, whiteSpace: 'nowrap',
                   }}>
                     {estObj.label}
                   </span>
@@ -229,35 +229,35 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {puedeConfirmar && (
                       <button onClick={() => cambiarEstado(cita, 'confirmada')} disabled={isSaving}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dcfce7', color: '#166534', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dcfce7', color: '#166534', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                         <i className="fas fa-check" style={{ marginRight: 4 }}></i>Confirmar
                       </button>
                     )}
                     {puedeCompletar && (
                       <button onClick={() => cambiarEstado(cita, 'completada')} disabled={isSaving}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#f3f4f6', color: '#374151', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#f3f4f6', color: '#374151', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                         <i className="fas fa-check-double" style={{ marginRight: 4 }}></i>Completada
                       </button>
                     )}
                     {puedeReprogram && (
                       <button onClick={() => setCitaReprog(cita)} disabled={isSaving}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#fef9c3', color: '#854d0e', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#fef9c3', color: '#854d0e', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                         <i className="fas fa-calendar-alt" style={{ marginRight: 4 }}></i>Reprogramar
                       </button>
                     )}
                     <button onClick={() => setCitaCambioC(cita)} disabled={isSaving}
-                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>Consultorio
                     </button>
                     {puedeCancelar && (
                       <button onClick={() => handleCancelar(cita)} disabled={isSaving}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#dc2626', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                         <i className="fas fa-times" style={{ marginRight: 4 }}></i>
                         {isSaving ? 'Cancelando...' : 'Cancelar'}
                       </button>
                     )}
                     <button onClick={() => setExpandedId(isOpen ? null : cita.id)}
-                      style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 12, cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', cursor: 'pointer' }} className="dentista-texto-pequeno">
                       <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`}></i>
                     </button>
                   </div>

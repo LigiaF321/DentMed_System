@@ -74,20 +74,20 @@ const AppointmentsList = ({
                 onClick={() => onSelectCita(citaAMostrar)}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="appointment-time">
+                <div className="appointment-time dentista-texto-xpequeno">
                   <i className="fas fa-clock"></i>
                   <span>{formatHora(citaAMostrar.fecha_hora)}</span>
                 </div>
 
                 <div className="appointment-info">
-                  <div className="appointment-patient">
+                  <div className="appointment-patient dentista-texto-pequeno">
                     {citaAMostrar.paciente_nombre}
                   </div>
-                  <div className="appointment-treatment">
+                  <div className="appointment-treatment dentista-texto-xxpequeno">
                     {citaAMostrar.motivo || 'Consulta general'}
                   </div>
                   {citaAMostrar.id_consultorio && (
-                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                    <div className="dentista-label" style={{ color: '#6b7280', marginTop: 2 }}>
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>
                       Consultorio {citaAMostrar.id_consultorio}
                     </div>
@@ -95,10 +95,10 @@ const AppointmentsList = ({
                 </div>
 
                 <div
-                  className={`appointment-status`}
+                  className={`appointment-status dentista-label`}
                   style={{
                     color: estadoColor[String(citaAMostrar.estado || '').toLowerCase()] || '#374151',
-                    fontWeight: 700, fontSize: 11,
+                    fontWeight: 700,
                   }}
                 >
                   {estadoLabel[String(citaAMostrar.estado || '').toLowerCase()] || citaAMostrar.estado}
@@ -107,10 +107,7 @@ const AppointmentsList = ({
             )}
 
             {/* ── Contador de citas del día ── */}
-            <div style={{
-              fontSize: 12, color: '#6b7280', padding: '6px 8px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
+            <div className="dentista-texto-xxpequeno" style={{ color: '#6b7280', padding: '6px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>
                 <i className="fas fa-list" style={{ marginRight: 5 }}></i>
                 {citasLocal.length} cita{citasLocal.length !== 1 ? 's' : ''} este día
@@ -123,16 +120,16 @@ const AppointmentsList = ({
             {/* ── Botón Ver detalles ── */}
             <button
               onClick={onVerDetalles}
-              style={{
-                width: '100%', padding: '10px 0', borderRadius: 10,
-                border: 'none',
-                background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                color: 'white', fontWeight: 800, fontSize: 13,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
-                marginTop: 6,
-              }}
+                        style={{
+                          width: '100%', padding: '10px 0', borderRadius: 10,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                          color: 'white', fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+                          marginTop: 6,
+                        }} className="dentista-label"
             >
               <i className="fas fa-calendar-check"></i> Ver todas las citas
             </button>

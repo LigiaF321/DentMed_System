@@ -16,7 +16,7 @@ function MultiSesionViewer({ sesiones }) {
         <button onClick={() => setIdx(i=>Math.min(sesiones.length-1,i+1))} disabled={idx===sesiones.length-1}
           style={{ padding:'2px 8px', borderRadius:6, border:'1px solid #d1d5db', cursor:'pointer', background:'white' }}>&gt;</button>
       </div>
-      <div style={{ fontSize:13 }}>
+      <div className="dentista-texto-pequeno">
         <strong>Fecha:</strong> {new Date(sesion.fecha).toLocaleDateString()}<br/>
         <strong>Descripción:</strong> {sesion.descripcion}<br/>
         <strong>Observaciones:</strong> {sesion.observaciones}
@@ -141,11 +141,11 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
       <div className="dm20-card" style={{ marginBottom:20 }}>
         <div className="dm20-header">
           <div>
-            <h2 style={{ margin:0, fontSize:22, fontWeight:900, color:'#173067' }}>
+            <h2 className="dentista-titulo" style={{ margin:0, fontWeight:900, color:'#173067' }}>
               <i className="fas fa-tooth" style={{ marginRight:10, color:'#2563eb' }}></i>
               Tratamientos
             </h2>
-            <p style={{ margin:'4px 0 0', fontSize:13, color:'#6b7280' }}>
+            <p className="dentista-texto-pequeno" style={{ margin:'4px 0 0', color:'#6b7280' }}>
               {pacienteNombre
                 ? <>Paciente: <strong style={{ color:'#111827' }}>{pacienteNombre}</strong></>
                 : 'Resumen clínico del día'}
@@ -153,16 +153,16 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
           </div>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <button onClick={()=>setShowNuevoTrat(true)}
-              style={{ padding:'10px 18px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'#fff', border:'none', fontWeight:800, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 6px 16px rgba(37,99,235,0.22)' }}>
+              className="dentista-label" style={{ padding:'10px 18px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'#fff', border:'none', fontWeight:800, cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 6px 16px rgba(37,99,235,0.22)' }}>
               <i className="fas fa-plus"></i> Nuevo tratamiento
             </button>
             <button onClick={handleExportPDF}
-              style={{ padding:'10px 18px', borderRadius:12, background:'#fff', color:'#2563eb', border:'1.5px solid #2563eb', fontWeight:700, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
+              className="dentista-label" style={{ padding:'10px 18px', borderRadius:12, background:'#fff', color:'#2563eb', border:'1.5px solid #2563eb', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
               <i className="fas fa-file-pdf"></i> Exportar PDF
             </button>
           </div>
         </div>
-        {exportMsg && <div style={{ margin:'8px 0 0', color:'#2563eb', fontWeight:700, fontSize:13 }}>{exportMsg}</div>}
+        {exportMsg && <div className="dentista-texto-pequeno" style={{ margin:'8px 0 0', color:'#2563eb', fontWeight:700 }}>{exportMsg}</div>}
       </div>
 
       {/* ── Estadísticas ── */}
@@ -173,13 +173,13 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
             <i className="fas fa-calendar-day" style={{ fontSize:14, color:'#185FA5' }}></i>
           </div>
           <div>
-            <div style={{ fontSize:28, fontWeight:500, color:'var(--color-text-primary)', lineHeight:1 }}>
+            <div className="dentista-titulo-lg" style={{ fontWeight:500, color:'var(--color-text-primary)', lineHeight:1 }}>
               {tratamientosHoy.length}
             </div>
-            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
               Tratamientos hoy
             </div>
-            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>del día actual</div>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-tertiary)', marginTop:2 }}>del día actual</div>
           </div>
         </div>
 
@@ -188,13 +188,13 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
             <i className="fas fa-check-circle" style={{ fontSize:14, color:'#3B6D11' }}></i>
           </div>
           <div>
-            <div style={{ fontSize:28, fontWeight:500, color:'#3B6D11', lineHeight:1 }}>
+            <div className="dentista-titulo-lg" style={{ fontWeight:500, color:'#3B6D11', lineHeight:1 }}>
               {realizadosHoy}
             </div>
-            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
               Realizados hoy
             </div>
-            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>completados</div>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-tertiary)', marginTop:2 }}>completados</div>
           </div>
         </div>
 
@@ -203,13 +203,13 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
             <i className="fas fa-clock" style={{ fontSize:14, color:'#854F0B' }}></i>
           </div>
           <div>
-            <div style={{ fontSize:28, fontWeight:500, color:'#854F0B', lineHeight:1 }}>
+            <div className="dentista-titulo-lg" style={{ fontWeight:500, color:'#854F0B', lineHeight:1 }}>
               {planificadosHoy}
             </div>
-            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
               Planificados hoy
             </div>
-            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>pendientes</div>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-tertiary)', marginTop:2 }}>pendientes</div>
           </div>
         </div>
 
@@ -218,13 +218,13 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
             <i className="fas fa-dollar-sign" style={{ fontSize:14, color:'#0F6E56' }}></i>
           </div>
           <div>
-            <div style={{ fontSize:28, fontWeight:500, color:'#0F6E56', lineHeight:1 }}>
+            <div className="dentista-titulo-lg" style={{ fontWeight:500, color:'#0F6E56', lineHeight:1 }}>
               L. {costoTotal.toFixed(2)}
             </div>
-            <div style={{ fontSize:12, color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:4 }}>
               Costo acumulado
             </div>
-            <div style={{ fontSize:11, color:'var(--color-text-tertiary)', marginTop:2 }}>total registrado</div>
+            <div className="dentista-texto-xpequeno" style={{ color:'var(--color-text-tertiary)', marginTop:2 }}>total registrado</div>
           </div>
         </div>
 
@@ -235,24 +235,24 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
         {!pacienteId && (
           <input placeholder="Filtrar por paciente..."
             value={filtroPaciente} onChange={e=>setFiltroPaciente(e.target.value)}
-            style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13, flex:1, minWidth:150 }} />
+            style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13, flex:1, minWidth:150 }} className="dentista-texto-pequeno" />
         )}
         <select value={filtroTipo} onChange={e=>setFiltroTipo(e.target.value)}
-          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }}>
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db' }} className="dentista-texto-pequeno">
           <option value="">Tipo</option>
           {tiposUnicos.map((t,i)=><option key={i} value={t}>{t}</option>)}
         </select>
         <input type="date" value={filtroDesde} onChange={e=>setFiltroDesde(e.target.value)}
-          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }} />
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db' }} className="dentista-texto-pequeno" />
         <input type="date" value={filtroHasta} onChange={e=>setFiltroHasta(e.target.value)}
-          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db', fontSize:13 }} />
+          style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #d1d5db' }} className="dentista-texto-pequeno" />
         <button onClick={()=>{ setFiltroTipo(''); setFiltroDesde(''); setFiltroHasta(''); setFiltroPaciente(''); }}
-          style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #d1d5db', background:'#f9fafb', fontSize:13, cursor:'pointer', color:'#374151' }}>
+          style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #d1d5db', background:'#f9fafb', cursor:'pointer', color:'#374151' }} className="dentista-texto-pequeno">
           Limpiar filtros
         </button>
         {pacienteId && !pacienteIdProp && (
           <button onClick={()=>{ setPacienteId(null); setPacienteNombre(''); }}
-            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #f87171', background:'#fef2f2', fontSize:13, cursor:'pointer', color:'#dc2626', fontWeight:700 }}>
+            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #f87171', background:'#fef2f2', cursor:'pointer', color:'#dc2626', fontWeight:700 }} className="dentista-texto-pequeno">
             <i className="fas fa-times" style={{ marginRight:4 }}></i>Ver todos
           </button>
         )}
@@ -261,10 +261,10 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
       {/* ── Lista de tratamientos ── */}
       <div className="dm20-card">
         <div style={{ padding:'16px 20px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h3 style={{ margin:0, fontSize:16, fontWeight:800, color:'#173067' }}>
+          <h3 className="dentista-titulo" style={{ margin:0, fontWeight:800, color:'#173067' }}>
             {pacienteId ? `Tratamientos de ${pacienteNombre}` : 'Todos los tratamientos'}
           </h3>
-          <span style={{ fontSize:12, color:'#6b7280' }}>
+          <span className="dentista-texto-xpequeno" style={{ color:'#6b7280' }}>
             {tratamientosFiltrados.length} resultado{tratamientosFiltrados.length!==1?'s':''}
           </span>
         </div>
@@ -277,12 +277,12 @@ const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: paciente
               <div style={{ width:68, height:68, borderRadius:'50%', background:'linear-gradient(135deg,#dbeafe,#eff6ff)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', boxShadow:'0 4px 16px rgba(37,99,235,0.1)' }}>
                 <i className="fas fa-tooth" style={{ fontSize:26, color:'#2563eb', opacity:0.6 }}></i>
               </div>
-              <h4 style={{ margin:'0 0 6px', fontSize:15, fontWeight:700, color:'#374151' }}>Sin tratamientos registrados</h4>
-              <p style={{ margin:'0 0 18px', fontSize:13, color:'#9ca3af' }}>
+              <h4 className="dentista-label" style={{ margin:'0 0 6px', fontWeight:700, color:'#374151' }}>Sin tratamientos registrados</h4>
+              <p className="dentista-texto-pequeno" style={{ margin:'0 0 18px', color:'#9ca3af' }}>
                 {pacienteId ? 'Este paciente aún no tiene tratamientos.' : 'No hay tratamientos para los filtros seleccionados.'}
               </p>
               <button onClick={()=>setShowNuevoTrat(true)}
-                style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', border:'none', fontWeight:700, fontSize:14, cursor:'pointer', boxShadow:'0 4px 14px rgba(37,99,235,0.2)' }}>
+                className="dentista-label" style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', border:'none', fontWeight:700, cursor:'pointer', boxShadow:'0 4px 14px rgba(37,99,235,0.2)' }}>
                 <i className="fas fa-plus" style={{ marginRight:8 }}></i>
                 Registrar primer tratamiento
               </button>

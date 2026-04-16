@@ -10,7 +10,6 @@
   font-weight: 700;
   color: #2563eb;
   margin-bottom: 6px;
-  font-size: 14px;
 }
 .dm17-sugerido-item {
   display: flex;
@@ -36,11 +35,9 @@
   color: #1a2c3e;
 }
 .dm17-sugerido-equipamiento {
-  font-size: 13px;
   color: #64748b;
 }
 .dm17-sugerido-disponibilidad {
-  font-size: 13px;
   font-weight: 600;
 }
 .dm17-sugerido-disponibilidad.disponible {

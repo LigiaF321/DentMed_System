@@ -99,7 +99,7 @@ const ModalTooth = ({ numero, isUpper, condition, onToothClick }) => {
           {svgContent}
         </svg>
       )}
-      <span style={{fontSize:'9px',fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'2px':0,marginBottom:!isUpper?'2px':0}}>
+      <span className="dentista-texto-xpequeno" style={{fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'2px':0,marginBottom:!isUpper?'2px':0}}>
         {numero}
       </span>
       {!isUpper && (
@@ -154,7 +154,7 @@ const OdontogramaModal = ({ teethStates, onToothClick, selectedPaint, onSelectPa
         </div>
       </div>
       {selectedPaint && (
-        <p style={{textAlign:'center',fontSize:'10px',color:'#6B7280',margin:'4px 0 0',fontStyle:'italic'}}>
+        <p className="dentista-texto-xpequeno" style={{textAlign:'center',color:'#6B7280',margin:'4px 0 0',fontStyle:'italic'}}>
           Aplicando{' '}
           <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>
             {PALETTE.find(p=>p.id===selectedPaint)?.label}
@@ -164,7 +164,7 @@ const OdontogramaModal = ({ teethStates, onToothClick, selectedPaint, onSelectPa
       )}
       <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'4px 10px',marginTop:8,padding:'6px 0 0',borderTop:'1px solid #EEF2F7'}}>
         {PALETTE.filter(p=>p.id!=='sano').map(opt=>(
-          <div key={opt.id} style={{display:'flex',alignItems:'center',gap:'3px',fontSize:'10px',color:'#4B5563'}}>
+          <div key={opt.id} className="dentista-texto-xpequeno" style={{display:'flex',alignItems:'center',gap:'3px',color:'#4B5563'}}>
             <span style={{width:'8px',height:'8px',borderRadius:'2px',background:opt.color??'#4B5563',display:'inline-block',flexShrink:0}}/>
             {opt.label}
           </div>
@@ -200,7 +200,7 @@ const BuscadorPaciente = ({ onSelect }) => {
   return (
     <div style={{ position:'relative' }}>
       <div style={{ position:'relative' }}>
-        <i className="fas fa-search" style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af', fontSize:13 }}/>
+        <i className="fas fa-search dentista-texto-pequeno" style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }}/>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -208,7 +208,7 @@ const BuscadorPaciente = ({ onSelect }) => {
           style={{ width:'100%', padding:'10px 12px 10px 34px', border:`1.5px solid ${BRAND.border}`, borderRadius:10, fontSize:14, boxSizing:'border-box', outline:'none' }}
           autoFocus
         />
-        {buscando && <i className="fas fa-spinner fa-spin" style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:BRAND.primary, fontSize:13 }}/>}
+        {buscando && <i className="fas fa-spinner fa-spin dentista-texto-pequeno" style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:BRAND.primary }}/>} 
       </div>
 
       {resultados.length > 0 && (
@@ -221,11 +221,11 @@ const BuscadorPaciente = ({ onSelect }) => {
               onMouseLeave={e => e.currentTarget.style.background = 'white'}
             >
               <div style={{ width:32, height:32, borderRadius:'50%', background:BRAND.gradient, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <i className="fas fa-user" style={{ color:'white', fontSize:13 }}/>
+                <i className="fas fa-user dentista-texto-pequeno" style={{ color:'white' }}/>
               </div>
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#111827' }}>{p.nombre_completo || p.nombre}</div>
-                <div style={{ fontSize:11, color:'#6b7280' }}>{p.telefono || ''} {p.edad ? `· ${p.edad} años` : ''}</div>
+                <div className="dentista-label" style={{ fontWeight:700, color:'#111827' }}>{p.nombre_completo || p.nombre}</div>
+                <div className="dentista-texto-xpequeno" style={{ color:'#6b7280' }}>{p.telefono || ''} {p.edad ? `· ${p.edad} años` : ''}</div>
               </div>
             </div>
           ))}
@@ -233,7 +233,7 @@ const BuscadorPaciente = ({ onSelect }) => {
       )}
 
       {query.trim().length >= 2 && !buscando && resultados.length === 0 && (
-        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'white', borderRadius:10, boxShadow:'0 4px 12px rgba(0,0,0,0.08)', border:'1px solid #e9ecef', zIndex:10, padding:'12px 14px', fontSize:13, color:'#6b7280', textAlign:'center' }}>
+        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'white', borderRadius:10, boxShadow:'0 4px 12px rgba(0,0,0,0.08)', border:'1px solid #e9ecef', zIndex:10, padding:'12px 14px', color:'#6b7280', textAlign:'center' }} className="dentista-texto-pequeno">
           No se encontraron pacientes
         </div>
       )}
@@ -381,12 +381,12 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
               ) : (
                 <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:BRAND.light, borderRadius:10, border:`1.5px solid ${BRAND.border}` }}>
                   <div style={{ width:32, height:32, borderRadius:'50%', background:BRAND.gradient, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <i className="fas fa-user" style={{ color:'white', fontSize:13 }}/>
+                    <i className="fas fa-user dentista-texto-pequeno" style={{ color:'white' }}/>
                   </div>
-                  <span style={{ fontWeight:700, fontSize:14, color:'#111827', flex:1 }}>{pacienteNombre}</span>
+                  <span className="dentista-label" style={{ fontWeight:700, color:'#111827', flex:1 }}>{pacienteNombre}</span>
                   <button type="button"
                     onClick={() => { setPacienteIdLocal(null); setPacienteNombreLocal(''); }}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', fontSize:18, lineHeight:1 }}>×</button>
+                    style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', lineHeight:1 }}>×</button>
                 </div>
               )}
             </div>
@@ -397,7 +397,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             <>
               {/* Paciente seleccionado por prop — mostrar nombre */}
               {pacienteIdProp && pacienteNombre && (
-                <div style={{ padding:'8px 14px', background:BRAND.light, borderRadius:10, border:`1.5px solid ${BRAND.border}`, fontSize:13, color:BRAND.primary, fontWeight:700, marginBottom:4 }}>
+                <div style={{ padding:'8px 14px', background:BRAND.light, borderRadius:10, border:`1.5px solid ${BRAND.border}`, color:BRAND.primary, fontWeight:700, marginBottom:4 }} className="dentista-texto-pequeno">
                   <i className="fas fa-user" style={{ marginRight:8 }}/>
                   {pacienteNombre}
                 </div>
@@ -433,7 +433,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
               {/* Dientes afectados */}
               <div>
                 <p style={sectionTitle}>Dientes afectados</p>
-                <p style={{fontSize:12,color:'#6b7280',margin:'0 0 8px'}}>
+                <p className="dentista-texto-xpequeno" style={{color:'#6b7280',margin:'0 0 8px'}}>
                   Selecciona un color y haz clic en los dientes afectados
                 </p>
                 <OdontogramaModal
@@ -444,21 +444,21 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 />
                 {dientesMarcados.length > 0 && (
                   <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:8,alignItems:'center'}}>
-                    <span style={{fontSize:11,color:'#6b7280'}}>Marcados:</span>
+                    <span className="dentista-texto-xpequeno" style={{color:'#6b7280'}}>Marcados:</span>
                     {dientesMarcados.map(([n, est]) => {
                       const pal = PALETTE.find(p=>p.id===est);
                       return (
-                        <span key={n} style={{background:pal?.color?pal.color+'22':BRAND.light,color:pal?.color??BRAND.primary,padding:'2px 8px',borderRadius:20,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',gap:4,border:`1px solid ${pal?.color?pal.color+'44':BRAND.border}`}}>
+                        <span key={n} className="dentista-texto-xpequeno" style={{background:pal?.color?pal.color+'22':BRAND.light,color:pal?.color??BRAND.primary,padding:'2px 8px',borderRadius:20,fontWeight:700,display:'flex',alignItems:'center',gap:4,border:`1px solid ${pal?.color?pal.color+'44':BRAND.border}`}}>
                           {n} · {pal?.label}
                           <button type="button"
                             onClick={()=>setForm(prev=>{const e={...prev.dienteEstados};delete e[String(n)];return{...prev,dienteEstados:e,dientes:Object.keys(e).map(Number)};})}
-                            style={{background:'none',border:'none',cursor:'pointer',color:pal?.color??BRAND.primary,fontSize:13,padding:0,lineHeight:1}}>×</button>
+                            style={{background:'none',border:'none',cursor:'pointer',color:pal?.color??BRAND.primary,padding:0,lineHeight:1}}>×</button>
                         </span>
                       );
                     })}
                     <button type="button"
                       onClick={()=>setForm(prev=>({...prev,dienteEstados:{},dientes:[]}))}
-                      style={{fontSize:11,color:'#dc2626',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',padding:0}}>
+                      className="dentista-texto-xpequeno" style={{color:'#dc2626',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',padding:0}}>
                       Limpiar todo
                     </button>
                   </div>
@@ -485,13 +485,13 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                       <div key={m.id} className="nt-mat-row">
                         <span>{m.nombre}</span>
                         <input type="number" min={1} value={m.cantidad} onChange={e=>cambiarCant(m.id,e.target.value)}/>
-                        <span style={{fontSize:12,color:'#6b7280'}}>{m.unidad}</span>
+                        <span className="dentista-texto-xpequeno" style={{color:'#6b7280'}}>{m.unidad}</span>
                         <button type="button" onClick={()=>quitarMat(m.id)}>×</button>
                       </div>
                     ))}
                   </div>
                 )}
-                {matSelec.length===0&&!queryMat&&<p style={{fontSize:12,color:'#9ca3af',margin:'6px 0 0'}}>Busca y agrega materiales utilizados en este tratamiento.</p>}
+                {matSelec.length===0&&!queryMat&&<p className="dentista-texto-xpequeno" style={{color:'#9ca3af',margin:'6px 0 0'}}>Busca y agrega materiales utilizados en este tratamiento.</p>}
               </div>
 
               {/* Costo */}
@@ -557,13 +557,13 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
 
           {/* Si no hay paciente seleccionado, mostrar mensaje */}
           {!pacienteId && pacienteIdProp === undefined && (
-            <div style={{ textAlign:'center', padding:'24px', color:'#9ca3af', fontSize:13 }}>
+            <div style={{ textAlign:'center', padding:'24px', color:'#9ca3af' }} className="dentista-texto-pequeno">
               <i className="fas fa-user-circle" style={{ fontSize:32, display:'block', marginBottom:8, opacity:0.4 }}/>
               Busca y selecciona un paciente para continuar
             </div>
           )}
 
-          {error && <div className="nt-error"><i className="fas fa-exclamation-circle"></i> {error}</div>}
+          {error && <div className="nt-error dentista-texto-xpequeno"><i className="fas fa-exclamation-circle"></i> {error}</div>}
 
           <div className="nt-actions">
             <button type="button" className="nt-btn nt-btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>

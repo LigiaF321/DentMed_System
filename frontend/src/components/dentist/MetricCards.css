@@ -43,13 +43,11 @@
 }
 
 .metric-value {
-  font-size: 28px;
   font-weight: 700;
   color: #1a2c3e;
 }
 
 .metric-label {
-  font-size: 13px;
   color: #6c757d;
 }
 
