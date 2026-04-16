@@ -49,8 +49,8 @@ const MetricCards = ({ citasHoy, pacientesVistos, siguienteCita, tratamientosPen
             <i className={`fas ${metric.icon}`}></i>
           </div>
           <div className="metric-content">
-            <span className="metric-value">{metric.value}</span>
-            <span className="metric-label">{metric.label}</span>
+            <span className="metric-value dentista-titulo-lg">{metric.value}</span>
+            <span className="metric-label dentista-texto-xpequeno">{metric.label}</span>
           </div>
         </div>
       ))}

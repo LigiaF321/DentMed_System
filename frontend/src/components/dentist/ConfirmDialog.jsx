@@ -21,12 +21,12 @@ const ConfirmDialog = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="confirm-dialog-header">
-          <div className={`confirm-dialog-icon ${variant}`}>
+          <div className={`confirm-dialog-icon ${variant} dentista-titulo-md`}>
             <i className="fas fa-exclamation-triangle"></i>
           </div>
           <div>
-            <h3>{title}</h3>
-            <p>{message}</p>
+            <h3 className="dentista-titulo">{title}</h3>
+            <p className="dentista-texto-normal">{message}</p>
           </div>
         </div>
 

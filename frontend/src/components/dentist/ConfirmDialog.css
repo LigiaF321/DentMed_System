@@ -32,7 +32,6 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 18px;
 }
 
 .confirm-dialog-icon.danger {
@@ -47,14 +46,12 @@
 
 .confirm-dialog-header h3 {
   margin: 0;
-  font-size: 19px;
   color: #1a2c3e;
 }
 
 .confirm-dialog-header p {
   margin: 8px 0 0;
   color: #64748b;
-  font-size: 14px;
   line-height: 1.5;
 }
 
