@@ -41,23 +41,42 @@ const formatearFecha = (valor) => {
   try { return new Date(valor).toLocaleDateString('es-HN'); } catch { return '-'; }
 };
 
-// ── Exportar expediente como PDF ──────────────────────────────────────────────
+// ── Exportar expediente como PDF con colores de marca ────────────────────────
 const exportarExpedientePDF = (paciente) => {
-  const nombre = paciente.paciente_nombre || paciente.nombre_completo || paciente.nombre || 'Paciente';
-  const edad = paciente.edad ?? '-';
-  const sexo = paciente.sexo || paciente.genero || 'No especificado';
-  const tel = paciente.telefono || 'No registrado';
-  const email = paciente.email || paciente.correo || paciente.correo_electronico || 'No registrado';
-  const dir = paciente.direccion || 'No registrada';
-  const seguro = paciente.seguro_medico || paciente.aseguradora || 'No registrado';
-  const contactoEmerg = paciente.contacto_emergencia || paciente.nombre_contacto_emergencia || 'No registrado';
-  const telEmerg = paciente.telefono_emergencia || paciente.contacto_emergencia_telefono || 'No registrado';
+  const nombre     = paciente.paciente_nombre || paciente.nombre_completo || paciente.nombre || 'Paciente';
+  const edad       = paciente.edad ?? '-';
+  const sexo       = paciente.sexo || paciente.genero || 'No especificado';
+  const tel        = paciente.telefono || 'No registrado';
+  const email      = paciente.email || paciente.correo || paciente.correo_electronico || 'No registrado';
+  const dir        = paciente.direccion || 'No registrada';
+  const seguro     = paciente.seguro_medico || paciente.aseguradora || 'No registrado';
+  const contactoE  = paciente.contacto_emergencia || paciente.nombre_contacto_emergencia || 'No registrado';
+  const telE       = paciente.telefono_emergencia || paciente.contacto_emergencia_telefono || 'No registrado';
+  const enfermedades = String(paciente.enfermedades || paciente.condiciones_cronicas || '') || '';
+  const medicamentos = String(paciente.medicamentos || paciente.medicamentos_actuales || '') || '';
+  const alergias     = String(paciente.alergias || '') || '';
 
-  const enfermedades = (paciente.enfermedades || paciente.condiciones_cronicas || '').toString() || 'Ninguna';
-  const medicamentos = (paciente.medicamentos || paciente.medicamentos_actuales || '').toString() || 'Ninguno';
-  const alergias = (paciente.alergias || '').toString() || 'Ninguna';
+  // Odontograma — representación textual de dientes marcados
+  const odontograma = paciente.odontograma || {};
+  const odontogramaHtml = Object.keys(odontograma).length > 0
+    ? Object.entries(odontograma).map(([n, est]) => {
+        const colores = { caries:'#E53935', planificado:'#FB8C00', obturado:'#43A047', tratamiento:'#1E88E5', extraido:'#757575' };
+        const labels  = { caries:'Caries', planificado:'Planificado', obturado:'Obturado', tratamiento:'Tratamiento', extraido:'Extraído' };
+        const color   = colores[est] || '#6b7280';
+        return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}22;color:${color};border:1px solid ${color}44;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;">${n} · ${labels[est]||est}</span>`;
+      }).join('')
+    : '<span style="font-size:12px;color:#9ca3af;">Sin registros en el odontograma</span>';
 
-  const fecha = new Date().toLocaleDateString('es-HN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const fecha = new Date().toLocaleDateString('es-HN', { day:'2-digit', month:'long', year:'numeric' });
+
+  const chips = (val, tipo='normal') => {
+    if (!val || val.trim() === '') return `<span style="color:#9ca3af;font-size:12px;">Sin registros</span>`;
+    const bg    = tipo==='danger' ? '#fee2e2' : '#eff6ff';
+    const color = tipo==='danger' ? '#dc2626' : '#2563eb';
+    return val.split(',').map(v=>v.trim()).filter(Boolean)
+      .map(v=>`<span style="display:inline-block;background:${bg};color:${color};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;margin:2px;">${v}</span>`)
+      .join('');
+  };
 
   const html = `
 <!DOCTYPE html>
@@ -67,34 +86,48 @@ const exportarExpedientePDF = (paciente) => {
   <title>Expediente — ${nombre}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; color:#1a2c3e; background:white; padding:32px; }
-    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #2563eb; padding-bottom:16px; margin-bottom:24px; }
-    .clinic-name { font-size:22px; font-weight:900; color:#2563eb; }
+    body { font-family:'Segoe UI',Arial,sans-serif; color:#1a2c3e; background:white; padding:32px; font-size:14px; }
+
+    .header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:18px; margin-bottom:24px; position:relative; }
+    .header::after { content:''; display:block; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(135deg,#4f46e5,#db2777); border-radius:2px; }
+    .clinic-name { font-size:24px; font-weight:900; background:linear-gradient(135deg,#4f46e5,#db2777); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .clinic-sub  { font-size:12px; color:#6b7280; margin-top:2px; }
-    .doc-title   { text-align:right; }
-    .doc-title h1{ font-size:18px; font-weight:800; color:#111827; }
-    .doc-title p { font-size:11px; color:#6b7280; margin-top:3px; }
-    .patient-card { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border-left: 5px solid #2563eb; }
-    .patient-name { font-size:20px; font-weight:900; color:#1e3a5f; }
-    .patient-meta { font-size:12px; color:#4b6a8a; margin-top:4px; }
-    .section { margin-bottom:20px; }
-    .section-title { font-size:13px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid #dbeafe; padding-bottom:6px; margin-bottom:12px; }
+    .doc-title h1 { font-size:18px; font-weight:800; color:#111827; text-align:right; }
+    .doc-title p  { font-size:11px; color:#6b7280; text-align:right; margin-top:3px; }
+
+    .patient-card { background:linear-gradient(135deg,#f0effe,#fdf2f8); border-radius:14px; padding:18px 22px; margin-bottom:22px; border-left:5px solid #4f46e5; }
+    .patient-name { font-size:22px; font-weight:900; color:#1e1b4b; }
+    .patient-meta { font-size:12px; color:#6b7280; margin-top:5px; display:flex; gap:16px; flex-wrap:wrap; }
+    .patient-meta span { display:flex; align-items:center; gap:4px; }
+
+    .alert-box { background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:10px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .alert-label { font-size:12px; font-weight:800; color:#dc2626; white-space:nowrap; }
+
+    .section { margin-bottom:22px; }
+    .section-title { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; padding-bottom:7px; margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:2px solid transparent; border-image:linear-gradient(135deg,#4f46e5,#db2777) 1; }
+    .section-title-dot { width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#4f46e5,#db2777); flex-shrink:0; }
+
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .field   { background:#f8fafc; border-radius:8px; padding:10px 14px; border:1px solid #e2e8f0; }
-    .field-label { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
+    .field { background:#f8fafc; border-radius:10px; padding:10px 14px; border:1px solid #e5e7eb; }
+    .field-label { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
     .field-value { font-size:14px; font-weight:600; color:#111827; }
-    .alert-box { background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-    .alert-label { font-size:12px; font-weight:800; color:#dc2626; }
-    .alert-value { font-size:13px; color:#7f1d1d; }
-    .chip { display:inline-block; background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; margin:2px; }
-    .chip.danger { background:#fee2e2; color:#dc2626; }
-    .footer { margin-top:32px; padding-top:16px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:11px; color:#9ca3af; }
-    .sign-area { margin-top:40px; display:flex; justify-content:flex-end; }
-    .sign-box { text-align:center; width:220px; border-top:1px solid #374151; padding-top:6px; font-size:11px; color:#374151; }
-    @media print { body { padding:20px; } @page { margin:1.5cm; } }
+
+    .odontograma-box { background:#f0effe; border-radius:10px; padding:14px 16px; border:1px solid #c4b5fd; margin-top:10px; }
+    .odontograma-title { font-size:11px; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+
+    .sign-area { margin-top:36px; display:flex; justify-content:flex-end; }
+    .sign-box { text-align:center; width:240px; }
+    .sign-line { border-top:1px solid #374151; padding-top:8px; font-size:11px; color:#374151; }
+
+    .footer { margin-top:24px; padding-top:14px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:10px; color:#9ca3af; }
+    .footer-brand { font-weight:700; background:linear-gradient(135deg,#4f46e5,#db2777); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    @media print { body{padding:20px;} @page{margin:1.5cm;} }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <div class="header">
     <div>
       <div class="clinic-name">DentMed</div>
@@ -105,60 +138,80 @@ const exportarExpedientePDF = (paciente) => {
       <p>Generado el ${fecha}</p>
     </div>
   </div>
+
+  <!-- Paciente -->
   <div class="patient-card">
     <div class="patient-name">${nombre}</div>
     <div class="patient-meta">
-      Edad: ${edad} años &nbsp;·&nbsp; Sexo: ${sexo}
-      ${paciente.id || paciente.id_paciente ? `&nbsp;·&nbsp; ID: ${paciente.id || paciente.id_paciente}` : ''}
+      <span>Edad: <strong>${edad} años</strong></span>
+      <span>Sexo: <strong>${sexo}</strong></span>
+      ${paciente.id||paciente.id_paciente?`<span>ID: <strong>${paciente.id||paciente.id_paciente}</strong></span>`:''}
     </div>
   </div>
-  ${alergias !== 'Ninguna' ? `<div class="alert-box"><span class="alert-label">⚠ ALERGIAS:</span><span class="alert-value">${alergias}</span></div>` : ''}
+
+  <!-- Alerta de alergias -->
+  ${alergias ? `<div class="alert-box"><span class="alert-label">⚠ ALERGIAS:</span><div style="font-size:13px;color:#7f1d1d;">${alergias}</div></div>` : ''}
+
+  <!-- Información Personal -->
   <div class="section">
-    <div class="section-title">Información Personal</div>
+    <div class="section-title"><div class="section-title-dot"></div>Información Personal</div>
     <div class="grid-2">
       <div class="field"><div class="field-label">Correo electrónico</div><div class="field-value">${email}</div></div>
       <div class="field"><div class="field-label">Teléfono</div><div class="field-value">${tel}</div></div>
       <div class="field"><div class="field-label">Dirección</div><div class="field-value">${dir}</div></div>
       <div class="field"><div class="field-label">Seguro médico</div><div class="field-value">${seguro}</div></div>
-      <div class="field"><div class="field-label">Contacto emergencia</div><div class="field-value">${contactoEmerg}</div></div>
-      <div class="field"><div class="field-label">Teléfono emergencia</div><div class="field-value">${telEmerg}</div></div>
+      <div class="field"><div class="field-label">Contacto de emergencia</div><div class="field-value">${contactoE}</div></div>
+      <div class="field"><div class="field-label">Teléfono emergencia</div><div class="field-value">${telE}</div></div>
     </div>
   </div>
+
+  <!-- Historial Médico -->
   <div class="section">
-    <div class="section-title">Historial Médico</div>
+    <div class="section-title"><div class="section-title-dot"></div>Historial Médico</div>
     <div class="grid-2">
       <div class="field">
         <div class="field-label">Enfermedades / Condiciones crónicas</div>
-        <div class="field-value" style="margin-top:4px">
-          ${enfermedades.split(',').map(e => e.trim()).filter(Boolean).map(e => `<span class="chip">${e}</span>`).join('') || '<span style="color:#9ca3af;font-size:12px">Sin registros</span>'}
-        </div>
+        <div style="margin-top:6px">${chips(enfermedades)}</div>
       </div>
       <div class="field">
         <div class="field-label">Medicamentos actuales</div>
-        <div class="field-value" style="margin-top:4px">
-          ${medicamentos.split(',').map(m => m.trim()).filter(Boolean).map(m => `<span class="chip">${m}</span>`).join('') || '<span style="color:#9ca3af;font-size:12px">Sin registros</span>'}
-        </div>
+        <div style="margin-top:6px">${chips(medicamentos)}</div>
       </div>
       <div class="field" style="grid-column:1/-1">
         <div class="field-label">Alergias conocidas</div>
-        <div class="field-value" style="margin-top:4px">
-          ${alergias.split(',').map(a => a.trim()).filter(Boolean).map(a => `<span class="chip danger">${a}</span>`).join('') || '<span style="color:#9ca3af;font-size:12px">Ninguna registrada</span>'}
-        </div>
+        <div style="margin-top:6px">${chips(alergias,'danger')}</div>
       </div>
     </div>
   </div>
-  <div class="sign-area">
-    <div class="sign-box">Dr./Dra. ____________________________<br/>Firma y sello del profesional</div>
+
+  <!-- Odontograma -->
+  <div class="section">
+    <div class="section-title"><div class="section-title-dot"></div>Estado del Odontograma</div>
+    <div class="odontograma-box">
+      <div class="odontograma-title">Dientes con condición registrada</div>
+      <div style="line-height:2">${odontogramaHtml}</div>
+    </div>
   </div>
+
+  <!-- Firma -->
+  <div class="sign-area">
+    <div class="sign-box">
+      <div style="height:40px"></div>
+      <div class="sign-line">Dr./Dra. ____________________________<br/>Firma y sello del profesional</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <div class="footer">
-    <span>DentMed — Sistema de Gestión Clínica</span>
+    <span class="footer-brand">DentMed</span>
     <span>Expediente generado el ${fecha} · Documento confidencial</span>
   </div>
+
   <script>window.onload = () => { window.print(); }</script>
 </body>
 </html>`;
 
-  const ventana = window.open('', '_blank', 'width=900,height=700');
+  const ventana = window.open('', '_blank', 'width=960,height=720');
   if (ventana) { ventana.document.write(html); ventana.document.close(); }
 };
 
@@ -209,19 +262,19 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
       <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' }}>
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
           <h3 className="dentista-titulo" style={{ margin: 0, color: '#111827' }}>
-            <i className="fas fa-user-plus" style={{ marginRight: 8, color: '#2563eb' }}></i>
+            <i className="fas fa-user-plus" style={{ marginRight: 8, color: '#4f46e5' }}></i>
             Nuevo paciente
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }} className="dentista-titulo">×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 22 }}>×</button>
         </div>
         <form onSubmit={handleSubmit} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p className="dentista-label" style={{ margin: 0, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
+          <p className="dentista-label" style={{ margin: 0, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos personales
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label className="dentista-label" style={{ color: '#374151' }}>Nombre completo <span style={{ color: '#dc2626' }}>*</span></label>
-              <input name="nombre" value={form.nombre} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10 }} />
+              <input name="nombre" value={form.nombre} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
             </div>
             {[
               { label: 'Teléfono', name: 'telefono', type: 'text' },
@@ -230,12 +283,12 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
             ].map(f => (
               <div key={f.name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label className="dentista-label" style={{ color: '#374151' }}>{f.label}</label>
-                <input type={f.type} name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10 }} />
+                <input type={f.type} name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
               </div>
             ))}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label className="dentista-label" style={{ color: '#374151' }}>Sexo</label>
-              <select name="sexo" value={form.sexo} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10 }}>
+              <select name="sexo" value={form.sexo} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }}>
                 <option value="">Seleccione</option>
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
@@ -244,10 +297,10 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
             </div>
             <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label className="dentista-label" style={{ color: '#374151' }}>Dirección</label>
-              <input name="direccion" value={form.direccion} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10 }} />
+              <input name="direccion" value={form.direccion} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
             </div>
           </div>
-          <p className="dentista-label" style={{ margin: 0, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
+          <p className="dentista-label" style={{ margin: 0, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e0ebff', paddingBottom: 6 }}>
             Datos médicos
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -259,7 +312,7 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
             ].map(f => (
               <div key={f.name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label className="dentista-label" style={{ color: '#374151' }}>{f.label}</label>
-                <input name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10 }} />
+                <input name={f.name} value={form[f.name]} onChange={handleChange} style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 14 }} />
               </div>
             ))}
           </div>
@@ -269,10 +322,10 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
-            <button type="button" onClick={onClose} className="dentista-texto-normal" style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="dentista-texto-normal" style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#2563eb,#3b82f6)', color: 'white', fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+            <button type="submit" disabled={saving} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#4f46e5,#db2777)', color: 'white', fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.6 : 1, fontSize: 14 }}>
               {saving ? 'Guardando...' : 'Guardar paciente'}
             </button>
           </div>
@@ -314,7 +367,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   }, []);
 
   useEffect(() => {
-    const hasSearch = q.trim().length > 0;
+    const hasSearch  = q.trim().length > 0;
     const hasFilters = Object.values(filtros).some((v) => String(v).trim() !== '');
 
     if (!hasSearch && !hasFilters) {
@@ -355,9 +408,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   }, [q, page, limit, filtros, reloadFlag]);
 
   const handleFiltroChange = (field, value) => { setPage(1); setFiltros((prev) => ({ ...prev, [field]: value })); };
-
-  const limpiarFiltros = () => { setPage(1); setFiltros({ ...filtrosIniciales }); };
-
+  const limpiarFiltros     = () => { setPage(1); setFiltros({ ...filtrosIniciales }); };
   const aplicarBusquedaReciente = (item) => { setPage(1); setQ(item.q || ''); setFiltros(item.filtros || filtrosIniciales); };
 
   const handleSelectPaciente = async (paciente) => {
@@ -379,7 +430,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     }
   };
 
-  // ── Guardar odontograma del paciente ─────────────────────────────────────
+  // ── Guardar odontograma — usa { estados } para que coincida con Odontograma.jsx
   const handleGuardarOdontograma = async (condiciones) => {
     const id = pacienteSeleccionado?.id_paciente || pacienteSeleccionado?.id;
     if (!id) throw new Error('No se encontró el ID del paciente');
@@ -387,10 +438,12 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     const res = await fetch(`http://localhost:3000/api/pacientes/${id}/odontograma`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ odontograma: condiciones }),
+      body: JSON.stringify({ estados: condiciones }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || 'Error al guardar odontograma');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.message || 'Error al guardar odontograma');
+    }
     setPacienteSeleccionado(prev => ({ ...prev, odontograma: condiciones }));
   };
 
@@ -398,47 +451,30 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
   if (pacienteSeleccionado) {
     return (
       <div className="dm20-page">
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
-          padding: '12px 20px', background: 'white', borderRadius: 16,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e9ecef',
-          flexWrap: 'wrap',
-        }}>
-          <button
-            onClick={() => setPacienteSeleccionado(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#2563eb', fontWeight: 700 }} className="dentista-label"
-          >
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, padding:'12px 20px', background:'white', borderRadius:16, boxShadow:'0 2px 8px rgba(0,0,0,0.06)', border:'1px solid #e9ecef', flexWrap:'wrap' }}>
+          <button onClick={()=>setPacienteSeleccionado(null)}
+            style={{ background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'#4f46e5', fontWeight:700 }} className="dentista-label">
             <i className="fas fa-arrow-left"></i> Volver a lista
           </button>
-          <span style={{ color: '#d1d5db' }}>|</span>
-          <span className="dentista-texto-pequeno" style={{ color: '#6b7280' }}>Mis Pacientes</span>
-          <span style={{ color: '#d1d5db' }}>›</span>
-          <span className="dentista-label" style={{ fontWeight: 700, color: '#111827', flex: 1 }}>
+          <span style={{ color:'#d1d5db' }}>|</span>
+          <span className="dentista-texto-pequeno" style={{ color:'#6b7280' }}>Mis Pacientes</span>
+          <span style={{ color:'#d1d5db' }}>›</span>
+          <span className="dentista-label" style={{ fontWeight:700, color:'#111827', flex:1 }}>
             {pacienteSeleccionado.paciente_nombre || pacienteSeleccionado.nombre_completo || 'Expediente'}
           </span>
-          <button
-            onClick={() => exportarExpedientePDF(pacienteSeleccionado)}
-            className="dentista-label"
-            style={{ padding: '8px 16px', borderRadius: 10, background: 'white', color: '#dc2626', border: '1.5px solid #dc2626', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#dc2626'; e.currentTarget.style.color = 'white'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#dc2626'; }}
-          >
+          <button onClick={()=>exportarExpedientePDF(pacienteSeleccionado)} className="dentista-label"
+            style={{ padding:'8px 16px', borderRadius:10, background:'white', color:'#dc2626', border:'1.5px solid #dc2626', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}
+            onMouseEnter={e=>{e.currentTarget.style.background='#dc2626';e.currentTarget.style.color='white';}}
+            onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color='#dc2626';}}>
             <i className="fas fa-file-pdf"></i> Exportar expediente
           </button>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <Odontograma
-            paciente={pacienteSeleccionado}
-            onGuardar={handleGuardarOdontograma}
-          />
+          <Odontograma paciente={pacienteSeleccionado} onGuardar={handleGuardarOdontograma}/>
         </div>
 
-        <PatientTabs
-          paciente={pacienteSeleccionado}
-          onVerTodos={() => { }}
-          modoPanel={false}
-        />
+        <PatientTabs paciente={pacienteSeleccionado} onVerTodos={()=>{}} modoPanel={false}/>
       </div>
     );
   }
@@ -452,31 +488,24 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
             <h2>Mis Pacientes</h2>
             <p>Busca por nombre, apellido, teléfono o documento y aplica filtros avanzados.</p>
           </div>
-          <button
-            onClick={() => setShowNuevoPaciente(true)}
-            className="dentista-label"
-            style={{ padding: '10px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#2563eb,#3b82f6)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 16px rgba(37,99,235,0.22)', whiteSpace: 'nowrap' }}
-          >
+          <button onClick={()=>setShowNuevoPaciente(true)} className="dentista-label"
+            style={{ padding:'10px 18px', borderRadius:12, background:'linear-gradient(135deg,#4f46e5,#db2777)', color:'#fff', border:'none', fontWeight:800, cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 6px 16px rgba(79,70,229,0.22)', whiteSpace:'nowrap' }}>
             <i className="fas fa-user-plus"></i> Nuevo paciente
           </button>
         </div>
 
         <div className="dm20-search-wrap">
-          <input
-            type="text"
-            className="dm20-search-input"
+          <input type="text" className="dm20-search-input"
             placeholder="Buscar por nombre, apellido, teléfono o documento..."
-            value={q}
-            onChange={(e) => { setPage(1); setQ(e.target.value); }}
-          />
+            value={q} onChange={(e) => { setPage(1); setQ(e.target.value); }}/>
         </div>
 
         <div className="dm20-filters">
-          <input type="number" placeholder="Edad mín." value={filtros.edad_min} onChange={(e) => handleFiltroChange('edad_min', e.target.value)} />
-          <input type="number" placeholder="Edad máx." value={filtros.edad_max} onChange={(e) => handleFiltroChange('edad_max', e.target.value)} />
-          <input type="date" value={filtros.fecha_ultima_visita_desde} onChange={(e) => handleFiltroChange('fecha_ultima_visita_desde', e.target.value)} />
-          <input type="date" value={filtros.fecha_ultima_visita_hasta} onChange={(e) => handleFiltroChange('fecha_ultima_visita_hasta', e.target.value)} />
-          <select value={filtros.activo} onChange={(e) => handleFiltroChange('activo', e.target.value)}>
+          <input type="number" placeholder="Edad mín." value={filtros.edad_min} onChange={(e)=>handleFiltroChange('edad_min',e.target.value)}/>
+          <input type="number" placeholder="Edad máx." value={filtros.edad_max} onChange={(e)=>handleFiltroChange('edad_max',e.target.value)}/>
+          <input type="date" value={filtros.fecha_ultima_visita_desde} onChange={(e)=>handleFiltroChange('fecha_ultima_visita_desde',e.target.value)}/>
+          <input type="date" value={filtros.fecha_ultima_visita_hasta} onChange={(e)=>handleFiltroChange('fecha_ultima_visita_hasta',e.target.value)}/>
+          <select value={filtros.activo} onChange={(e)=>handleFiltroChange('activo',e.target.value)}>
             <option value="">Estado</option>
             <option value="true">Activo</option>
             <option value="false">Inactivo</option>
@@ -488,9 +517,9 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <div className="dm20-section">
             <h4>Búsquedas recientes</h4>
             <div className="dm20-tags">
-              {busquedasRecientes.map((item, index) => (
-                <button key={`${item.q}-${index}`} className="dm20-tag" onClick={() => aplicarBusquedaReciente(item)}>
-                  {item.q || 'Filtros avanzados'}
+              {busquedasRecientes.map((item,index)=>(
+                <button key={`${item.q}-${index}`} className="dm20-tag" onClick={()=>aplicarBusquedaReciente(item)}>
+                  {item.q||'Filtros avanzados'}
                 </button>
               ))}
             </div>
@@ -523,23 +552,21 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
                 </tr>
               </thead>
               <tbody>
-                {rows.map((paciente) => (
+                {rows.map((paciente)=>(
                   <tr key={paciente.id}>
-                    <td>{paciente.nombre_completo || paciente.nombre}</td>
-                    <td>{paciente.documento || '-'}</td>
-                    <td>{paciente.telefono || '-'}</td>
-                    <td>{paciente.edad ?? '-'}</td>
+                    <td>{paciente.nombre_completo||paciente.nombre}</td>
+                    <td>{paciente.documento||'-'}</td>
+                    <td>{paciente.telefono||'-'}</td>
+                    <td>{paciente.edad??'-'}</td>
                     <td>{formatearFecha(paciente.ultima_visita)}</td>
                     <td>
-                      <span className={`dm20-status-badge ${String(paciente.activo_texto).toLowerCase() === 'activo' ? 'activo' : 'inactivo'}`}>
-                        {paciente.activo_texto || '-'}
+                      <span className={`dm20-status-badge ${String(paciente.activo_texto).toLowerCase()==='activo'?'activo':'inactivo'}`}>
+                        {paciente.activo_texto||'-'}
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => handleSelectPaciente(paciente)}
-                        style={{ padding: '5px 14px', borderRadius: 8, border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
+                      <button onClick={()=>handleSelectPaciente(paciente)}
+                        style={{ padding:'5px 14px', borderRadius:8, border:'1.5px solid #4f46e5', background:'transparent', color:'#4f46e5', fontWeight:700, fontSize:12, cursor:'pointer', whiteSpace:'nowrap' }}>
                         Ver expediente
                       </button>
                     </td>
@@ -551,21 +578,14 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
         </div>
 
         <div className="dm20-pagination">
-          <button disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>Anterior</button>
+          <button disabled={page<=1} onClick={()=>setPage(prev=>prev-1)}>Anterior</button>
           <span>Página {page} de {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage((prev) => prev + 1)}>Siguiente</button>
+          <button disabled={page>=totalPages} onClick={()=>setPage(prev=>prev+1)}>Siguiente</button>
         </div>
       </div>
 
-      <NuevoPacienteModal
-        open={showNuevoPaciente}
-        onClose={() => setShowNuevoPaciente(false)}
-        onCreado={() => {
-          setShowNuevoPaciente(false);
-          setPage(1);
-          setReloadFlag(prev => prev + 1);
-        }}
-      />
+      <NuevoPacienteModal open={showNuevoPaciente} onClose={()=>setShowNuevoPaciente(false)}
+        onCreado={()=>{ setShowNuevoPaciente(false); setPage(1); setReloadFlag(prev=>prev+1); }}/>
     </div>
   );
 };

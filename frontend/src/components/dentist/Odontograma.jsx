@@ -34,12 +34,12 @@ const DEFS = {
   lower_molar:    { W:40, H:67, vW:52, vH:87, crown:`M2,33 Q1,23 2,7 Q2,0 11,0 Q18,15 26,1 Q34,15 40,1 Q49,0 50,7 Q51,23 50,33 Q26,43 2,33Z`, roots:[`M3,35 Q13,43 21,43 L19,79 Q12,85 4,81Z`,`M29,43 Q39,43 49,35 L50,43 L48,79 Q39,85 30,81Z`], overlay:`M7,2 Q7,0 13,0 Q20,11 26,1 Q32,11 38,1 Q45,0 46,5 L46,18 Q26,23 7,18Z`, xv:[26,16,14] },
 };
 
-const C = { highlight:'#EAF7FF', base:'#BFDDEA', midtone:'#7FAFC4', shadow:'#4B748D', stroke:'#1A3040', detail:'#365465' };
+const C = { highlight:'#EAF7FF', base:'#BFDDEA', midtone:'#7FAFC4', shadow:'#4B748D', stroke:'#1A3040' };
 
 const ToothSVG = ({ def, numero, overlayColor, isExtracted, hovered }) => {
   const [xcx,xcy,xcr] = def.xv;
-  const gid   = `enamel_${numero}`;
-  const lgid  = `lin_${numero}`;
+  const gid    = `enamel_${numero}`;
+  const lgid   = `lin_${numero}`;
   const glowId = `glow_${numero}`;
   return (
     <>
@@ -52,7 +52,7 @@ const ToothSVG = ({ def, numero, overlayColor, isExtracted, hovered }) => {
         </radialGradient>
         <linearGradient id={lgid} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stopColor={C.highlight} stopOpacity="0.4"/>
-          <stop offset="100%" stopColor={C.shadow}     stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={C.shadow}    stopOpacity="0.3"/>
         </linearGradient>
         <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="2.5" result="blur"/>
@@ -105,7 +105,8 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
   const handleLeave  = () => { if (!soloLectura) setHovered(false); };
 
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}} title={`Diente ${numero}${condition && condition!=='sano' ? ` — ${paletteItem?.label}` : ''}`}>
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}}
+      title={`Diente ${numero}${condition && condition!=='sano' ? ` — ${paletteItem?.label}` : ''}`}>
       {isUpper && (
         <svg width={def.W} height={def.H} viewBox={`0 0 ${def.vW} ${def.vH}`}
           style={{...svgBase, transform:`scaleY(-1) scale(${(!soloLectura&&hovered)?1.06:1})`}}
@@ -113,7 +114,7 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
           <ToothSVG def={def} numero={numero} overlayColor={overlayColor} isExtracted={isExtracted} hovered={!soloLectura&&hovered}/>
         </svg>
       )}
-      <span className="dentista-texto-xpequeno" style={{fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'3px':0,marginBottom:!isUpper?'3px':0,fontFamily:"'Segoe UI', sans-serif"}}>
+      <span style={{fontSize:'11px',fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'3px':0,marginBottom:!isUpper?'3px':0,fontFamily:"'Segoe UI', sans-serif"}}>
         {numero}
       </span>
       {!isUpper && (
@@ -127,66 +128,65 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
   );
 };
 
+// ── Odontograma principal ─────────────────────────────────────────────────────
 const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   const [teethStates,   setTeethStates]   = useState(INITIAL_TEETH);
   const [selectedPaint, setSelectedPaint] = useState(null);
-  const [saving,         setSaving]        = useState(false);
+  const [saving,        setSaving]        = useState(false);
   const [savedMsg,      setSavedMsg]      = useState('');
   const [hasChanges,    setHasChanges]    = useState(false);
+  // ── NUEVO: modo edición — arranca en solo lectura, el médico pulsa Editar para activar
+  const [modoEdicion,   setModoEdicion]   = useState(false);
+
+  const pacienteKey = paciente?.id_paciente || paciente?.id || null;
 
   useEffect(() => {
-    if (paciente?.odontograma) {
-      try {
-        const data = typeof paciente.odontograma === 'string' 
-          ? JSON.parse(paciente.odontograma) 
-          : paciente.odontograma;
-        setTeethStates(data || INITIAL_TEETH);
-      } catch (e) {
-        setTeethStates(INITIAL_TEETH);
-      }
+    if (paciente?.odontograma && typeof paciente.odontograma === 'object') {
+      setTeethStates(paciente.odontograma);
     } else {
       setTeethStates(INITIAL_TEETH);
     }
     setHasChanges(false);
     setSavedMsg('');
     setSelectedPaint(null);
-  }, [paciente?.id_paciente || paciente?.id]);
+    setModoEdicion(false);
+  }, [pacienteKey]);
+
+  // Si viene soloLectura desde prop (agenda) nunca se puede editar
+  const esInteractivo = !soloLectura && modoEdicion;
 
   const handleToothClick = (n) => {
-    if (soloLectura || !selectedPaint) return;
+    if (!esInteractivo || !selectedPaint) return;
     setTeethStates(prev => ({ ...prev, [String(n)]: selectedPaint }));
     setHasChanges(true);
   };
 
   const handleGuardar = async () => {
     if (!onGuardar) return;
-    
-    const dientesTratados = Object.keys(teethStates).filter(d => teethStates[d] !== 'sano');
-
     try {
       setSaving(true);
-      
-      const payload = {
-        pacienteId: paciente?.id || paciente?.id_paciente,
-        tipo: selectedPaint ? (PALETTE.find(p=>p.id===selectedPaint)?.label) : 'Evaluación General',
-        diente: dientesTratados.length > 0 ? dientesTratados.join(', ') : 'General',
-        observaciones: 'Actualización de odontograma gráfico',
-        costo: 0,
-        odontograma: teethStates 
-      };
-
-      await onGuardar(payload);
-      
+      await onGuardar(teethStates);
       setHasChanges(false);
+      setModoEdicion(false);
       setSavedMsg('¡Odontograma guardado!');
       setTimeout(() => setSavedMsg(''), 3000);
     } catch (err) {
-      console.error("Error al guardar:", err);
-      setSavedMsg('Error al guardar: ' + (err.message || 'Intente de nuevo'));
+      setSavedMsg('Error al guardar');
       setTimeout(() => setSavedMsg(''), 3000);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelarEdicion = () => {
+    if (paciente?.odontograma && typeof paciente.odontograma === 'object') {
+      setTeethStates(paciente.odontograma);
+    } else {
+      setTeethStates(INITIAL_TEETH);
+    }
+    setHasChanges(false);
+    setSelectedPaint(null);
+    setModoEdicion(false);
   };
 
   const getCond = (n) => teethStates[String(n)] ?? 'sano';
@@ -199,31 +199,49 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   if (!paciente) return (
     <div style={{padding:'20px',textAlign:'center',color:'#9CA3AF',background:'#F9FAFB',borderRadius:'10px',border:'1px dashed #D1D5DB'}}>
       <i className="fas fa-tooth" style={{fontSize:28,marginBottom:8,display:'block',opacity:0.3}}></i>
-      <p className="dentista-texto-xpequeno" style={{margin:0}}>Seleccione un paciente para ver su odontograma</p>
+      <p style={{margin:0,fontSize:'12px'}}>Seleccione un paciente para ver su odontograma</p>
     </div>
   );
 
   const ArchRow = ({ teeth, isUpper }) => (
     <div style={{display:'flex',justifyContent:'center',alignItems:isUpper?'flex-end':'flex-start',gap:'2px'}}>
-      {teeth.slice(0,8).map(n => <Tooth key={n} numero={n} isUpper={isUpper} condition={getCond(n)} onToothClick={handleToothClick} soloLectura={soloLectura}/>)}
+      {teeth.slice(0,8).map(n => <Tooth key={n} numero={n} isUpper={isUpper} condition={getCond(n)} onToothClick={handleToothClick} soloLectura={!esInteractivo}/>)}
       <div style={{width:'2px',alignSelf:'stretch',background:'#94A3B8',opacity:0.35,margin:'0 3px',flexShrink:0}}/>
-      {teeth.slice(8).map(n => <Tooth key={n} numero={n} isUpper={isUpper} condition={getCond(n)} onToothClick={handleToothClick} soloLectura={soloLectura}/>)}
+      {teeth.slice(8).map(n => <Tooth key={n} numero={n} isUpper={isUpper} condition={getCond(n)} onToothClick={handleToothClick} soloLectura={!esInteractivo}/>)}
     </div>
   );
 
   return (
     <div style={{background:'white',borderRadius:'12px',padding:'14px 12px 12px',fontFamily:"'Segoe UI', system-ui, sans-serif",maxWidth:'100%',boxSizing:'border-box',boxShadow:'0 2px 12px rgba(0,0,0,0.07)'}}>
+
+      {/* Header */}
       <div style={{marginBottom:'10px',display:'flex',alignItems:'center',gap:8}}>
-        <i className="fas fa-tooth dentista-texto-pequeno" style={{color:'#1E88E5'}}></i>
-        <span className="dentista-label" style={{fontWeight:'800',fontSize:'13px',color:'#1A3040'}}>
-          {paciente.paciente_nombre || paciente.nombre}
+        <i className="fas fa-tooth" style={{color:'#1E88E5',fontSize:13}}></i>
+        <span style={{fontWeight:'800',fontSize:'13px',color:'#1A3040'}}>
+          {paciente.paciente_nombre}
         </span>
         {soloLectura && (
-          <span className="dentista-texto-xpequeno" style={{color:'#9ca3af',marginLeft:'auto',fontStyle:'italic'}}>Solo lectura</span>
+          <span style={{fontSize:10,color:'#9ca3af',marginLeft:'auto',fontStyle:'italic'}}>Solo lectura</span>
+        )}
+        {/* ── NUEVO: botón Editar odontograma ── */}
+        {!soloLectura && !modoEdicion && onGuardar && (
+          <button onClick={() => setModoEdicion(true)}
+            style={{marginLeft:'auto',padding:'5px 14px',borderRadius:8,border:'1.5px solid #c4b5fd',background:'#f0effe',color:'#4f46e5',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,transition:'all 0.15s'}}
+            onMouseEnter={e=>{e.currentTarget.style.background='#4f46e5';e.currentTarget.style.color='white';}}
+            onMouseLeave={e=>{e.currentTarget.style.background='#f0effe';e.currentTarget.style.color='#4f46e5';}}>
+            <i className="fas fa-pen" style={{fontSize:10}}></i>
+            Editar odontograma
+          </button>
+        )}
+        {savedMsg && !modoEdicion && (
+          <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:savedMsg.startsWith('Error')?'#dc2626':'#16a34a'}}>
+            {savedMsg.startsWith('Error') ? '✗' : '✓'} {savedMsg}
+          </span>
         )}
       </div>
 
-      <div style={{background:'linear-gradient(180deg,#E8EFF6 0%,#DDE6EF 100%)',borderRadius:'10px',padding:'10px 6px',border:'1px solid #C8D8E4',overflowX:'auto'}}>
+      {/* Grilla dental */}
+      <div style={{background:'linear-gradient(180deg,#E8EFF6 0%,#DDE6EF 100%)',borderRadius:'10px',padding:'10px 6px',border:'1px solid #C8D8E4',overflowX:'auto',opacity:(!soloLectura && !modoEdicion) ? 0.85 : 1,transition:'opacity 0.2s'}}>
         <div style={{minWidth:'max-content'}}>
           <ArchRow teeth={[...upperLeft,...upperRight]} isUpper={true}/>
           <div style={{height:'2px',background:'linear-gradient(90deg,transparent,#94A3B8,transparent)',margin:'6px 12px',opacity:0.5}}/>
@@ -231,8 +249,10 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
         </div>
       </div>
 
-      {!soloLectura && (
+      {/* Controles — solo en modo edición */}
+      {esInteractivo && (
         <>
+          {/* Paleta */}
           <div style={{display:'flex',justifyContent:'center',marginTop:'12px'}}>
             <div style={{background:'white',borderRadius:'40px',padding:'7px 16px',boxShadow:'0 3px 16px rgba(0,0,0,0.13)',display:'flex',gap:'10px',alignItems:'center',border:'1px solid #E9EEF3'}}>
               {PALETTE.map(opt => {
@@ -240,7 +260,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
                 return (
                   <button key={opt.id} title={opt.label}
                     onClick={() => setSelectedPaint(p => p===opt.id ? null : opt.id)}
-                    style={{width:'26px',height:'26px',borderRadius:'50%',background:opt.color??'#F3F4F6',border:active?'3px solid #1E88E5':`1.5px solid ${opt.color?opt.color+'AA':'#9CA3AF'}`,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',transform:active?'scale(1.25)':'scale(1)',transition:'transform .15s, border .15s, box-shadow .15s',boxSizing:'border-box',boxShadow:active?'0 0 0 2px white, 0 0 0 4px #1E88E5':'0 1px 3px rgba(0,0,0,0.15)'}}>
+                    style={{width:'26px',height:'26px',borderRadius:'50%',background:opt.color??'#F3F4F6',border:active?'3px solid #1E88E5':`1.5px solid ${opt.color?opt.color+'AA':'#9CA3AF'}`,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',transform:active?'scale(1.25)':'scale(1)',transition:'transform .15s, border .15s',boxSizing:'border-box',boxShadow:active?'0 0 0 2px white, 0 0 0 4px #1E88E5':'0 1px 3px rgba(0,0,0,0.15)'}}>
                     {opt.id==='sano' && (<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="#9CA3AF" strokeWidth="1.3"/></svg>)}
                     {opt.id==='extraido' && (<svg width="12" height="12" viewBox="0 0 12 12"><line x1="3" y1="3" x2="9" y2="9" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="3" x2="3" y2="9" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>)}
                   </button>
@@ -250,7 +270,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
           </div>
 
           {selectedPaint && (
-            <p className="dentista-texto-xpequeno" style={{textAlign:'center',color:'#6B7280',margin:'5px 0 0',fontStyle:'italic'}}>
+            <p style={{textAlign:'center',fontSize:'10px',color:'#6B7280',margin:'5px 0 0',fontStyle:'italic'}}>
               Aplicando{' '}
               <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>
                 {PALETTE.find(p=>p.id===selectedPaint)?.label}
@@ -259,38 +279,75 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
             </p>
           )}
 
+          {/* Dientes marcados + Limpiar todo */}
+          {Object.keys(teethStates).length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:8,alignItems:'center'}}>
+              <span style={{fontSize:11,color:'#6b7280'}}>Marcados:</span>
+              {Object.entries(teethStates).map(([n, est]) => {
+                const pal = PALETTE.find(p => p.id === est);
+                if (!pal || est === 'sano') return null;
+                return (
+                  <span key={n} style={{background:pal.color?pal.color+'22':'#f0effe',color:pal.color??'#4f46e5',padding:'2px 8px',borderRadius:20,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',gap:4,border:`1px solid ${pal.color?pal.color+'44':'#c4b5fd'}`}}>
+                    {n} · {pal.label}
+                    <button type="button"
+                      onClick={()=>{ setTeethStates(prev=>{const e={...prev};delete e[String(n)];return e;}); setHasChanges(true); }}
+                      style={{background:'none',border:'none',cursor:'pointer',color:pal.color??'#4f46e5',fontSize:13,padding:0,lineHeight:1}}>×</button>
+                  </span>
+                );
+              })}
+              {/* ── CAMBIO: Limpiar todo con estilo de botón real ── */}
+              <button type="button"
+                onClick={()=>{ setTeethStates(INITIAL_TEETH); setHasChanges(true); }}
+                style={{padding:'3px 12px',borderRadius:20,border:'1.5px solid #fca5a5',background:'#fef2f2',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}
+                onMouseEnter={e=>{e.currentTarget.style.background='#dc2626';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#dc2626';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#dc2626';e.currentTarget.style.borderColor='#fca5a5';}}>
+                <i className="fas fa-trash-alt" style={{fontSize:9}}></i>
+                Limpiar todo
+              </button>
+            </div>
+          )}
+
+          {/* Botones Guardar / Cancelar */}
           {onGuardar && (
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginTop:12}}>
-              <button
-                onClick={handleGuardar}
-                disabled={saving || !hasChanges}
-                style={{
-                  padding:'8px 22px', borderRadius:10, border:'none',
-                  background: hasChanges ? 'linear-gradient(135deg,#4f46e5,#db2777)' : '#e5e7eb',
-                  color: hasChanges ? 'white' : '#9ca3af',
-                  fontWeight:700, fontSize:13, cursor: hasChanges ? 'pointer' : 'default',
-                  transition:'all 0.2s', boxShadow: hasChanges ? '0 4px 12px rgba(79,70,229,0.3)' : 'none',
-                }}
-              >
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginTop:14}}>
+              <button onClick={handleCancelarEdicion}
+                style={{padding:'8px 18px',borderRadius:10,border:'1.5px solid #d1d5db',background:'white',color:'#374151',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+                Cancelar
+              </button>
+              <button onClick={handleGuardar} disabled={saving || !hasChanges}
+                style={{padding:'8px 22px',borderRadius:10,border:'none',background:hasChanges?'linear-gradient(135deg,#4f46e5,#db2777)':'#e5e7eb',color:hasChanges?'white':'#9ca3af',fontWeight:700,fontSize:13,cursor:hasChanges?'pointer':'default',transition:'all 0.2s',boxShadow:hasChanges?'0 4px 12px rgba(79,70,229,0.3)':'none'}}>
                 {saving ? 'Guardando...' : 'Guardar odontograma'}
               </button>
               {savedMsg && (
-                <span className="dentista-texto-xpequeno" style={{fontWeight:600, color: savedMsg.startsWith('Error') ? '#dc2626' : '#16a34a'}}>
+                <span style={{fontSize:12,fontWeight:600,color:savedMsg.startsWith('Error')?'#dc2626':'#16a34a'}}>
                   {savedMsg.startsWith('Error') ? '✗' : '✓'} {savedMsg}
                 </span>
               )}
             </div>
           )}
 
+          {/* Leyenda */}
           <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'5px 12px',marginTop:'10px',padding:'8px 0 2px',borderTop:'1px solid #EEF2F7'}}>
             {PALETTE.filter(p=>p.id!=='sano').map(opt=>(
-              <div key={opt.id} className="dentista-texto-xpequeno" style={{display:'flex',alignItems:'center',gap:'4px',color:'#4B5563'}}>
+              <div key={opt.id} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:'#4B5563'}}>
                 <span style={{width:'9px',height:'9px',borderRadius:'2px',background:opt.color??'#4B5563',display:'inline-block',flexShrink:0,boxShadow:'0 1px 2px rgba(0,0,0,0.15)'}}/>
                 {opt.label}
               </div>
             ))}
           </div>
         </>
+      )}
+
+      {/* Leyenda en solo lectura si hay dientes marcados */}
+      {!esInteractivo && Object.values(teethStates).some(v => v !== 'sano') && (
+        <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'5px 12px',marginTop:'10px',padding:'8px 0 2px',borderTop:'1px solid #EEF2F7'}}>
+          {PALETTE.filter(p=>p.id!=='sano').map(opt=>(
+            <div key={opt.id} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:'#4B5563'}}>
+              <span style={{width:'9px',height:'9px',borderRadius:'2px',background:opt.color??'#4B5563',display:'inline-block',flexShrink:0}}/>
+              {opt.label}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
