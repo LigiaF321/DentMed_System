@@ -113,7 +113,7 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
           <ToothSVG def={def} numero={numero} overlayColor={overlayColor} isExtracted={isExtracted} hovered={!soloLectura&&hovered}/>
         </svg>
       )}
-      <span style={{fontSize:'11px',fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'3px':0,marginBottom:!isUpper?'3px':0,fontFamily:"'Segoe UI', sans-serif"}}>
+      <span className="dentista-texto-xpequeno" style={{fontWeight:'700',color:numColor,display:'block',textAlign:'center',lineHeight:1,width:def.W,marginTop:isUpper?'3px':0,marginBottom:!isUpper?'3px':0,fontFamily:"'Segoe UI', sans-serif"}}>
         {numero}
       </span>
       {!isUpper && (
@@ -167,9 +167,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
       setSaving(true);
       
       const payload = {
-        // Se asegura de tomar el ID correcto según el objeto paciente recibido
         pacienteId: paciente?.id || paciente?.id_paciente,
-        // Evita el error notNull Violation en el backend
         tipo: selectedPaint ? (PALETTE.find(p=>p.id===selectedPaint)?.label) : 'Evaluación General',
         diente: dientesTratados.length > 0 ? dientesTratados.join(', ') : 'General',
         observaciones: 'Actualización de odontograma gráfico',
@@ -201,7 +199,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   if (!paciente) return (
     <div style={{padding:'20px',textAlign:'center',color:'#9CA3AF',background:'#F9FAFB',borderRadius:'10px',border:'1px dashed #D1D5DB'}}>
       <i className="fas fa-tooth" style={{fontSize:28,marginBottom:8,display:'block',opacity:0.3}}></i>
-      <p style={{margin:0,fontSize:'12px'}}>Seleccione un paciente para ver su odontograma</p>
+      <p className="dentista-texto-xpequeno" style={{margin:0}}>Seleccione un paciente para ver su odontograma</p>
     </div>
   );
 
@@ -216,12 +214,12 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   return (
     <div style={{background:'white',borderRadius:'12px',padding:'14px 12px 12px',fontFamily:"'Segoe UI', system-ui, sans-serif",maxWidth:'100%',boxSizing:'border-box',boxShadow:'0 2px 12px rgba(0,0,0,0.07)'}}>
       <div style={{marginBottom:'10px',display:'flex',alignItems:'center',gap:8}}>
-        <i className="fas fa-tooth" style={{color:'#1E88E5',fontSize:13}}></i>
-        <span style={{fontWeight:'800',fontSize:'13px',color:'#1A3040'}}>
+        <i className="fas fa-tooth dentista-texto-pequeno" style={{color:'#1E88E5'}}></i>
+        <span className="dentista-label" style={{fontWeight:'800',fontSize:'13px',color:'#1A3040'}}>
           {paciente.paciente_nombre || paciente.nombre}
         </span>
         {soloLectura && (
-          <span style={{fontSize:10,color:'#9ca3af',marginLeft:'auto',fontStyle:'italic'}}>Solo lectura</span>
+          <span className="dentista-texto-xpequeno" style={{color:'#9ca3af',marginLeft:'auto',fontStyle:'italic'}}>Solo lectura</span>
         )}
       </div>
 
@@ -252,8 +250,12 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
           </div>
 
           {selectedPaint && (
-            <p style={{textAlign:'center',fontSize:'10px',color:'#6B7280',margin:'5px 0 0',fontStyle:'italic'}}>
-              Aplicando <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>{PALETTE.find(p=>p.id===selectedPaint)?.label}</strong> — haz clic en un diente
+            <p className="dentista-texto-xpequeno" style={{textAlign:'center',color:'#6B7280',margin:'5px 0 0',fontStyle:'italic'}}>
+              Aplicando{' '}
+              <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>
+                {PALETTE.find(p=>p.id===selectedPaint)?.label}
+              </strong>
+              {' '}— haz clic en un diente
             </p>
           )}
 
@@ -273,7 +275,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
                 {saving ? 'Guardando...' : 'Guardar odontograma'}
               </button>
               {savedMsg && (
-                <span style={{ fontSize:12, fontWeight:600, color: savedMsg.startsWith('Error') ? '#dc2626' : '#16a34a' }}>
+                <span className="dentista-texto-xpequeno" style={{fontWeight:600, color: savedMsg.startsWith('Error') ? '#dc2626' : '#16a34a'}}>
                   {savedMsg.startsWith('Error') ? '✗' : '✓'} {savedMsg}
                 </span>
               )}
@@ -282,7 +284,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
 
           <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'5px 12px',marginTop:'10px',padding:'8px 0 2px',borderTop:'1px solid #EEF2F7'}}>
             {PALETTE.filter(p=>p.id!=='sano').map(opt=>(
-              <div key={opt.id} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:'#4B5563'}}>
+              <div key={opt.id} className="dentista-texto-xpequeno" style={{display:'flex',alignItems:'center',gap:'4px',color:'#4B5563'}}>
                 <span style={{width:'9px',height:'9px',borderRadius:'2px',background:opt.color??'#4B5563',display:'inline-block',flexShrink:0,boxShadow:'0 1px 2px rgba(0,0,0,0.15)'}}/>
                 {opt.label}
               </div>

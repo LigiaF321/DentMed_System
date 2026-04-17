@@ -312,14 +312,14 @@ const DocumentosTab = ({ paciente }) => {
     <div className="documentos-tab">
       <div className="documentos-topbar">
         <div>
-          <h3 className="documentos-title">Documentos del paciente</h3>
-          <p className="documentos-subtitle">{nombrePaciente}</p>
+          <h3 className="documentos-title dentista-titulo">Documentos del paciente</h3>
+          <p className="documentos-subtitle dentista-subtitulo">{nombrePaciente}</p>
         </div>
       </div>
 
       <div className="documentos-panel documentos-subida-config">
         <div className="documentos-campo">
-          <label>Tipo de documento</label>
+          <label className="dentista-label">Tipo de documento</label>
           <select
             value={tipoSubida}
             onChange={(e) => setTipoSubida(e.target.value)}
@@ -332,7 +332,7 @@ const DocumentosTab = ({ paciente }) => {
         </div>
 
         <div className="documentos-campo documentos-campo-etiquetas">
-          <label>Etiquetas</label>
+          <label className="dentista-label">Etiquetas</label>
           <input
             type="text"
             value={etiquetasInput}
@@ -381,7 +381,7 @@ const DocumentosTab = ({ paciente }) => {
 
       <div className="documentos-panel documentos-filtros">
         <div className="documentos-campo">
-          <label>Filtrar por tipo</label>
+          <label className="dentista-label">Filtrar por tipo</label>
           <select
             value={tipoFiltro}
             onChange={(e) => setTipoFiltro(e.target.value)}
@@ -395,7 +395,7 @@ const DocumentosTab = ({ paciente }) => {
         </div>
 
         <div className="documentos-campo documentos-campo-busqueda">
-          <label>Buscar por nombre o etiqueta</label>
+          <label className="dentista-label">Buscar por nombre o etiqueta</label>
           <input
             type="text"
             value={busqueda}

@@ -14,14 +14,12 @@
 
 .documentos-title {
   margin: 0;
-  font-size: 22px;
   font-weight: 800;
   color: #1a2c3e;
 }
 
 .documentos-subtitle {
   margin: 6px 0 0;
-  font-size: 14px;
   color: #6b7280;
 }
 
@@ -47,7 +45,6 @@
 }
 
 .documentos-campo label {
-  font-size: 13px;
   font-weight: 700;
   color: #334155;
 }

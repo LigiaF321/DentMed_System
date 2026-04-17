@@ -166,25 +166,10 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
                     flexShrink: 0
                   }}
                 />
-                <label htmlFor="todo_el_dia" style={{ 
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#1e293b",
-                  cursor: "pointer",
-                  margin: 0,
-                  flex: 1
-                }}>
+                <label htmlFor="todo_el_dia" className="dentista-label" style={{ fontWeight: "600", color: "#1e293b", cursor: "pointer", margin: 0, flex: 1 }}>
                   Bloquear día completo
                 </label>
-                <span style={{
-                  background: "#e2e8f0",
-                  padding: "4px 10px",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: "#475569",
-                  letterSpacing: "0.3px"
-                }}>
+                <span className="dentista-texto-xpequeno" style={{ background: "#e2e8f0", padding: "4px 10px", borderRadius: "4px", fontWeight: "600", color: "#475569", letterSpacing: "0.3px" }}>
                   24 HORAS
                 </span>
               </div>
@@ -255,12 +240,7 @@ export default function BloqueoModal({ isOpen, onClose, onSave, idDentista }) {
           </div>
 
           {error && (
-            <div className="dm17-error" style={{ 
-                color: '#dc3545', 
-                marginTop: '10px', 
-                fontSize: '14px',
-                fontWeight: '500' 
-            }}>
+            <div className="dm17-error dentista-label" style={{ color: '#dc3545', marginTop: '10px', fontWeight: '500' }}>
                 <i className="fas fa-exclamation-circle"></i> {error}
             </div>
           )}
