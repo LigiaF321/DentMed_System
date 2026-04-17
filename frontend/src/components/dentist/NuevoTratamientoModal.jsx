@@ -330,7 +330,8 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
         tipo: form.procedimiento.trim(),
         fecha: new Date().toISOString().slice(0,19).replace('T',' '),
         diente: Object.keys(form.dienteEstados).join(', ')||'General',
-        doctorId: 86,
+        // 🔴 CORRECCIÓN: ELIMINADO doctorId: 86 - El backend lo obtiene del token automáticamente
+        // doctorId: 86,  // <--- ESTA LÍNEA HA SIDO ELIMINADA
         costo: parseFloat(form.costo)||0,
         descripcion: form.observaciones?.trim()||'',
         diagnostico: form.diagnostico.trim(),

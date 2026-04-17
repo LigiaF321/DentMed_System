@@ -430,7 +430,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     }
   };
 
-  // ── Guardar odontograma — usa { estados } para que coincida con Odontograma.jsx
+  // ✅ CORREGIDO: Guardar odontograma — envía { estados: condiciones } como espera el backend
   const handleGuardarOdontograma = async (condiciones) => {
     const id = pacienteSeleccionado?.id_paciente || pacienteSeleccionado?.id;
     if (!id) throw new Error('No se encontró el ID del paciente');
@@ -438,7 +438,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     const res = await fetch(`http://localhost:3000/api/pacientes/${id}/odontograma`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estados: condiciones }),
+      body: JSON.stringify({ estados: condiciones }), // ✅ CORREGIDO: "estados" como espera el backend
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
