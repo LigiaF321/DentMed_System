@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DocumentosTab from './DocumentosTab';
+import Odontograma from './Odontograma'; 
 import { obtenerPacienteDetalle } from '../../services/pacientes.service';
 import './PatientTabs.css';
 
@@ -96,10 +97,6 @@ const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
 };
 
 // ── Componente principal ──────────────────────────────────────────────────────
-// modoPanel = true  → panel derecho de Mi Agenda: solo lectura, sin "Editar", con "Ver expediente completo"
-// modoPanel = false → página completa (Mis Pacientes): edición habilitada, sin "Ver expediente completo"
-// onVerExpediente → navega a Mis Pacientes con el expediente abierto (solo en modoPanel)
-// onVerTodos      → navega a Tratamientos
 const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }) => {
   const [activeTab,      setActiveTab]      = useState(TAB_INFO);
   const [editModes,      setEditModes]      = useState({
@@ -111,9 +108,10 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
   const [notaDocumentos,  setNotaDocumentos]  = useState('');
   const [fieldErrors,     setFieldErrors]     = useState({});
 
+  // AJUSTE: Mapeo exacto al campo 'id' que vimos en tu tabla de MySQL
   const patientId = useMemo(() => {
     if (!paciente) return null;
-    return paciente.id_paciente || paciente.idPaciente || paciente.paciente?.id ||
+    return paciente.id || paciente.id_paciente || paciente.idPaciente || paciente.paciente?.id ||
       (typeof paciente.id === 'number' ? paciente.id : null);
   }, [paciente]);
 
@@ -186,7 +184,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
         return;
       }
     }
-
     setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
   };
 
@@ -194,7 +191,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
 
   const handleFieldChange = (field, value) => {
     updateField(field, value);
-
     if (field === 'email') {
       const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
       setFieldErrors((prev) => ({ ...prev, email: nextError }));
@@ -220,28 +216,17 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
     </div>
   );
 
-  // ── Botón "Ver expediente completo" — solo aparece en modoPanel ──────────
   const BtnVerExpediente = () => {
     if (!modoPanel) return null;
     return (
       <button
         onClick={onVerExpediente}
         style={{
-          width: '100%',
-          padding: '11px 0',
-          borderRadius: 12,
-          border: 'none',
-          background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-          color: 'white',
-          fontWeight: 800,
-          fontSize: 13,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          boxShadow: '0 6px 16px rgba(37,99,235,0.18)',
-          marginTop: 12,
+          width: '100%', padding: '11px 0', borderRadius: 12, border: 'none',
+          background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white',
+          fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', gap: 8,
+          boxShadow: '0 6px 16px rgba(37,99,235,0.18)', marginTop: 12,
         }}
       >
         <i className="fas fa-folder-open"></i> Ver expediente completo
@@ -263,7 +248,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
       </div>
 
       <div className="tabs-header">
-        <button className={`tab-btn ${activeTab === TAB_INFO         ? 'active' : ''}`} onClick={() => setActiveTab(TAB_INFO)}>
+        <button className={`tab-btn ${activeTab === TAB_INFO           ? 'active' : ''}`} onClick={() => setActiveTab(TAB_INFO)}>
           <i className="fas fa-id-card"></i> Info Personal
         </button>
         <button className={`tab-btn ${activeTab === TAB_HISTORIAL    ? 'active' : ''}`} onClick={() => setActiveTab(TAB_HISTORIAL)}>
@@ -304,17 +289,16 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
             )}
 
             <div className="info-grid">
-              {renderField('Nombre',              infoPersonal.nombre,             'nombre',              !modoPanel && editModes[TAB_INFO])}
-              {renderField('Edad',                String(infoPersonal.edad),       'edad',                !modoPanel && editModes[TAB_INFO])}
-              {renderField('Sexo',                infoPersonal.sexo,               'sexo',                !modoPanel && editModes[TAB_INFO])}
-              {renderField('Correo electrónico',  infoPersonal.email,              'email',               !modoPanel && editModes[TAB_INFO])}
-              {renderField('Teléfono',            infoPersonal.telefono,           'telefono',            !modoPanel && editModes[TAB_INFO])}
-              {renderField('Dirección',           infoPersonal.direccion,          'direccion',           !modoPanel && editModes[TAB_INFO])}
-              {renderField('Seguro médico',       infoPersonal.seguroMedico,       'seguro_medico',       !modoPanel && editModes[TAB_INFO])}
+              {renderField('Nombre', infoPersonal.nombre, 'nombre', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Edad', String(infoPersonal.edad), 'edad', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Sexo', infoPersonal.sexo, 'sexo', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Correo electrónico', infoPersonal.email, 'email', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Teléfono', infoPersonal.telefono, 'telefono', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Dirección', infoPersonal.direccion, 'direccion', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Seguro médico', infoPersonal.seguroMedico, 'seguro_medico', !modoPanel && editModes[TAB_INFO])}
               {!modoPanel && renderField('Contacto emergencia', infoPersonal.contactoEmergencia, 'contacto_emergencia', editModes[TAB_INFO])}
               {!modoPanel && renderField('Teléfono emergencia', infoPersonal.telefonoEmergencia, 'telefono_emergencia', editModes[TAB_INFO])}
             </div>
-
             <BtnVerExpediente />
           </div>
         )}
@@ -330,7 +314,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
                 </button>
               )}
             </div>
-
             <div className="history-grid">
               <div className="history-card">
                 <h5>Enfermedades</h5>
@@ -357,19 +340,32 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
                     : <p className="history-empty">Sin registros</p>}
               </div>
             </div>
-
             <BtnVerExpediente />
           </div>
         )}
 
-        {/* ── Tratamientos ── */}
+        {/* ── Tratamientos (Integrado con Odontograma) ── */}
         {activeTab === TAB_TRATAMIENTOS && (
           <div className="tab-pane">
             <div className="tab-toolbar">
-              <h4>Tratamientos</h4>
+              <h4>Tratamientos y Odontograma</h4>
             </div>
+            
+            <div style={{ marginBottom: '20px', background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+               <Odontograma 
+                 pacienteId={patientId} 
+                 pacienteNombre={nombrePaciente}
+                 // AJUSTE: Pasamos 'tipo' preventivamente si el componente lo usa como prop
+                 tipoTratamiento="Odontograma" 
+                 onGuardar={() => {
+                   if (patientId) obtenerPacienteDetalle(patientId).then(setDetallePaciente);
+                 }} 
+               />
+            </div>
+
+            <h5 style={{ fontSize: '14px', color: '#64748b', marginBottom: '10px' }}>Historial Reciente</h5>
             <ResumenTratamientos
-              pacienteId={patientId || paciente?.id}
+              pacienteId={patientId}
               onVerTodos={onVerTodos}
             />
             <BtnVerExpediente />
@@ -387,28 +383,17 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
                 </button>
               )}
             </div>
-
-            {/* Panel: solo mensaje, sin uploader ni gestión */}
             {modoPanel ? (
-              <div style={{
-                padding: '20px', textAlign: 'center', color: '#9ca3af',
-                background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb',
-              }}>
+              <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb' }}>
                 <i className="fas fa-file-medical" style={{ fontSize: 24, marginBottom: 8, display: 'block', opacity: 0.4 }}></i>
-                <p style={{ margin: 0, fontSize: 12 }}>
-                  Los documentos y radiografías se gestionan desde el expediente completo.
-                </p>
+                <p style={{ margin: 0, fontSize: 12 }}>Los documentos y radiografías se gestionan desde el expediente completo.</p>
               </div>
             ) : (
               <>
                 {editModes[TAB_DOCUMENTOS] ? (
                   <div className="tab-quick-edit">
                     <label>Campo rápido: observaciones de documentos</label>
-                    <textarea
-                      value={notaDocumentos}
-                      onChange={(e) => setNotaDocumentos(e.target.value)}
-                      placeholder="Ejemplo: pendiente cargar radiografía panorámica y consentimiento firmado."
-                    />
+                    <textarea value={notaDocumentos} onChange={(e) => setNotaDocumentos(e.target.value)} placeholder="Ejemplo: pendiente cargar radiografía panorámica y consentimiento firmado." />
                   </div>
                 ) : notaDocumentos ? (
                   <div className="tab-quick-preview">{notaDocumentos}</div>
@@ -418,7 +403,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
                 </div>
               </>
             )}
-
             <BtnVerExpediente />
           </div>
         )}

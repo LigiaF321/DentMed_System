@@ -58,6 +58,14 @@ const ModalTooth = ({ numero, isUpper, condition, onToothClick }) => {
   const gid          = `mt${numero}`;
   const [xcx,xcy,xcr] = def.xv;
 
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onToothClick) {
+      onToothClick(numero);
+    }
+  };
+
   const svgContent = (
     <>
       <defs>
@@ -94,7 +102,7 @@ const ModalTooth = ({ numero, isUpper, condition, onToothClick }) => {
       {isUpper && (
         <svg width={def.W} height={def.H} viewBox={`0 0 ${def.vW} ${def.vH}`}
           style={{display:'block',cursor:'pointer',transform:`scaleY(-1) scale(${scl})`,transition:'transform 0.1s'}}
-          onClick={()=>onToothClick(numero)}
+          onClick={handleClick}
           onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}>
           {svgContent}
         </svg>
@@ -105,7 +113,7 @@ const ModalTooth = ({ numero, isUpper, condition, onToothClick }) => {
       {!isUpper && (
         <svg width={def.W} height={def.H} viewBox={`0 0 ${def.vW} ${def.vH}`}
           style={{display:'block',cursor:'pointer',transform:`scale(${scl})`,transition:'transform 0.1s'}}
-          onClick={()=>onToothClick(numero)}
+          onClick={handleClick}
           onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}>
           {svgContent}
         </svg>
@@ -129,8 +137,12 @@ const OdontogramaModal = ({ teethStates, onToothClick, selectedPaint, onSelectPa
     </div>
   );
 
+  const handleContainerClick = (e) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div>
+    <div onClick={handleContainerClick}>
       <div style={{background:'linear-gradient(180deg,#E8EFF6,#DDE6EF)',borderRadius:10,padding:'10px 6px',border:`1px solid ${BRAND.border}`,overflowX:'auto'}}>
         <div style={{minWidth:'max-content'}}>
           <Row teeth={[...UL,...UR]} isUpper={true}/>
@@ -144,7 +156,11 @@ const OdontogramaModal = ({ teethStates, onToothClick, selectedPaint, onSelectPa
             const active = selectedPaint === opt.id;
             return (
               <button key={opt.id} title={opt.label}
-                onClick={()=>onSelectPaint(p=>p===opt.id?null:opt.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSelectPaint(p => p === opt.id ? null : opt.id);
+                }}
                 style={{width:'26px',height:'26px',borderRadius:'50%',background:opt.color??'#F3F4F6',border:active?'3px solid #1E88E5':`1.5px solid ${opt.color?opt.color+'AA':'#9CA3AF'}`,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',transform:active?'scale(1.25)':'scale(1)',transition:'transform .15s',boxSizing:'border-box',boxShadow:active?'0 0 0 2px white, 0 0 0 4px #1E88E5':'0 1px 3px rgba(0,0,0,0.15)'}}>
                 {opt.id==='sano'    && <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="#9CA3AF" strokeWidth="1.3"/></svg>}
                 {opt.id==='extraido'&& <svg width="12" height="12" viewBox="0 0 12 12"><line x1="3" y1="3" x2="9" y2="9" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="3" x2="3" y2="9" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>}
@@ -174,7 +190,6 @@ const OdontogramaModal = ({ teethStates, onToothClick, selectedPaint, onSelectPa
   );
 };
 
-// ── Buscador de paciente ──────────────────────────────────────────────────────
 const BuscadorPaciente = ({ onSelect }) => {
   const [query,      setQuery]      = useState('');
   const [resultados, setResultados] = useState([]);
@@ -198,7 +213,7 @@ const BuscadorPaciente = ({ onSelect }) => {
   }, [query]);
 
   return (
-    <div style={{ position:'relative' }}>
+    <div style={{ position:'relative' }} onClick={(e) => e.stopPropagation()}>
       <div style={{ position:'relative' }}>
         <i className="fas fa-search" style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af', fontSize:13 }}/>
         <input
@@ -206,7 +221,6 @@ const BuscadorPaciente = ({ onSelect }) => {
           onChange={e => setQuery(e.target.value)}
           placeholder="Buscar paciente por nombre, teléfono..."
           style={{ width:'100%', padding:'10px 12px 10px 34px', border:`1.5px solid ${BRAND.border}`, borderRadius:10, fontSize:14, boxSizing:'border-box', outline:'none' }}
-          autoFocus
         />
         {buscando && <i className="fas fa-spinner fa-spin" style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:BRAND.primary, fontSize:13 }}/>}
       </div>
@@ -215,7 +229,13 @@ const BuscadorPaciente = ({ onSelect }) => {
         <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'white', borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', border:'1px solid #e9ecef', zIndex:10, maxHeight:220, overflowY:'auto' }}>
           {resultados.map(p => (
             <div key={p.id}
-              onClick={() => { onSelect(p); setQuery(''); setResultados([]); }}
+              onClick={(e) => { 
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect(p); 
+                setQuery(''); 
+                setResultados([]); 
+              }}
               style={{ padding:'10px 14px', cursor:'pointer', borderBottom:'1px solid #f3f4f6', display:'flex', alignItems:'center', gap:10, transition:'background 0.1s' }}
               onMouseEnter={e => e.currentTarget.style.background = BRAND.light}
               onMouseLeave={e => e.currentTarget.style.background = 'white'}
@@ -241,14 +261,11 @@ const BuscadorPaciente = ({ onSelect }) => {
   );
 };
 
-// ── Modal principal ───────────────────────────────────────────────────────────
 export default function NuevoTratamientoModal({ open, onClose, onCreated, pacienteId: pacienteIdProp, pacienteNombre: pacienteNombreProp, onPacienteSeleccionado }) {
 
-  // ── NUEVO: estado interno del paciente seleccionado (cuando no viene por prop) ──
   const [pacienteIdLocal,     setPacienteIdLocal]     = useState(null);
   const [pacienteNombreLocal, setPacienteNombreLocal] = useState('');
 
-  // El paciente activo es el de la prop si existe, si no el seleccionado localmente
   const pacienteId     = pacienteIdProp     || pacienteIdLocal;
   const pacienteNombre = pacienteNombreProp || pacienteNombreLocal;
 
@@ -264,6 +281,7 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
   const [dragOver,   setDragOver]   = useState(false);
   const [saving,     setSaving]     = useState(false);
   const [error,      setError]      = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // Mensaje de éxito simple
   const inputFileRef = useRef(null);
 
   useEffect(() => {
@@ -275,13 +293,23 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
 
   useEffect(() => {
     if (!open) return;
-    // Resetear todo al abrir
     setForm({diagnostico:'',procedimiento:'',dientes:[],dienteEstados:{},observaciones:'',costo:'',forma_pago:'Efectivo',es_multisesion:false,sesiones_estimadas:2,estado:'planificado'});
     setSelectedPaint(null);
     setQueryMat(''); setMatSelec([]); setArchivos([]); setDragOver(false); setError('');
-    // Solo resetear paciente local si no viene por prop
+    setSuccessMessage(''); // Limpiar mensaje de éxito
     if (!pacienteIdProp) { setPacienteIdLocal(null); setPacienteNombreLocal(''); }
-  }, [open]);
+  }, [open, pacienteIdProp]);
+
+  // Auto-cerrar mensaje de éxito después de 3 segundos
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+        onClose(); // Cerrar el modal después del mensaje
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, onClose]);
 
   const handleChange = (e) => {
     const {name,value,type,checked} = e.target;
@@ -300,7 +328,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
     });
   };
 
-  // ── NUEVO: cuando se selecciona un paciente desde el buscador ──
   const handlePacienteSeleccionado = (p) => {
     const id     = p.id || p.id_paciente;
     const nombre = p.nombre_completo || p.nombre || 'Paciente';
@@ -317,35 +344,87 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
   const handleFileIn  = (e)=>setArchivos(prev=>[...prev,...Array.from(e.target.files)]);
   const quitarArch    = (idx)=>setArchivos(prev=>prev.filter((_,i)=>i!==idx));
 
+  const handleCloseModal = () => {
+    if (!saving) {
+      onClose();
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); setError('');
-    if (!pacienteId)              { setError('Debes seleccionar un paciente.'); return; }
-    if (!form.diagnostico.trim()) { setError('El diagnóstico es obligatorio.'); return; }
-    if (!form.procedimiento.trim()) { setError('El procedimiento es obligatorio.'); return; }
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+    
+    if (!pacienteId) {
+      setError('Debes seleccionar un paciente.');
+      return;
+    }
+    if (!form.diagnostico.trim()) {
+      setError('El diagnóstico es obligatorio.');
+      return;
+    }
+    if (!form.procedimiento.trim()) {
+      setError('El procedimiento es obligatorio.');
+      return;
+    }
+
     try {
       setSaving(true);
-      const fd = new FormData();
-      fd.append('id_paciente',        pacienteId);
-      fd.append('diagnostico',        form.diagnostico.trim());
-      fd.append('procedimiento',      form.procedimiento.trim());
-      fd.append('dientes',            JSON.stringify(form.dientes));
-      fd.append('diente_estados',     JSON.stringify(form.dienteEstados));
-      fd.append('observaciones',      form.observaciones.trim());
-      fd.append('costo',              form.costo||0);
-      fd.append('forma_pago',         form.forma_pago);
-      fd.append('es_multisesion',     form.es_multisesion);
-      fd.append('sesiones_estimadas', form.es_multisesion?form.sesiones_estimadas:1);
-      fd.append('estado',             form.estado);
-      fd.append('materiales',         JSON.stringify(matSelec.map(m=>({id:m.id,cantidad:m.cantidad}))));
-      archivos.forEach(file=>fd.append('radiografias',file));
-      const token = localStorage.getItem('token')||'';
-      const res = await fetch('http://localhost:3000/api/tratamientos',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
+      const token = localStorage.getItem('token') || '';
+
+      const finalPacienteId = pacienteId;
+      const finalDoctorId = 86;
+      const finalTipo = selectedPaint ? (PALETTE.find(p => p.id === selectedPaint)?.label || "Consulta") : "Consulta";
+      const finalDiente = Object.keys(form.dienteEstados).length > 0 ? Object.keys(form.dienteEstados).join(', ') : "General";
+
+      const payload = {
+        pacienteId: finalPacienteId,
+        tipo: finalTipo,
+        fecha: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        diente: finalDiente,
+        doctorId: finalDoctorId,
+        costo: parseFloat(form.costo) || 0,
+        descripcion: form.observaciones?.trim() || "Registro automático",
+        diagnostico: form.diagnostico.trim(),
+        observaciones: `Estado: ${form.estado} | Forma pago: ${form.forma_pago} | Es multi-sesión: ${form.es_multisesion} | Sesiones: ${form.sesiones_estimadas} | Dientes estados: ${JSON.stringify(form.dienteEstados)}`,
+        materiales: matSelec.map(m => ({ 
+          id: m.id, 
+          nombre: m.nombre, 
+          cantidad: m.cantidad,
+          unidad: m.unidad 
+        }))
+      };
+
+      console.log('📤 Enviando payload al backend:', payload);
+
+      const res = await fetch('http://localhost:3000/api/tratamientos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message||'No se pudo crear el tratamiento');
+      
+      if (!res.ok) {
+        throw new Error(data.error || data.detalle || data.message || 'No se pudo crear el tratamiento');
+      }
+      
+      console.log('✅ Tratamiento creado exitosamente:', data);
+      
+      // Mostrar mensaje de éxito
+      setSuccessMessage('✓ Tratamiento guardado exitosamente');
+      setSaving(false);
+      
       if (onCreated) onCreated(data);
-      onClose();
-    } catch(err) { setError(err.message||'Error al guardar'); }
-    finally { setSaving(false); }
+      
+    } catch (err) {
+      console.error('❌ Error en handleSubmit:', err);
+      setError(err.message || 'Error al guardar el tratamiento');
+      setSaving(false);
+    }
   };
 
   if (!open) return null;
@@ -358,21 +437,26 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
 
   const dientesMarcados = Object.entries(form.dienteEstados);
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget && !saving) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="nt-overlay">
-      <div className="nt-modal">
+    <div className="nt-overlay" onClick={handleOverlayClick}>
+      <div className="nt-modal" onClick={(e) => e.stopPropagation()}>
 
         <div className="nt-header" style={{borderBottom:`2px solid ${BRAND.light}`}}>
           <h3 style={{display:'flex',alignItems:'center',gap:8}}>
             <i className="fas fa-tooth" style={{color:BRAND.primary}}></i>
             Nuevo Tratamiento
           </h3>
-          <button type="button" className="nt-close" onClick={onClose}>×</button>
+          <button type="button" className="nt-close" onClick={handleCloseModal}>×</button>
         </div>
 
         <form className="nt-form" onSubmit={handleSubmit}>
 
-          {/* ── NUEVO: Selector de paciente (solo si no viene por prop) ── */}
           {!pacienteIdProp && (
             <div>
               <p style={sectionTitle}>Paciente</p>
@@ -392,10 +476,8 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             </div>
           )}
 
-          {/* ── El resto del formulario solo se muestra si hay paciente ── */}
           {pacienteId && (
             <>
-              {/* Paciente seleccionado por prop — mostrar nombre */}
               {pacienteIdProp && pacienteNombre && (
                 <div style={{ padding:'8px 14px', background:BRAND.light, borderRadius:10, border:`1.5px solid ${BRAND.border}`, fontSize:13, color:BRAND.primary, fontWeight:700, marginBottom:4 }}>
                   <i className="fas fa-user" style={{ marginRight:8 }}/>
@@ -403,7 +485,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 </div>
               )}
 
-              {/* Información clínica */}
               <div>
                 <p style={sectionTitle}>Información clínica</p>
                 <div className="nt-grid">
@@ -430,7 +511,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 </div>
               </div>
 
-              {/* Dientes afectados */}
               <div>
                 <p style={sectionTitle}>Dientes afectados</p>
                 <p style={{fontSize:12,color:'#6b7280',margin:'0 0 8px'}}>
@@ -465,7 +545,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 )}
               </div>
 
-              {/* Materiales */}
               <div>
                 <p style={sectionTitle}>Materiales utilizados</p>
                 <input style={{padding:'9px 12px',border:'1px solid #d1d5db',borderRadius:10,fontSize:14,width:'100%',boxSizing:'border-box'}}
@@ -494,7 +573,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 {matSelec.length===0&&!queryMat&&<p style={{fontSize:12,color:'#9ca3af',margin:'6px 0 0'}}>Busca y agrega materiales utilizados en este tratamiento.</p>}
               </div>
 
-              {/* Costo */}
               <div>
                 <p style={sectionTitle}>Costo y pago</p>
                 <div className="nt-grid">
@@ -511,7 +589,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 </div>
               </div>
 
-              {/* Sesiones */}
               <div>
                 <p style={sectionTitle}>Sesiones</p>
                 <label className="nt-multisesion-check">
@@ -526,7 +603,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
                 )}
               </div>
 
-              {/* Radiografías */}
               <div>
                 <p style={sectionTitle}>Radiografías y documentos</p>
                 <div className={`nt-dropzone ${dragOver?'over':''}`}
@@ -555,7 +631,6 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             </>
           )}
 
-          {/* Si no hay paciente seleccionado, mostrar mensaje */}
           {!pacienteId && pacienteIdProp === undefined && (
             <div style={{ textAlign:'center', padding:'24px', color:'#9ca3af', fontSize:13 }}>
               <i className="fas fa-user-circle" style={{ fontSize:32, display:'block', marginBottom:8, opacity:0.4 }}/>
@@ -563,15 +638,34 @@ export default function NuevoTratamientoModal({ open, onClose, onCreated, pacien
             </div>
           )}
 
+          {/* Mensaje de éxito simplificado */}
+          {successMessage && (
+            <div className="nt-success" style={{
+              background: '#d1fae5',
+              border: '1px solid #34d399',
+              color: '#065f46',
+              borderRadius: '10px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <i className="fas fa-check-circle" style={{ fontSize: '18px' }}></i>
+              {successMessage}
+            </div>
+          )}
+
           {error && <div className="nt-error"><i className="fas fa-exclamation-circle"></i> {error}</div>}
 
           <div className="nt-actions">
-            <button type="button" className="nt-btn nt-btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+            <button type="button" className="nt-btn nt-btn-secondary" onClick={handleCloseModal} disabled={saving}>Cancelar</button>
             <button type="submit" className="nt-btn nt-btn-primary" disabled={saving || !pacienteId}
-              style={{background:(saving||!pacienteId)?'#9ca3af':BRAND.gradient,border:'none',cursor:(!pacienteId)?'not-allowed':'pointer'}}
-              onMouseEnter={e=>{if(!saving&&pacienteId)e.currentTarget.style.background=BRAND.gradientHover;}}
-              onMouseLeave={e=>{if(!saving&&pacienteId)e.currentTarget.style.background=BRAND.gradient;}}>
-              {saving?'Guardando...':'Guardar tratamiento'}
+              style={{background:(saving||!pacienteId)?'#9ca3af':BRAND.gradient,border:'none',cursor:(!pacienteId)?'not-allowed':'pointer'}}>
+              {saving ? (
+                <><i className="fas fa-spinner fa-spin" style={{marginRight:8}}></i> Guardando...</>
+              ) : 'Guardar tratamiento'}
             </button>
           </div>
         </form>

@@ -52,7 +52,7 @@ const ToothSVG = ({ def, numero, overlayColor, isExtracted, hovered }) => {
         </radialGradient>
         <linearGradient id={lgid} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stopColor={C.highlight} stopOpacity="0.4"/>
-          <stop offset="100%" stopColor={C.shadow}    stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={C.shadow}     stopOpacity="0.3"/>
         </linearGradient>
         <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="2.5" result="blur"/>
@@ -84,7 +84,6 @@ const ToothSVG = ({ def, numero, overlayColor, isExtracted, hovered }) => {
   );
 };
 
-// ── Diente ────────────────────────────────────────────────────────────────────
 const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
   const [hovered, setHovered] = useState(false);
   const type        = getToothType(numero);
@@ -128,21 +127,23 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
   );
 };
 
-// ── Odontograma principal ─────────────────────────────────────────────────────
-// soloLectura = true  → sin paleta, sin clic (panel Mi Agenda)
-// soloLectura = false → interactivo completo con botón Guardar (Mis Pacientes)
-// onGuardar(condiciones) → callback que recibe el objeto {diente: condicion} actualizado
 const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   const [teethStates,   setTeethStates]   = useState(INITIAL_TEETH);
   const [selectedPaint, setSelectedPaint] = useState(null);
-  const [saving,        setSaving]        = useState(false);
+  const [saving,         setSaving]        = useState(false);
   const [savedMsg,      setSavedMsg]      = useState('');
   const [hasChanges,    setHasChanges]    = useState(false);
 
-  // ── NUEVO: inicializar desde paciente.odontograma cuando cambia el paciente ──
   useEffect(() => {
-    if (paciente?.odontograma && typeof paciente.odontograma === 'object') {
-      setTeethStates(paciente.odontograma);
+    if (paciente?.odontograma) {
+      try {
+        const data = typeof paciente.odontograma === 'string' 
+          ? JSON.parse(paciente.odontograma) 
+          : paciente.odontograma;
+        setTeethStates(data || INITIAL_TEETH);
+      } catch (e) {
+        setTeethStates(INITIAL_TEETH);
+      }
     } else {
       setTeethStates(INITIAL_TEETH);
     }
@@ -157,17 +158,33 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
     setHasChanges(true);
   };
 
-  // ── NUEVO: llamar onGuardar con el estado actual ──
   const handleGuardar = async () => {
     if (!onGuardar) return;
+    
+    const dientesTratados = Object.keys(teethStates).filter(d => teethStates[d] !== 'sano');
+
     try {
       setSaving(true);
-      await onGuardar(teethStates);
+      
+      const payload = {
+        // Se asegura de tomar el ID correcto según el objeto paciente recibido
+        pacienteId: paciente?.id || paciente?.id_paciente,
+        // Evita el error notNull Violation en el backend
+        tipo: selectedPaint ? (PALETTE.find(p=>p.id===selectedPaint)?.label) : 'Evaluación General',
+        diente: dientesTratados.length > 0 ? dientesTratados.join(', ') : 'General',
+        observaciones: 'Actualización de odontograma gráfico',
+        costo: 0,
+        odontograma: teethStates 
+      };
+
+      await onGuardar(payload);
+      
       setHasChanges(false);
       setSavedMsg('¡Odontograma guardado!');
       setTimeout(() => setSavedMsg(''), 3000);
     } catch (err) {
-      setSavedMsg('Error al guardar');
+      console.error("Error al guardar:", err);
+      setSavedMsg('Error al guardar: ' + (err.message || 'Intente de nuevo'));
       setTimeout(() => setSavedMsg(''), 3000);
     } finally {
       setSaving(false);
@@ -198,19 +215,16 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
 
   return (
     <div style={{background:'white',borderRadius:'12px',padding:'14px 12px 12px',fontFamily:"'Segoe UI', system-ui, sans-serif",maxWidth:'100%',boxSizing:'border-box',boxShadow:'0 2px 12px rgba(0,0,0,0.07)'}}>
-
-      {/* Nombre del paciente */}
       <div style={{marginBottom:'10px',display:'flex',alignItems:'center',gap:8}}>
         <i className="fas fa-tooth" style={{color:'#1E88E5',fontSize:13}}></i>
         <span style={{fontWeight:'800',fontSize:'13px',color:'#1A3040'}}>
-          {paciente.paciente_nombre}
+          {paciente.paciente_nombre || paciente.nombre}
         </span>
         {soloLectura && (
           <span style={{fontSize:10,color:'#9ca3af',marginLeft:'auto',fontStyle:'italic'}}>Solo lectura</span>
         )}
       </div>
 
-      {/* Grilla dental */}
       <div style={{background:'linear-gradient(180deg,#E8EFF6 0%,#DDE6EF 100%)',borderRadius:'10px',padding:'10px 6px',border:'1px solid #C8D8E4',overflowX:'auto'}}>
         <div style={{minWidth:'max-content'}}>
           <ArchRow teeth={[...upperLeft,...upperRight]} isUpper={true}/>
@@ -219,7 +233,6 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
         </div>
       </div>
 
-      {/* Paleta — solo en modo interactivo */}
       {!soloLectura && (
         <>
           <div style={{display:'flex',justifyContent:'center',marginTop:'12px'}}>
@@ -240,15 +253,10 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
 
           {selectedPaint && (
             <p style={{textAlign:'center',fontSize:'10px',color:'#6B7280',margin:'5px 0 0',fontStyle:'italic'}}>
-              Aplicando{' '}
-              <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>
-                {PALETTE.find(p=>p.id===selectedPaint)?.label}
-              </strong>
-              {' '}— haz clic en un diente
+              Aplicando <strong style={{color:PALETTE.find(p=>p.id===selectedPaint)?.color??'#374151',fontStyle:'normal'}}>{PALETTE.find(p=>p.id===selectedPaint)?.label}</strong> — haz clic en un diente
             </p>
           )}
 
-          {/* ── NUEVO: Botón Guardar + feedback ── */}
           {onGuardar && (
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginTop:12}}>
               <button
@@ -256,9 +264,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
                 disabled={saving || !hasChanges}
                 style={{
                   padding:'8px 22px', borderRadius:10, border:'none',
-                  background: hasChanges
-                    ? 'linear-gradient(135deg,#4f46e5,#db2777)'
-                    : '#e5e7eb',
+                  background: hasChanges ? 'linear-gradient(135deg,#4f46e5,#db2777)' : '#e5e7eb',
                   color: hasChanges ? 'white' : '#9ca3af',
                   fontWeight:700, fontSize:13, cursor: hasChanges ? 'pointer' : 'default',
                   transition:'all 0.2s', boxShadow: hasChanges ? '0 4px 12px rgba(79,70,229,0.3)' : 'none',
@@ -267,17 +273,13 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
                 {saving ? 'Guardando...' : 'Guardar odontograma'}
               </button>
               {savedMsg && (
-                <span style={{
-                  fontSize:12, fontWeight:600,
-                  color: savedMsg.startsWith('Error') ? '#dc2626' : '#16a34a',
-                }}>
+                <span style={{ fontSize:12, fontWeight:600, color: savedMsg.startsWith('Error') ? '#dc2626' : '#16a34a' }}>
                   {savedMsg.startsWith('Error') ? '✗' : '✓'} {savedMsg}
                 </span>
               )}
             </div>
           )}
 
-          {/* Leyenda */}
           <div style={{display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'5px 12px',marginTop:'10px',padding:'8px 0 2px',borderTop:'1px solid #EEF2F7'}}>
             {PALETTE.filter(p=>p.id!=='sano').map(opt=>(
               <div key={opt.id} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:'#4B5563'}}>
