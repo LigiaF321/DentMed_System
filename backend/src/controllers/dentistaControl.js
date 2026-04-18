@@ -137,7 +137,29 @@ const dentistaController = {
         } catch (error) {
             res.status(500).json({ error: "No se puede eliminar: registros vinculados" });
         }
+    },
+    obtenerPerfil: async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const dentista = await Dentista.findOne({
+      where: { id_usuario: userId }
+    });
+
+    if (!dentista) {
+      return res.status(404).json({ message: "Dentista no encontrado" });
     }
+
+    res.json({
+      nombre: dentista.nombre,
+      especialidad: dentista.especialidad || "Odontólogo"
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error obteniendo perfil" });
+  }
+}
 };
 
 module.exports = dentistaController;

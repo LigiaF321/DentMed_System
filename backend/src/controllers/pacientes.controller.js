@@ -412,14 +412,14 @@ const actualizarOdontograma = async (req, res) => {
 
     // Verificar qué se guardó
     const pacienteActualizado = await Paciente.findByPk(id);
-    console.log('✅ [ODONTOGRAMA] Odontograma guardado en BD:', pacienteActualizado.odontograma);
+    console.log('[ODONTOGRAMA] Odontograma guardado en BD:', pacienteActualizado.odontograma);
 
     return res.status(200).json({
       message: 'Odontograma actualizado correctamente',
       odontograma: estados
     });
   } catch (error) {
-    console.error('❌ [ODONTOGRAMA] Error al guardar odontograma:', error);
+    console.error(' [ODONTOGRAMA] Error al guardar odontograma:', error);
     return res.status(500).json({
       ok: false,
       message: 'Error al guardar odontograma: ' + error.message
