@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./LoginScreen.css";
+import logoDentMed from "../assets/dentmed-logo.png";
 import { setAuthToken, clearAuthToken } from "../utils/auth";
 
 const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
-  const [userType, setUserType] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -28,7 +28,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     });
   };
 
-  const hacerLoginBackend = async ({ loginType }) => {
+  const hacerLoginBackend = async () => {
     const response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
       headers: {
@@ -38,7 +38,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         email: username.trim(),
         username: username.trim(),
         password: password,
-        loginType,
       }),
     });
 
@@ -59,9 +58,11 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     const roleFromApi =
       data?.role ||
       data?.rol ||
+      data?.user?.role ||
+      data?.user?.rol ||
       data?.data?.role ||
       data?.data?.rol ||
-      loginType;
+      "admin";
 
     return {
       token,
@@ -76,45 +77,23 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     setError("");
 
     try {
-      if (!userType) {
-        setError("Por favor seleccione un tipo de usuario");
-        setIsLoading(false);
-        return;
-      }
-
       if (!username.trim() || !password.trim()) {
         setError("Por favor ingrese sus credenciales");
         setIsLoading(false);
         return;
       }
 
-      if (userType === "admin") {
-        const resultado = await hacerLoginBackend({ loginType: "admin" });
+      const resultado = await hacerLoginBackend();
 
-        guardarSesion(resultado.token, "admin", {
-          requiresPasswordChange:
-            resultado?.data?.requiresPasswordChange ??
-            resultado?.data?.data?.requiresPasswordChange ??
-            true,
-        });
+      guardarSesion(resultado.token, resultado.role, {
+        requiresPasswordChange:
+          resultado?.data?.requiresPasswordChange ??
+          resultado?.data?.data?.requiresPasswordChange ??
+          true,
+      });
 
-        setIsLoading(false);
-        return;
-      }
-
-      if (userType === "doctor") {
-        const resultado = await hacerLoginBackend({ loginType: "doctor" });
-
-        guardarSesion(resultado.token, "doctor", {
-          requiresPasswordChange:
-            resultado?.data?.requiresPasswordChange ??
-            resultado?.data?.data?.requiresPasswordChange ??
-            true,
-        });
-
-        setIsLoading(false);
-        return;
-      }
+      setIsLoading(false);
+      return;
     } catch (err) {
       console.error("Error en login:", err);
       setError(
@@ -132,21 +111,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     }
   };
 
-  const handleUserTypeSelect = (type) => {
-    if (userType === type) {
-      setUserType("");
-      setUsername("");
-      setPassword("");
-      setError("");
-      return;
-    }
-
-    setUserType(type);
-    setUsername("");
-    setPassword("");
-    setError("");
-  };
-
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
     if (error) {
@@ -161,14 +125,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
     }
   };
 
-  useEffect(() => {
-    if (userType) {
-      setUsername("");
-      setPassword("");
-      setError("");
-    }
-  }, [userType]);
-
   return (
     <div className="login-screen">
 
@@ -176,11 +132,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
       <div className="login-main">
         <div className="login-visual">
           <div className="visual-content">
-            <div
-              className={`visual-fade${
-                userType === "doctor" ? " hide" : ""
-              }`}
-            >
+            <div className="visual-fade">
               <h2>Bienvenido al Sistema de Gestión DentMed</h2>
               <p className="visual-subtitle">
                 Acceso exclusivo para personal autorizado
@@ -192,37 +144,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             </div>
 
-            <div
-              className={`doctor-instructions-visual${
-                userType === "doctor" ? " show" : ""
-              }`}
-            >
-              {userType === "doctor" && (
-                <>
-                  <h2>
-                    <i className="fas fa-user-md"></i> Instrucciones para
-                    Doctores
-                  </h2>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Use credenciales
-                    temporales asignadas
-                  </p>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Ejemplo:
-                    dra.garcia / TempPass123
-                  </p>
-                  <p>
-                    <i className="fas fa-check-circle"></i> Cambie su contraseña
-                    en el primer acceso
-                  </p>
-                  <p className="warning-text">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    Si no tiene credenciales, contacte al administrador
-                  </p>
-                </>
-              )}
-            </div>
-
 
 
       
@@ -232,7 +153,9 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
         <div className="login-form-container">
           <div className="form-header">
-            
+            <div className="login-logo">
+              <img src={logoDentMed} alt="DentMed" />
+            </div>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -246,35 +169,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               </div>
             )}
 
-            <div className="form-group user-type-group">
-              <label className="form-label">
-                <i className="fas fa-user-tag"></i> Tipo de Usuario *
-              </label>
-              <div className="user-type-options">
-                <button
-                  type="button"
-                  className={`user-type-btn ${
-                    userType === "admin" ? "selected" : ""
-                  }`}
-                  onClick={() => handleUserTypeSelect("admin")}
-                >
-                  <i className="fas fa-user-shield"></i>
-                  <span>Administrador(a)</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`user-type-btn ${
-                    userType === "doctor" ? "selected" : ""
-                  }`}
-                  onClick={() => handleUserTypeSelect("doctor")}
-                >
-                  <i className="fas fa-user-md"></i>
-                  <span>Doctor(a)</span>
-                </button>
-              </div>
-            </div>
-
             <div className="form-group">
               <label htmlFor="username" className="form-label">
                 <i className="fas fa-user"></i> Usuario *
@@ -284,20 +178,13 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 id="username"
                 value={username}
                 onChange={handleUsernameChange}
-                placeholder={
-                  userType === "admin"
-                    ? "Ingrese usuario admin"
-                    : "Ej: dra.garcia"
-                }
+                placeholder="Usuario o correo"
                 required
-                disabled={!userType}
                 className="form-input"
               />
               <div className="input-hint">
                 <i className="fas fa-info-circle"></i>
-                {userType === "admin"
-                  ? "Debe existir en el backend para generar token"
-                  : "Use usuario asignado"}
+                Ingrese su usuario o correo asignado.
               </div>
             </div>
 
@@ -310,13 +197,8 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 id="password"
                 value={password}
                 onChange={handlePasswordChange}
-                placeholder={
-                  userType === "admin"
-                    ? "Ingrese contraseña admin"
-                    : "Contraseña temporal asignada"
-                }
+                placeholder="Ingrese su contraseña"
                 required
-                disabled={!userType}
                 className="form-input"
               />
               
@@ -329,7 +211,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                   id="remember"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={!userType}
                   className="checkbox-input"
                 />
                 <label htmlFor="remember" className="checkbox-label">
@@ -351,8 +232,8 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
             <button
               type="submit"
-              className={`submit-btn ${userType ? "active" : "disabled"}`}
-              disabled={isLoading || !userType}
+              className={`submit-btn ${isLoading ? "disabled" : ""}`}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>
