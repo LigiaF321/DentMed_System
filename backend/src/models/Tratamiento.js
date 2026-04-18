@@ -11,7 +11,8 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Pacientes',
+      // CORRECCIÓN: En tu base de datos la tabla suele llamarse 'pacientes' (minúsculas)
+      model: 'pacientes', 
       key: 'id',
     },
   },
@@ -22,6 +23,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
   fecha: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: DataTypes.NOW, // Recomendado para evitar nulos de fecha
   },
   diente: {
     type: DataTypes.STRING,
@@ -31,7 +33,8 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Dentistas',
+      // CORRECCIÓN: Tu tabla en phpMyAdmin se llama 'dentistas' en minúsculas
+      model: 'dentistas', 
       key: 'id',
     },
   },
@@ -52,7 +55,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
     allowNull: true,
   },
   materiales: {
-    type: DataTypes.TEXT, // Se guarda como JSON.stringify(array)
+    type: DataTypes.TEXT,
     allowNull: true,
     get() {
       const raw = this.getDataValue('materiales');
@@ -67,7 +70,8 @@ const Tratamiento = sequelize.define('Tratamiento', {
     }
   },
 }, {
-  tableName: 'Tratamientos',
+  // CORRECCIÓN: En tu captura de phpMyAdmin, la tabla aparece como 'tratamientos' (minúsculas)
+  tableName: 'tratamientos', 
   timestamps: false,
 });
 

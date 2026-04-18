@@ -40,7 +40,6 @@
 
 .nt-header h3 {
   margin: 0;
-  font-size: 18px;
   font-weight: 700;
   color: #111827;
   display: flex;
@@ -53,7 +52,6 @@
 .nt-close {
   background: none;
   border: none;
-  font-size: 22px;
   cursor: pointer;
   color: #6b7280;
   line-height: 1;
@@ -69,7 +67,6 @@
 }
 
 .nt-section-title {
-  font-size: 13px;
   font-weight: 700;
   color: #2563eb;
   text-transform: uppercase;
@@ -96,7 +93,6 @@
 }
 
 .nt-field label {
-  font-size: 13px;
   font-weight: 600;
   color: #374151;
 }
@@ -112,7 +108,6 @@
   padding: 9px 12px;
   border: 1px solid #d1d5db;
   border-radius: 10px;
-  font-size: 14px;
   color: #111827;
   background: #fafafa;
   transition: border-color 0.15s;
@@ -139,7 +134,6 @@
 }
 
 .nt-odonto-hint {
-  font-size: 12px;
   color: #6b7280;
   margin-bottom: 8px;
 }
@@ -201,7 +195,6 @@
   color: #1d4ed8;
   padding: 2px 8px;
   border-radius: 20px;
-  font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -213,7 +206,6 @@
   border: none;
   cursor: pointer;
   color: #1d4ed8;
-  font-size: 12px;
   padding: 0;
   line-height: 1;
 }
@@ -266,7 +258,6 @@
   background: #f8fafc;
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 13px;
 }
 
 .nt-mat-row span { flex: 1; color: #111827; }
@@ -276,7 +267,6 @@
   padding: 4px 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 13px;
   text-align: center;
 }
 
@@ -285,7 +275,6 @@
   border: none;
   color: #dc2626;
   cursor: pointer;
-  font-size: 14px;
   padding: 0;
 }
 
@@ -305,9 +294,9 @@
   background: #dbeafe;
 }
 
-.nt-dropzone i { font-size: 24px; color: #60a5fa; margin-bottom: 6px; display: block; }
-.nt-dropzone p { margin: 0; font-size: 13px; color: #6b7280; }
-.nt-dropzone small { font-size: 11px; color: #9ca3af; }
+.nt-dropzone i { color: #60a5fa; margin-bottom: 6px; display: block; }
+.nt-dropzone p { margin: 0; color: #6b7280; }
+.nt-dropzone small { color: #9ca3af; }
 
 .nt-files-preview {
   display: flex;
@@ -323,7 +312,6 @@
   background: #f1f5f9;
   border-radius: 8px;
   padding: 4px 8px;
-  font-size: 12px;
   color: #374151;
 }
 
@@ -332,7 +320,6 @@
   border: none;
   color: #dc2626;
   cursor: pointer;
-  font-size: 13px;
   padding: 0;
 }
 
@@ -341,7 +328,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
   font-weight: 600;
   color: #374151;
   cursor: pointer;
@@ -399,4 +385,97 @@
   .nt-grid { grid-template-columns: 1fr; }
   .nt-modal { border-radius: 16px; }
   .nt-form { padding: 16px; }
+}
+
+/* ───────────────────────────────────────────── */
+/* ── MODAL DE ÉXITO PROFESIONAL (NUEVO) ── */
+/* ───────────────────────────────────────────── */
+
+.nt-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  backdrop-filter: blur(4px);
+}
+
+.nt-success-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 40px;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nt-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+}
+
+.nt-success-icon i {
+  color: white;
+  font-size: 36px;
+}
+
+.nt-success-modal h4 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  color: #111827;
+}
+
+.nt-success-modal p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+.nt-success-btn {
+  background: linear-gradient(135deg, #4f46e5, #db2777);
+  border: none;
+  border-radius: 40px;
+  padding: 12px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.nt-success-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  opacity: 0.95;
+}
+
+.nt-success-btn:active {
+  transform: translateY(0);
 }

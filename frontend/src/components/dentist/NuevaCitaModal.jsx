@@ -226,7 +226,7 @@ function CrearPacienteRapidoModal({
     <div className="dm17-overlay">
       <div className="dm17-modal dm17-modal-small">
         <div className="dm17-modal-header">
-          <h3>Crear nuevo paciente</h3>
+          <h3 className="dentista-titulo">Crear nuevo paciente</h3>
           <button type="button" className="dm17-close-btn" onClick={onClose}>
             ×
           </button>
@@ -235,7 +235,7 @@ function CrearPacienteRapidoModal({
         <form className="dm17-form" onSubmit={handleSubmit}>
           <div className="dm17-grid">
             <div className="dm17-field dm17-field-full">
-              <label>Nombre completo</label>
+              <label className="dentista-label">Nombre completo</label>
               <input
                 type="text"
                 name="nombre"
@@ -247,7 +247,7 @@ function CrearPacienteRapidoModal({
             </div>
 
             <div className="dm17-field">
-              <label>Teléfono</label>
+              <label className="dentista-label">Teléfono</label>
               <input
                 type="text"
                 name="telefono"
@@ -258,7 +258,7 @@ function CrearPacienteRapidoModal({
             </div>
 
             <div className="dm17-field">
-              <label>Correo</label>
+              <label className="dentista-label">Correo</label>
               <input
                 type="email"
                 name="email"
@@ -269,7 +269,7 @@ function CrearPacienteRapidoModal({
             </div>
           </div>
 
-          {error ? <div className="dm17-error">{error}</div> : null}
+          {error ? <div className="dm17-error dentista-texto-xpequeno">{error}</div> : null}
 
           <div className="dm17-actions">
             <button

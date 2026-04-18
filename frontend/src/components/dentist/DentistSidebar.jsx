@@ -26,7 +26,7 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
           <img src={logoDentMed} alt="DentMed" className="dentist-sidebar-logoImg" />
         </div>
 
-        <div className="dentist-sidebar-sectionTitle">Menú</div>
+        <div className="dentist-sidebar-sectionTitle dentista-texto-xxsmall">Menú</div>
 
         <nav className="dentist-sidebar-nav">
           {MENU_ITEMS.map((item) => {
@@ -42,7 +42,7 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
                 <span className="dentist-sidebar-ico" aria-hidden="true">
                   <i className={`fa-solid ${item.icon}`} />
                 </span>
-                <span className="dentist-sidebar-label">{item.label}</span>
+                <span className="dentist-sidebar-label dentista-texto-normal">{item.label}</span>
               </button>
             );
           })}
@@ -53,8 +53,8 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
         <div className="dentist-sidebar-user">
           <div className="dentist-sidebar-avatar">{userInitial}</div>
           <div className="dentist-sidebar-usertext">
-            <div className="dentist-sidebar-username">Dr. {displayName}</div>
-            <div className="dentist-sidebar-role">Odontólogo</div>
+            <div className="dentist-sidebar-username dentista-titulo">Dr. {displayName}</div>
+            <div className="dentist-sidebar-role dentista-label">Odontólogo</div>
           </div>
         </div>
 

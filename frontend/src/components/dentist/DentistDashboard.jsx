@@ -156,6 +156,9 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const [bloqueoToDelete, setBloqueoToDelete] = useState(null);
   const [pacienteExpediente, setPacienteExpediente] = useState(null);
 
+  // ── NUEVO: paciente con odontograma cargado para mostrar en agenda ──
+  const [pacienteDetalleAgenda, setPacienteDetalleAgenda] = useState(null);
+
   const [metrics, setMetrics] = useState({
     citasHoy: 0, pacientesVistos: 0, siguienteCita: null, tratamientosPendientes: 0,
   });
@@ -227,6 +230,36 @@ const DentistDashboard = ({ userData, onLogout }) => {
     } catch { setBloques([]); }
   };
 
+  // ── NUEVO: cargar detalle del paciente (con odontograma) al seleccionar cita ──
+  const fetchPacienteDetalle = async (pacienteId, citaBase) => {
+    if (!pacienteId) {
+      setPacienteDetalleAgenda(citaBase || null);
+      return;
+    }
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`http://localhost:3000/api/pacientes/${pacienteId}?from_search=1`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('No se pudo obtener el paciente');
+      const detalle = await res.json();
+      // Parsear odontograma si viene como string
+      const odontograma = typeof detalle.odontograma === 'string'
+        ? JSON.parse(detalle.odontograma || '{}')
+        : (detalle.odontograma || {});
+      setPacienteDetalleAgenda({
+        ...citaBase,
+        ...detalle,
+        id_paciente: detalle.id || pacienteId,
+        paciente_nombre: detalle.nombre_completo || detalle.nombre || citaBase?.paciente_nombre || 'Paciente',
+        odontograma,
+      });
+    } catch {
+      // Si falla el fetch, usar los datos de la cita sin odontograma
+      setPacienteDetalleAgenda(citaBase || null);
+    }
+  };
+
   const handleSaveBloqueo = async (datos) => {
     try {
       await bloquesService.crearBloqueo(datos);
@@ -267,6 +300,9 @@ const DentistDashboard = ({ userData, onLogout }) => {
     });
     setAgendaDate(fechaNuevaCita);
     setSelectedCita(response.selectedCita || nuevaCita);
+    // ── NUEVO: cargar odontograma del paciente de la nueva cita ──
+    const idPac = nuevaCita.id_paciente || nuevaCita.paciente?.id;
+    fetchPacienteDetalle(idPac, response.selectedCita || nuevaCita);
     if (calendarRef.current) {
       const api = calendarRef.current.getApi();
       api.gotoDate(fechaNuevaCita);
@@ -282,6 +318,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
     setSelectedEvent((prev) => prev && String(prev.id) === String(idCita) ? null : prev);
     setShowModal((prev) => selectedEvent && String(selectedEvent.id) === String(idCita) ? false : prev);
     setSelectedCita((prev) => prev && Number(prev.id) === idCita ? null : prev);
+    if (selectedCita && Number(selectedCita.id) === idCita) setPacienteDetalleAgenda(null);
     mostrarToast('Cita cancelada correctamente');
   };
 
@@ -296,10 +333,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
     }
   };
 
+  // ── CAMBIO: al seleccionar cita, también cargar el detalle del paciente ──
   const handleSelectCita = (cita) => {
     setSelectedCita(cita);
     setAgendaDate(new Date(cita.fecha_hora));
     if (calendarRef.current) calendarRef.current.getApi().gotoDate(new Date(cita.fecha_hora));
+    // Cargar odontograma del paciente
+    const idPac = cita.id_paciente || cita.paciente?.id;
+    fetchPacienteDetalle(idPac, cita);
   };
 
   const handleSelectPatientFromSearch = (pacienteDetalle) => {
@@ -312,8 +353,9 @@ const DentistDashboard = ({ userData, onLogout }) => {
       setSelectedCita(citaHoy);
       setAgendaDate(new Date(citaHoy.fecha_hora));
       if (calendarRef.current) calendarRef.current.getApi().gotoDate(new Date(citaHoy.fecha_hora));
+      fetchPacienteDetalle(citaHoy.id_paciente || citaHoy.paciente?.id, citaHoy);
     } else {
-      setSelectedCita({
+      const citaBase = {
         id: `paciente-${pacienteDetalle.id}`,
         id_paciente: pacienteDetalle.id,
         fecha_hora: new Date().toISOString(),
@@ -324,9 +366,11 @@ const DentistDashboard = ({ userData, onLogout }) => {
         paciente_nombre: pacienteDetalle.nombre_completo || pacienteDetalle.nombre || 'Paciente',
         paciente: pacienteDetalle,
         esBusquedaPaciente: true,
-      });
+      };
+      setSelectedCita(citaBase);
       setAgendaDate(new Date());
       if (calendarRef.current) calendarRef.current.getApi().gotoDate(new Date());
+      fetchPacienteDetalle(pacienteDetalle.id, citaBase);
     }
     setActiveView('agenda');
     mostrarToast('Paciente seleccionado correctamente');
@@ -381,7 +425,13 @@ const DentistDashboard = ({ userData, onLogout }) => {
     const citasEnFecha = ordenarCitasPorFecha(
       citas.filter((c) => esMismoDia(c.fecha_hora, nuevaFecha) && normalizarEstado(c.estado) !== 'cancelada')
     );
-    setSelectedCita(citasEnFecha.length ? citasEnFecha[0] : null);
+    const primera = citasEnFecha.length ? citasEnFecha[0] : null;
+    setSelectedCita(primera);
+    if (primera) {
+      fetchPacienteDetalle(primera.id_paciente || primera.paciente?.id, primera);
+    } else {
+      setPacienteDetalleAgenda(null);
+    }
   };
 
   const handleViewChange = (view) => {
@@ -444,7 +494,12 @@ const DentistDashboard = ({ userData, onLogout }) => {
           const primera = ordenadas.find(
             (c) => new Date(c.fecha_hora).toDateString() === hoy && !['completada', 'cancelada'].includes(normalizarEstado(c.estado))
           );
-          if (primera) { setSelectedCita(primera); setAgendaDate(new Date(primera.fecha_hora)); }
+          if (primera) {
+            setSelectedCita(primera);
+            setAgendaDate(new Date(primera.fecha_hora));
+            // ── NUEVO: cargar odontograma de la primera cita del día ──
+            fetchPacienteDetalle(primera.id_paciente || primera.paciente?.id, primera);
+          }
         }
       } catch (e) { console.error('Error obteniendo citas:', e); }
       finally { setLoading(false); }
@@ -586,7 +641,8 @@ const DentistDashboard = ({ userData, onLogout }) => {
                   selectedDate={agendaDate}
                   onVerDetalles={() => setActiveView('citas')}
                 />
-                <Odontograma paciente={selectedCita} soloLectura={true} />
+                {/* ── CAMBIO: usar pacienteDetalleAgenda en lugar de selectedCita ── */}
+                <Odontograma paciente={pacienteDetalleAgenda} soloLectura={true} />
                 <PatientTabs
                   paciente={selectedCita}
                   onVerTodos={() => setActiveView('tratamientos')}

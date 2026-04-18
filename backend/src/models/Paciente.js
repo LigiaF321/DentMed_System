@@ -34,6 +34,10 @@ const Paciente = sequelize.define(
       allowNull: true,
       comment: "Alergias separadas por comas",
     },
+    odontograma: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     tableName: "pacientes",
