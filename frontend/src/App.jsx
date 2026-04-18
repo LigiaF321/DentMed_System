@@ -44,15 +44,40 @@ function App() {
 
   const goTo = (next) => setScreen(next);
 
-  const handleLoginSuccess = (userData) => {
-    if (!userData) {
-      limpiarSesion();
-      return;
-    }
+const handleLoginSuccess = async (userData) => {
+  if (!userData) {
+    limpiarSesion();
+    return;
+  }
 
+  try {
+    const token = userData.token;
+
+    const res = await fetch("http://localhost:3000/api/dentistas/perfil", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const perfil = await res.json();
+
+    const userCompleto = {
+      ...userData,
+      nombre: perfil.nombre,
+      especialidad: perfil.especialidad
+    };
+
+    setCurrentUser(userCompleto);
+    setScreen("loading");
+
+  } catch (error) {
+    console.error("Error cargando perfil:", error);
+
+    // fallback
     setCurrentUser(userData);
-    setScreen("loading"); // Sync inmediato
-  };
+    setScreen("loading");
+  }
+};
 
   const handleLogout = () => {
     limpiarSesion();

@@ -9,13 +9,29 @@ const MENU_ITEMS = [
   { id: 'tratamientos', icon: 'fa-tooth',          label: 'Tratamientos' },
   { id: 'notas',        icon: 'fa-sticky-note',    label: 'Notas' },
 ];
+const ESPECIALIDADES = [
+  { id: 1, nombre: "Odontología General" },
+  { id: 2, nombre: "Ortodoncia" },
+  { id: 3, nombre: "Endodoncia" },
+  { id: 4, nombre: "Periodoncia" },
+  { id: 5, nombre: "Odontopediatría" },
+  { id: 6, nombre: "Cirugía Oral" },
+  { id: 7, nombre: "Rehabilitación Oral" },
+  { id: 8, nombre: "Estética Dental" }
+];
 
 const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentistaInfo }) => {
+
   const displayName =
     dentistaInfo?.nombre ||
     userData?.username ||
     userData?.email?.split('@')?.[0] ||
     'Doctor(a)';
+
+  const especialidad =
+    dentistaInfo?.especialidad ||
+    ESPECIALIDADES.find(e => e.id === dentistaInfo?.id_especialidad)?.nombre ||
+    'Odontólogo';
 
   const userInitial = String(displayName).charAt(0).toUpperCase();
 
@@ -54,7 +70,9 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
           <div className="dentist-sidebar-avatar">{userInitial}</div>
           <div className="dentist-sidebar-usertext">
             <div className="dentist-sidebar-username dentista-titulo">Dr. {displayName}</div>
-            <div className="dentist-sidebar-role dentista-label">Odontólogo</div>
+            <div className="dentist-sidebar-role dentista-label">
+  {especialidad}
+</div>
           </div>
         </div>
 
