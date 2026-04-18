@@ -202,6 +202,34 @@ const obtenerSesionesTratamiento = async (req, res) => {
   }
 };
 
+/**
+ * Actualiza el estado de un tratamiento (cancelar, completar, etc.)
+ */
+const actualizarTratamiento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    
+    const tratamiento = await Tratamiento.findByPk(id);
+    if (!tratamiento) {
+      return res.status(404).json({ error: "Tratamiento no encontrado" });
+    }
+    
+    await tratamiento.update({ estado });
+    
+    return res.json({ 
+      message: "Tratamiento actualizado correctamente", 
+      tratamiento 
+    });
+  } catch (error) {
+    console.error("Error al actualizar tratamiento:", error);
+    return res.status(500).json({ 
+      error: "Error interno al actualizar el tratamiento",
+      detalle: error.message 
+    });
+  }
+};
+
 module.exports = {
   listarTodos,
   guardarTratamiento,
@@ -209,4 +237,5 @@ module.exports = {
   obtenerDetalleTratamiento,
   exportarHistorialPDF,
   obtenerSesionesTratamiento,
+  actualizarTratamiento,  // ← AGREGADA: función para cancelar/actualizar estado
 };

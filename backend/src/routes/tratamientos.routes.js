@@ -3,22 +3,13 @@ const router = express.Router();
 const { verifyToken } = require("../middlewares/auth.middleware");
 const tratamientosController = require("../controllers/tratamientos.controller");
 
-// Ruta global: listar todos los tratamientos del sistema
+
 router.get("/tratamientos", verifyToken, tratamientosController.listarTodos);
-
-// NUEVA RUTA: Guardar un tratamiento (Necesaria para el Odontograma)
 router.post("/tratamientos", verifyToken, tratamientosController.guardarTratamiento);
-
-// B1: Listar tratamientos de un paciente con filtros y paginación
 router.get("/pacientes/:id/tratamientos", verifyToken, tratamientosController.listarTratamientosPaciente);
-
-// B2: Obtener detalle completo de un tratamiento
 router.get("/tratamientos/:id", verifyToken, tratamientosController.obtenerDetalleTratamiento);
-
-// B3: Generar PDF con historial completo del paciente
 router.get("/tratamientos/exportar-pdf/:id_paciente", verifyToken, tratamientosController.exportarHistorialPDF);
-
-// B4: Obtener sesiones de un tratamiento multi-sesión
 router.get("/tratamientos/:id/sesiones", verifyToken, tratamientosController.obtenerSesionesTratamiento);
+router.put("/tratamientos/:id", verifyToken, tratamientosController.actualizarTratamiento);
 
 module.exports = router;

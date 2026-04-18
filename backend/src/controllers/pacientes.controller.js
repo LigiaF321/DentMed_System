@@ -219,21 +219,44 @@ const obtenerPacienteDetalle = async (req, res) => {
 
     const plain = paciente.get({ plain: true });
     
-    // ✅ Parsear odontograma si es string
-    let odontograma = plain.odontograma;
-    if (typeof odontograma === 'string') {
+    // ✅ FORZAR LECTURA CORRECTA DEL ODONTOGRAMA
+    let odontograma = {};
+    
+    console.log('🔍 [GET] Valor raw del odontograma en BD:', plain.odontograma);
+    
+    if (plain.odontograma) {
       try {
-        odontograma = JSON.parse(odontograma || '{}');
-      } catch {
-        odontograma = {};
+        // Si es string, parsearlo
+        if (typeof plain.odontograma === 'string') {
+          // Intentar parsear como JSON
+          odontograma = JSON.parse(plain.odontograma);
+          console.log('✅ [GET] Odontograma parseado correctamente:', odontograma);
+        } else {
+          odontograma = plain.odontograma;
+        }
+      } catch (error) {
+        console.error('❌ [GET] Error parseando odontograma:', error);
+        // Intentar corregir si falta llaves
+        if (typeof plain.odontograma === 'string' && plain.odontograma && !plain.odontograma.startsWith('{')) {
+          try {
+            odontograma = JSON.parse('{' + plain.odontograma + '}');
+            console.log('✅ [GET] Odontograma corregido (agregando llaves):', odontograma);
+          } catch (e2) {
+            odontograma = {};
+          }
+        } else {
+          odontograma = {};
+        }
       }
-    } else if (!odontograma) {
-      odontograma = {};
+    } else {
+      console.log('⚠️ [GET] No hay odontograma en BD');
     }
+    
+    console.log('📤 [GET] Odontograma final a enviar:', odontograma);
 
     const data = {
       ...plain,
-      odontograma: odontograma, // ✅ Ahora es objeto, no string
+      odontograma: odontograma,
       nombre_completo: hasPacienteField('apellido')
         ? `${plain.nombre || ''} ${plain.apellido || ''}`.trim()
         : plain.nombre,
@@ -352,16 +375,31 @@ const crearPacienteRapido = async (req, res) => {
   }
 };
 
-// ✅ NUEVA FUNCIÓN: Actualizar odontograma del paciente
+// ✅ FUNCIÓN CORREGIDA: Actualizar odontograma del paciente
 // Endpoint: PUT /api/pacientes/:id/odontograma
 // Recibe: { "estados": { "41": "caries", "42": "obturado" } }
 const actualizarOdontograma = async (req, res) => {
   try {
+    console.log('📥 [ODONTOGRAMA] Body recibido:', req.body);
+    
     const { id } = req.params;
-    const { estados } = req.body; // El frontend envía "estados"
+    
+    // ✅ Aceptar tanto "estados" como "odontograma" en el body
+    const estados = req.body.estados || req.body.odontograma;
+    
+    console.log('📥 [ODONTOGRAMA] Estados a guardar:', estados);
+
+    if (!estados) {
+      console.log('❌ [ODONTOGRAMA] No se recibieron estados');
+      return res.status(400).json({
+        ok: false,
+        message: 'No se recibieron datos de odontograma. Envía { "estados": {...} }'
+      });
+    }
 
     const paciente = await Paciente.findByPk(id);
     if (!paciente) {
+      console.log(`❌ [ODONTOGRAMA] Paciente ${id} no encontrado`);
       return res.status(404).json({
         ok: false,
         message: 'Paciente no encontrado'
@@ -369,17 +407,22 @@ const actualizarOdontograma = async (req, res) => {
     }
 
     // Guardar el odontograma (como string en la BD)
-    await paciente.update({ odontograma: JSON.stringify(estados || {}) });
+    const odontogramaString = JSON.stringify(estados);
+    await paciente.update({ odontograma: odontogramaString });
+
+    // Verificar qué se guardó
+    const pacienteActualizado = await Paciente.findByPk(id);
+    console.log('✅ [ODONTOGRAMA] Odontograma guardado en BD:', pacienteActualizado.odontograma);
 
     return res.status(200).json({
       message: 'Odontograma actualizado correctamente',
-      odontograma: estados || {}
+      odontograma: estados
     });
   } catch (error) {
-    console.error('Error al guardar odontograma:', error);
+    console.error('❌ [ODONTOGRAMA] Error al guardar odontograma:', error);
     return res.status(500).json({
       ok: false,
-      message: 'Error al guardar odontograma'
+      message: 'Error al guardar odontograma: ' + error.message
     });
   }
 };
