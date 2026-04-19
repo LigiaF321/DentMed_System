@@ -28,6 +28,15 @@ const calcularEdad = (fechaNacimiento) => {
   return edad;
 };
 
+const normalizarListaTexto = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean).join(', ');
+  }
+  if (value === undefined || value === null) return null;
+  const texto = String(value).trim();
+  return texto || null;
+};
+
 const buscarPacientes = async (req, res) => {
   try {
     const q = String(req.query.q || '').trim();
@@ -339,9 +348,22 @@ const obtenerPacientesRecientes = async (req, res) => {
 
 const crearPacienteRapido = async (req, res) => {
   try {
-    const { nombre, telefono, email, direccion, fecha_nacimiento } = req.body;
+    const {
+      nombre,
+      nombre_completo,
+      email,
+      telefono,
+      direccion,
+      fecha_nacimiento,
+      alergias,
+      sexo,
+      seguro_medico,
+      contacto_emergencia,
+      telefono_emergencia,
+    } = req.body;
 
-    if (!nombre || !String(nombre).trim()) {
+    const nombreFinal = String(nombre || nombre_completo || '').trim();
+    if (!nombreFinal) {
       return res.status(400).json({
         ok: false,
         message: 'El nombre del paciente es obligatorio',
@@ -349,11 +371,16 @@ const crearPacienteRapido = async (req, res) => {
     }
 
     const nuevoPaciente = await Paciente.create({
-      nombre: String(nombre).trim(),
-      telefono: telefono || null,
+      nombre: nombreFinal,
       email: email || null,
+      telefono: telefono || null,
       direccion: direccion || null,
       fecha_nacimiento: fecha_nacimiento || null,
+      alergias: normalizarListaTexto(alergias),
+      sexo: sexo || null,
+      seguro_medico: seguro_medico || null,
+      contacto_emergencia: contacto_emergencia || null,
+      telefono_emergencia: telefono_emergencia || null,
     });
 
     return res.status(201).json({
@@ -427,10 +454,95 @@ const actualizarOdontograma = async (req, res) => {
   }
 };
 
+// ✅ Actualizar datos generales del paciente
+const actualizarDatosPaciente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nombre,
+      nombre_completo,
+      email,
+      telefono,
+      direccion,
+      fecha_nacimiento,
+      alergias,
+      sexo,
+      seguro_medico,
+      contacto_emergencia,
+      telefono_emergencia,
+    } = req.body;
+
+    const paciente = await Paciente.findByPk(id);
+    if (!paciente) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Paciente no encontrado'
+      });
+    }
+
+    // Actualizar solo los campos que se proporcionen
+    const datosActualizar = {};
+
+    const nombreNormalizado = nombre !== undefined ? nombre : nombre_completo;
+    if (nombreNormalizado !== undefined && hasPacienteField('nombre')) {
+      datosActualizar.nombre = String(nombreNormalizado || '').trim();
+    }
+
+    if (email !== undefined) datosActualizar.email = email;
+    if (telefono !== undefined) datosActualizar.telefono = telefono;
+    if (direccion !== undefined) datosActualizar.direccion = direccion;
+    if (fecha_nacimiento !== undefined && hasPacienteField('fecha_nacimiento')) {
+      datosActualizar.fecha_nacimiento = fecha_nacimiento || null;
+    }
+    if (alergias !== undefined && hasPacienteField('alergias')) {
+      datosActualizar.alergias = normalizarListaTexto(alergias);
+    }
+    if (sexo !== undefined && hasPacienteField('sexo')) {
+      datosActualizar.sexo = sexo || null;
+    }
+    if (seguro_medico !== undefined && hasPacienteField('seguro_medico')) {
+      datosActualizar.seguro_medico = seguro_medico || null;
+    }
+    if (contacto_emergencia !== undefined && hasPacienteField('contacto_emergencia')) {
+      datosActualizar.contacto_emergencia = contacto_emergencia || null;
+    }
+    if (telefono_emergencia !== undefined && hasPacienteField('telefono_emergencia')) {
+      datosActualizar.telefono_emergencia = telefono_emergencia || null;
+    }
+
+    if (!Object.keys(datosActualizar).length) {
+      return res.status(400).json({
+        ok: false,
+        message: 'No se recibieron campos válidos para actualizar el paciente'
+      });
+    }
+
+    await paciente.update(datosActualizar);
+    await paciente.reload();
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Paciente actualizado correctamente',
+      data: {
+        ...paciente.get({ plain: true }),
+        nombre_completo: paciente.nombre,
+        edad: hasPacienteField('fecha_nacimiento') ? calcularEdad(paciente.fecha_nacimiento) : null,
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar paciente:', error);
+    return res.status(500).json({
+      ok: false,
+      message: 'Error al actualizar paciente: ' + error.message
+    });
+  }
+};
+
 module.exports = {
   buscarPacientes,
   obtenerPacienteDetalle,
   obtenerPacientesRecientes,
   crearPacienteRapido,
   actualizarOdontograma,
+  actualizarDatosPaciente,
 };
