@@ -37,6 +37,14 @@ const isValidEmail = (value) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
 };
 
+const formatBirthDate = (value) => {
+  if (!value) return '-';
+  const normalized = String(value).slice(0, 10);
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 // ── Resumen de tratamientos (últimos 3) ───────────────────────────────────────
 const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
   const [items,   setItems]   = useState([]);
@@ -150,8 +158,8 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 
   const infoPersonal = {
     nombre:             getValue(source, ['nombre', 'nombre_completo', 'paciente_nombre']),
+    fechaNacimiento:    getValue(source, ['fecha_nacimiento']),
     edad:               getValue(source, ['edad'], '-'),
-    fechaNacimiento:    getValue(source, ['fecha_nacimiento'], '-'),
     sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
     email:              getValue(source, ['email', 'correo', 'correo_electronico'], 'No registrado'),
     direccion:          getValue(source, ['direccion'], 'No registrada'),
@@ -196,11 +204,11 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         email: detallePaciente?.email || '',
         telefono: detallePaciente?.telefono || '',
         direccion: detallePaciente?.direccion || '',
-        fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
         sexo: detallePaciente?.sexo || '',
         seguro_medico: detallePaciente?.seguro_medico || '',
         contacto_emergencia: detallePaciente?.contacto_emergencia || '',
         telefono_emergencia: detallePaciente?.telefono_emergencia || '',
+        fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
         alergias: detallePaciente?.alergias || '',
       };
       
@@ -282,47 +290,17 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     setActiveTab(tab);
   };
 
-  const computeAgeFromDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return '';
-    const today = new Date();
-    let age = today.getFullYear() - date.getFullYear();
-    const monthDiff = today.getMonth() - date.getMonth();
-    const dayDiff = today.getDate() - date.getDate();
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      age -= 1;
-    }
-    return String(age >= 0 ? age : '');
-  };
-
   const updateField = (field, value) => setDetallePaciente((p) => {
     const nextState = { ...(p || source), [field]: value };
     if (field === 'nombre') {
       nextState.nombre_completo = value;
-    }
-    if (field === 'fecha_nacimiento') {
-      nextState.edad = computeAgeFromDate(value);
-    }
-    if (field === 'edad') {
-      const ageNumber = Number(value);
-      if (!Number.isNaN(ageNumber) && ageNumber >= 0) {
-        const baseDate = p?.fecha_nacimiento ? new Date(p.fecha_nacimiento) : new Date();
-        const month = baseDate.getMonth();
-        const day = baseDate.getDate();
-        const year = new Date().getFullYear() - ageNumber;
-        const dob = new Date(year, month, day);
-        nextState.fecha_nacimiento = dob.toISOString().slice(0, 10);
-        nextState.edad = String(ageNumber);
-      } else {
-        nextState.edad = value;
-      }
     }
     return nextState;
   });
 
   const handleFieldChange = (field, value) => {
     updateField(field, value);
+    setFieldErrors((prev) => ({ ...prev, general: '' }));
     if (field === 'email') {
       const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
       setFieldErrors((prev) => ({ ...prev, email: nextError }));
@@ -338,25 +316,31 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
       // En edición, usar directamente del estado sin fallbacks
       if (fieldName === 'nombre') {
         editValue = detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '';
+      } else if (fieldName === 'fecha_nacimiento') {
+        editValue = detallePaciente?.fecha_nacimiento ?? '';
       } else {
         editValue = detallePaciente?.[fieldName] ?? '';
       }
       // Para mostrar si no está editando, obtener el valor con fallback
       const fallbacks = {
-        nombre: '', edad: '-', sexo: 'No especificado', email: 'No registrado',
+        nombre: '', fecha_nacimiento: '-', edad: '-', sexo: 'No especificado', email: 'No registrado',
         direccion: 'No registrada', telefono: 'No registrado', seguro_medico: 'No registrado',
         contacto_emergencia: 'No registrado', telefono_emergencia: 'No registrado',
       };
-      displayValue = editValue || fallbacks[fieldName] || '-';
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(editValue)
+        : (editValue || fallbacks[fieldName] || '-');
     } else {
       // En lectura, usar los valores con fallbacks desde infoPersonal
       const fieldMapping = {
-        nombre: 'nombre', edad: 'edad', fecha_nacimiento: 'fechaNacimiento', sexo: 'sexo', email: 'email',
+        nombre: 'nombre', fecha_nacimiento: 'fechaNacimiento', edad: 'edad', sexo: 'sexo', email: 'email',
         direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',
         contacto_emergencia: 'contactoEmergencia', telefono_emergencia: 'telefonoEmergencia',
       };
       const displayKey = fieldMapping[fieldName];
-      displayValue = infoPersonal[displayKey] || '-';
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(infoPersonal[displayKey])
+        : (infoPersonal[displayKey] || '-');
       if (displayValue === 'No registrado' || displayValue === 'No registrada' || displayValue === 'No especificado') {
         displayValue = '-';
       }
@@ -383,14 +367,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
                 <input
                   className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
                   type="date"
-                  value={editValue || ''}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                />
-              ) : fieldName === 'edad' ? (
-                <input
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  type="number"
-                  min="0"
                   value={editValue}
                   onChange={(e) => handleFieldChange(fieldName, e.target.value)}
                 />
@@ -400,6 +376,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
                   type={fieldName === 'email' ? 'email' : 'text'}
                   value={editValue}
                   onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                  readOnly={fieldName === 'edad'}
                 />
               )}
               {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
@@ -498,8 +475,8 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 
             <div className="info-grid">
               {renderField('Nombre', 'nombre', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Edad', 'edad', !modoPanel && editModes[TAB_INFO])}
               {renderField('Fecha de nacimiento', 'fecha_nacimiento', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Edad', 'edad', false)}
               {renderField('Sexo', 'sexo', !modoPanel && editModes[TAB_INFO])}
               {renderField('Correo electrónico', 'email', !modoPanel && editModes[TAB_INFO])}
               {renderField('Teléfono', 'telefono', !modoPanel && editModes[TAB_INFO])}
@@ -517,19 +494,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Historial Médico</h4>
-              {!modoPanel && (
-                <button className="tab-edit-btn" onClick={() => handleEditButtonClick(TAB_HISTORIAL)} disabled={savingHistorial}>
-                  {savingHistorial ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}
-                    </>
-                  )}
-                </button>
-              )}
             </div>
             <div className="history-grid">
               <div className="history-card">

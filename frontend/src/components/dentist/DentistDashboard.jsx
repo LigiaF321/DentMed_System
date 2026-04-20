@@ -458,12 +458,8 @@ const DentistDashboard = ({ userData, onLogout }) => {
   const closeModal = () => { setShowModal(false); setSelectedEvent(null); };
 
   const handleVerExpediente = () => {
-    if (!selectedCita) return;
-    setPacienteExpediente({
-      ...selectedCita,
-      id_paciente: selectedCita.id_paciente || selectedCita.paciente?.id,
-      paciente_nombre: selectedCita.paciente_nombre || selectedCita.paciente?.nombre,
-    });
+    if (!pacienteDetalleAgenda && !selectedCita) return;
+    setPacienteExpediente(pacienteDetalleAgenda || selectedCita);
     setActiveView('pacientes');
   };
 
@@ -645,7 +641,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
                 {/* ── CAMBIO: usar pacienteDetalleAgenda en lugar de selectedCita ── */}
                 <Odontograma paciente={pacienteDetalleAgenda} soloLectura={true} />
                 <PatientTabs
-                  paciente={selectedCita}
+                  paciente={pacienteDetalleAgenda}
                   onVerTodos={() => setActiveView('tratamientos')}
                   onVerExpediente={handleVerExpediente}
                 />
