@@ -25,6 +25,22 @@ const Paciente = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    sexo: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    seguro_medico: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    contacto_emergencia: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    telefono_emergencia: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
     fecha_nacimiento: {
       type: DataTypes.DATEONLY,
       allowNull: true,

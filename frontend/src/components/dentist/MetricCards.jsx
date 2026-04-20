@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 
 import React from 'react';
 import './MetricCards.css';

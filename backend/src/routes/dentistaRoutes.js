@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { verifyToken } = require("../middlewares/auth.middleware");
 
-// Importamos el controlador
 const dentistaController = require('../controllers/dentistaControl');
 
-router.post('/', dentistaController.registrar); 
+router.post('/', dentistaController.registrar);
+
+// ✅ MOVER AQUÍ
+router.get('/perfil', verifyToken, dentistaController.obtenerPerfil);
 
 // Listar
 router.get('/', dentistaController.listarTodos);

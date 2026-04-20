@@ -104,56 +104,9 @@
 }
 
 .visual-fade {
-  transition: opacity 0.5s cubic-bezier(.4,0,.2,1), max-height 0.5s cubic-bezier(.4,0,.2,1);
   opacity: 1;
-  max-height: 400px;
-  overflow: hidden;
-}
-.visual-fade.hide {
-  opacity: 0;
-  max-height: 0;
-}
-
-.doctor-instructions-visual {
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: opacity 0.5s cubic-bezier(.4,0,.2,1), max-height 0.5s cubic-bezier(.4,0,.2,1);
-  background: rgba(255,255,255,0.18);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(30,41,59,0.10);
-  padding: 28px 20px 20px 20px;
-  margin: 0 auto 0 auto;
-  color: #1e293b;
-  text-align: center;
-}
-.doctor-instructions-visual.show {
-  opacity: 1;
-  max-height: 400px;
-}
-.doctor-instructions-visual h2 {
-  color: #fff !important;
-  margin-bottom: 15px;
-  font-size: 1.3rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
-.doctor-instructions-visual p {
-  color: #fff !important;
-  margin: 8px 0;
-  font-size: 0.97rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
-.doctor-instructions-visual .fa-check-circle {
-  color: #10b981 !important;
-}
-.doctor-instructions-visual .fa-exclamation-triangle {
-  color: #fbbf24 !important;
+  max-height: none;
+  overflow: visible;
 }
 
 /* LADO DERECHO - FORMULARIO */
@@ -171,6 +124,31 @@
   width: 100%;
   max-width: 450px;
   margin-bottom: 20px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.login-logo img {
+  height: 88px;
+  width: auto;
+  max-width: 100%;
+}
+
+.login-logo span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  letter-spacing: 0.03em;
 }
 
 .login-form {

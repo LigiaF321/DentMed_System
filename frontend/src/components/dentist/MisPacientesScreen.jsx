@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   buscarPacientes,
@@ -240,18 +241,31 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
     if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return; }
     try {
       setSaving(true);
-      const token = localStorage.getItem('token') || '';
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('La sesión ha expirado. Por favor, recargue la página y inicie sesión nuevamente.');
+        setSaving(false);
+        return;
+      }
       const res = await fetch('http://localhost:3000/api/pacientes/crear-rapido', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || 'Error al crear paciente');
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          setError('Su sesión ha expirado. Por favor, recargue la página y vuelva a iniciar sesión.');
+        } else {
+          setError(data?.message || 'Error al crear paciente');
+        }
+        throw new Error(data?.message || 'Error al crear paciente');
+      }
       onCreado(data?.data || data);
       onClose();
     } catch (err) {
-      setError(err.message || 'Error al guardar');
+      if (!error) setError(err.message || 'Error al guardar');
     } finally { setSaving(false); }
   };
 
@@ -474,7 +488,19 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
           <Odontograma paciente={pacienteSeleccionado} onGuardar={handleGuardarOdontograma}/>
         </div>
 
-        <PatientTabs paciente={pacienteSeleccionado} onVerTodos={()=>{}} modoPanel={false}/>
+        <PatientTabs
+          paciente={pacienteSeleccionado}
+          onVerTodos={() => {}}
+          modoPanel={false}
+          onPacienteActualizado={(updated) => {
+            setPacienteSeleccionado((prev) => ({
+              ...(prev || {}),
+              ...updated,
+              paciente_nombre: updated.nombre || updated.nombre_completo || prev?.paciente_nombre,
+            }));
+            setReloadFlag((prev) => prev + 1);
+          }}
+        />
       </div>
     );
   }

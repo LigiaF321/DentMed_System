@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   listarDocumentosPaciente,

@@ -10,4 +10,7 @@ router.get('/:id', verifyToken, pacienteController.obtenerPacienteDetalle);
 router.post('/crear-rapido', verifyToken, pacienteController.crearPacienteRapido);
 router.put('/:id/odontograma', verifyToken, pacienteController.actualizarOdontograma);
 
+// ✅ Endpoint para actualizar datos generales del paciente
+router.put('/:id', verifyToken, pacienteController.actualizarDatosPaciente);
+
 module.exports = router;

@@ -250,7 +250,7 @@ exports.login = async (req, res) => {
           master: true,
         },
         secret,
-        { expiresIn: "8h" }
+        { expiresIn: "24h" }
       );
 
       return res.json({
@@ -314,7 +314,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, rol: user.rol },
       secret,
-      { expiresIn: "8h" }
+      { expiresIn: "24h" }
     );
 
     return res.json({

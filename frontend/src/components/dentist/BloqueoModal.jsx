@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useState, useEffect } from "react";
 import "./NuevaCitaModal.css"; 
 

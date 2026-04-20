@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   buscarPacientes,
@@ -330,6 +331,11 @@ export default function NuevaCitaModal({
   const [conflictoSimultaneo, setConflictoSimultaneo] = useState(null);
 
   const pollingRef = useRef(null);
+
+  const noHayConsultoriosLibres = useMemo(() => {
+  return consultoriosDisponibles.length > 0 &&
+    consultoriosDisponibles.every(c => esConsultorioBloqueado(c));
+}, [consultoriosDisponibles]);
 
   const consultorioSeleccionado = useMemo(() => {
     return consultoriosDisponibles.find(
@@ -699,13 +705,13 @@ export default function NuevaCitaModal({
   useEffect(() => {
     if (!open) return;
 
-    if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) {
-      setDisponibilidad({
-        disponible: true,
-        message: "",
-      });
-      return;
-    }
+ if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) {
+  setDisponibilidad({
+    disponible: true,
+    message: "",
+  });
+  return;
+}
 
     const timer = setTimeout(async () => {
       try {
@@ -735,6 +741,35 @@ export default function NuevaCitaModal({
     return () => clearTimeout(timer);
   }, [form.fecha, form.hora, form.duracion, form.id_consultorio, open]);
 
+  useEffect(() => {
+  if (!open) return;
+
+  if (!form.fecha || !form.hora || !form.duracion || !form.id_consultorio) return;
+
+  const interval = setInterval(async () => {
+    try {
+      const response = await verificarDisponibilidad({
+        fecha: form.fecha,
+        hora: form.hora,
+        duracion: form.duracion,
+        id_consultorio: form.id_consultorio,
+      });
+
+      setDisponibilidad({
+        disponible: !!response.disponible,
+        message: response.message || "",
+      });
+    } catch (err) {
+      setDisponibilidad({
+        disponible: false,
+        message: "Error verificando disponibilidad",
+      });
+    }
+  }, 5000); // cada 5 segundos
+
+  return () => clearInterval(interval);
+}, [form.fecha, form.hora, form.duracion, form.id_consultorio, open]);
+
   const canSave = useMemo(() => {
     return (
       !!form.paciente &&
@@ -747,7 +782,8 @@ export default function NuevaCitaModal({
       advertenciasEquipamiento.length === 0 &&
       disponibilidad.disponible &&
       !conflictoSimultaneo &&
-      !saving
+      !saving &&
+    !noHayConsultoriosLibres
     );
   }, [
     form,
@@ -1020,6 +1056,16 @@ export default function NuevaCitaModal({
                     </option>
                   ))}
                 </select>
+                {noHayConsultoriosLibres && (
+  <div className="dm17-error" style={{ marginTop: 8 }}>
+    No hay consultorios disponibles para esta fecha y hora
+  </div>
+)}
+{!disponibilidad.disponible && (
+  <div className="dm17-error" style={{ marginTop: 8 }}>
+    {disponibilidad.message || "Este horario ya está ocupado"}
+  </div>
+)}
 
                 {consultorioSeleccionado ? (
                   <div className="dm17-help" style={{ marginTop: 8 }}>

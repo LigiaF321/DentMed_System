@@ -1,7 +1,8 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import DocumentosTab from './DocumentosTab';
 import Odontograma from './Odontograma'; 
-import { obtenerPacienteDetalle } from '../../services/pacientes.service';
+import { obtenerPacienteDetalle, actualizarPaciente } from '../../services/pacientes.service';
 import './PatientTabs.css';
 
 const TAB_INFO         = 'info';
@@ -34,6 +35,14 @@ const isValidEmail = (value) => {
   const normalized = String(value || '').trim();
   if (!normalized || normalized === 'No registrado') return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
+};
+
+const formatBirthDate = (value) => {
+  if (!value) return '-';
+  const normalized = String(value).slice(0, 10);
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 // ── Resumen de tratamientos (últimos 3) ───────────────────────────────────────
@@ -89,7 +98,7 @@ const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
 };
 
 // ── Componente principal ──────────────────────────────────────────────────────
-const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }) => {
+const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, onPacienteActualizado }) => {
   const [activeTab,      setActiveTab]      = useState(TAB_INFO);
   const [editModes,      setEditModes]      = useState({
     [TAB_INFO]: false, [TAB_HISTORIAL]: false,
@@ -99,6 +108,8 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
   const [loadingDetalle,  setLoadingDetalle]  = useState(false);
   const [notaDocumentos,  setNotaDocumentos]  = useState('');
   const [fieldErrors,     setFieldErrors]     = useState({});
+  const [savingInfo,      setSavingInfo]      = useState(false);
+  const [savingHistorial, setSavingHistorial] = useState(false);
 
   // AJUSTE: Mapeo exacto al campo 'id' que vimos en tu tabla de MySQL
   const patientId = useMemo(() => {
@@ -123,7 +134,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
     };
     cargar();
     return () => { mounted = false; };
-  }, [patientId, paciente]);
+  }, [patientId]);
 
   useEffect(() => {
     setEditModes({ [TAB_INFO]: false, [TAB_HISTORIAL]: false, [TAB_TRATAMIENTOS]: false, [TAB_DOCUMENTOS]: false });
@@ -141,10 +152,13 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
   }
 
   const source         = detallePaciente || paciente?.paciente || paciente;
-  const nombrePaciente = getValue(source, ['nombre_completo', 'paciente_nombre', 'nombre'], 'Paciente');
+  const nombrePaciente = source?.nombre !== undefined
+    ? String(source.nombre).trim()
+    : getValue(source, ['nombre_completo', 'paciente_nombre'], 'Paciente');
 
   const infoPersonal = {
-    nombre:             getValue(source, ['nombre_completo', 'paciente_nombre', 'nombre']),
+    nombre:             getValue(source, ['nombre', 'nombre_completo', 'paciente_nombre']),
+    fechaNacimiento:    getValue(source, ['fecha_nacimiento']),
     edad:               getValue(source, ['edad'], '-'),
     sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
     email:              getValue(source, ['email', 'correo', 'correo_electronico'], 'No registrado'),
@@ -168,45 +182,210 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
 
   const ultimaActualizacion = source?.updated_at || source?.updatedAt || source?.fecha_actualizacion || source?.created_at || source?.createdAt;
 
-  const toggleEdit = (tab) => {
-    if (tab === TAB_INFO && editModes[TAB_INFO]) {
-      const emailValue = getValue(detallePaciente || source, ['email', 'correo', 'correo_electronico'], '');
-      if (!isValidEmail(emailValue)) {
-        setFieldErrors((prev) => ({ ...prev, email: 'Ingresa un correo electrónico válido.' }));
-        return;
-      }
+  const handleSaveInfoPersonal = async () => {
+    // Validar que tengamos ID de paciente
+    if (!patientId) {
+      console.warn('No se encontró ID de paciente para guardar');
+      setFieldErrors((prev) => ({ ...prev, general: 'No se puede guardar sin ID de paciente' }));
+      return false;
     }
+    
+    // Validar email
+    const emailValue = detallePaciente?.email || '';
+    if (!isValidEmail(emailValue)) {
+      setFieldErrors((prev) => ({ ...prev, email: 'Ingresa un correo electrónico válido.' }));
+      return false; // Error, no guardar
+    }
+    
+    try {
+      setSavingInfo(true);
+      const datosActualizados = {
+        nombre_completo: detallePaciente?.nombre || detallePaciente?.nombre_completo || '',
+        email: detallePaciente?.email || '',
+        telefono: detallePaciente?.telefono || '',
+        direccion: detallePaciente?.direccion || '',
+        sexo: detallePaciente?.sexo || '',
+        seguro_medico: detallePaciente?.seguro_medico || '',
+        contacto_emergencia: detallePaciente?.contacto_emergencia || '',
+        telefono_emergencia: detallePaciente?.telefono_emergencia || '',
+        fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
+        alergias: detallePaciente?.alergias || '',
+      };
+      
+      await actualizarPaciente(patientId, datosActualizados);
+      const freshPaciente = await obtenerPacienteDetalle(patientId);
+      setDetallePaciente(freshPaciente);
+      onPacienteActualizado?.(freshPaciente);
+      setFieldErrors({}); // Limpiar errores si guardó exitosamente
+      return true;
+    } catch (error) {
+      console.error('Error guardando cambios:', error);
+      setFieldErrors((prev) => ({ ...prev, general: error.message }));
+      return false;
+    } finally {
+      setSavingInfo(false);
+    }
+  };
+
+  const handleSaveHistorialMedico = async () => {
+    try {
+      setSavingHistorial(true);
+      const datosActualizados = {
+        enfermedades: detallePaciente?.enfermedades || '',
+        medicamentos: detallePaciente?.medicamentos || '',
+        alergias: detallePaciente?.alergias || '',
+      };
+      
+      await actualizarPaciente(patientId, datosActualizados);
+      const freshPaciente = await obtenerPacienteDetalle(patientId);
+      setDetallePaciente(freshPaciente);
+      onPacienteActualizado?.(freshPaciente);
+      setFieldErrors({}); // Limpiar errores si guardó exitosamente
+      return true;
+    } catch (error) {
+      console.error('Error guardando historial:', error);
+      setFieldErrors((prev) => ({ ...prev, general: error.message }));
+      return false;
+    } finally {
+      setSavingHistorial(false);
+    }
+  };
+
+  const toggleEdit = (tab) => {
     setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
   };
 
-  const updateField = (field, value) => setDetallePaciente((p) => ({ ...(p || source), [field]: value }));
+  const handleEditButtonClick = async (tab) => {
+    // Si estamos en modo edición, intenta guardar
+    if (editModes[tab]) {
+      let saved = false;
+      if (tab === TAB_INFO) {
+        saved = await handleSaveInfoPersonal();
+      } else if (tab === TAB_HISTORIAL) {
+        saved = await handleSaveHistorialMedico();
+      }
+      
+      // Si se guardó exitosamente, salir del modo edición
+      if (saved) {
+        toggleEdit(tab);
+      }
+    } else {
+      // Si no estamos editando, entrar en modo edición
+      toggleEdit(tab);
+    }
+  };
+
+  const handleTabChange = async (tab) => {
+    if (tab === activeTab) return;
+    if (editModes[activeTab]) {
+      let saved = false;
+      if (activeTab === TAB_INFO) {
+        saved = await handleSaveInfoPersonal();
+      } else if (activeTab === TAB_HISTORIAL) {
+        saved = await handleSaveHistorialMedico();
+      }
+      if (!saved) return;
+      setEditModes((prev) => ({ ...prev, [activeTab]: false }));
+    }
+    setActiveTab(tab);
+  };
+
+  const updateField = (field, value) => setDetallePaciente((p) => {
+    const nextState = { ...(p || source), [field]: value };
+    if (field === 'nombre') {
+      nextState.nombre_completo = value;
+    }
+    return nextState;
+  });
 
   const handleFieldChange = (field, value) => {
     updateField(field, value);
+    setFieldErrors((prev) => ({ ...prev, general: '' }));
     if (field === 'email') {
       const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
       setFieldErrors((prev) => ({ ...prev, email: nextError }));
     }
   };
 
-  const renderField = (label, value, fieldName, canEdit) => (
-    <div className={`info-field ${fieldErrors[fieldName] ? 'has-error' : ''}`} key={label}>
-      <span className="info-label dentista-label">{label}</span>
-      {canEdit
-        ? (
-          <>
-            <input
-              className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-              type={fieldName === 'email' ? 'email' : 'text'}
-              value={value || ''}
-              onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-            />
-            {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
-          </>
-        )
-        : <span className="info-value">{value || '-'}</span>}
-    </div>
-  );
+  const renderField = (label, fieldName, canEdit) => {
+    // En modo edición, usar el valor directo de detallePaciente sin fallbacks
+    // En modo lectura, usar los valores procesados de infoPersonal con fallbacks
+    let displayValue, editValue;
+    
+    if (canEdit) {
+      // En edición, usar directamente del estado sin fallbacks
+      if (fieldName === 'nombre') {
+        editValue = detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '';
+      } else if (fieldName === 'fecha_nacimiento') {
+        editValue = detallePaciente?.fecha_nacimiento ?? '';
+      } else {
+        editValue = detallePaciente?.[fieldName] ?? '';
+      }
+      // Para mostrar si no está editando, obtener el valor con fallback
+      const fallbacks = {
+        nombre: '', fecha_nacimiento: '-', edad: '-', sexo: 'No especificado', email: 'No registrado',
+        direccion: 'No registrada', telefono: 'No registrado', seguro_medico: 'No registrado',
+        contacto_emergencia: 'No registrado', telefono_emergencia: 'No registrado',
+      };
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(editValue)
+        : (editValue || fallbacks[fieldName] || '-');
+    } else {
+      // En lectura, usar los valores con fallbacks desde infoPersonal
+      const fieldMapping = {
+        nombre: 'nombre', fecha_nacimiento: 'fechaNacimiento', edad: 'edad', sexo: 'sexo', email: 'email',
+        direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',
+        contacto_emergencia: 'contactoEmergencia', telefono_emergencia: 'telefonoEmergencia',
+      };
+      const displayKey = fieldMapping[fieldName];
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(infoPersonal[displayKey])
+        : (infoPersonal[displayKey] || '-');
+      if (displayValue === 'No registrado' || displayValue === 'No registrada' || displayValue === 'No especificado') {
+        displayValue = '-';
+      }
+    }
+    
+    return (
+      <div className={`info-field ${fieldErrors[fieldName] ? 'has-error' : ''}`} key={label}>
+        <span className="info-label dentista-label">{label}</span>
+        {canEdit
+          ? (
+            <>
+              {fieldName === 'sexo' ? (
+                <select
+                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
+                  value={editValue}
+                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              ) : fieldName === 'fecha_nacimiento' ? (
+                <input
+                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
+                  type="date"
+                  value={editValue}
+                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                />
+              ) : (
+                <input
+                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
+                  type={fieldName === 'email' ? 'email' : 'text'}
+                  value={editValue}
+                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                  readOnly={fieldName === 'edad'}
+                />
+              )}
+              {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
+            </>
+          )
+          : <span className="info-value">{displayValue}</span>}
+      </div>
+    );
+  };
 
   const BtnVerExpediente = () => {
     if (!modoPanel) return null;
@@ -240,16 +419,16 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
       </div>
 
       <div className="tabs-header">
-        <button className={`tab-btn ${activeTab === TAB_INFO           ? 'active' : ''}`} onClick={() => setActiveTab(TAB_INFO)}>
+        <button className={`tab-btn ${activeTab === TAB_INFO           ? 'active' : ''}`} onClick={() => handleTabChange(TAB_INFO)}>
           <i className="fas fa-id-card"></i> Info Personal
         </button>
-        <button className={`tab-btn ${activeTab === TAB_HISTORIAL    ? 'active' : ''}`} onClick={() => setActiveTab(TAB_HISTORIAL)}>
+        <button className={`tab-btn ${activeTab === TAB_HISTORIAL    ? 'active' : ''}`} onClick={() => handleTabChange(TAB_HISTORIAL)}>
           <i className="fas fa-heartbeat"></i> Historial Médico
         </button>
-        <button className={`tab-btn ${activeTab === TAB_TRATAMIENTOS ? 'active' : ''}`} onClick={() => setActiveTab(TAB_TRATAMIENTOS)}>
+        <button className={`tab-btn ${activeTab === TAB_TRATAMIENTOS ? 'active' : ''}`} onClick={() => handleTabChange(TAB_TRATAMIENTOS)}>
           <i className="fas fa-tooth"></i> Tratamientos
         </button>
-        <button className={`tab-btn ${activeTab === TAB_DOCUMENTOS   ? 'active' : ''}`} onClick={() => setActiveTab(TAB_DOCUMENTOS)}>
+        <button className={`tab-btn ${activeTab === TAB_DOCUMENTOS   ? 'active' : ''}`} onClick={() => handleTabChange(TAB_DOCUMENTOS)}>
           <i className="fas fa-file-medical"></i> Documentos
         </button>
       </div>
@@ -263,8 +442,16 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
             <div className="tab-toolbar">
               <h4>Información Personal</h4>
               {!modoPanel && (
-                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_INFO)}>
-                  <i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}
+                <button className="tab-edit-btn" onClick={() => handleEditButtonClick(TAB_INFO)} disabled={savingInfo}>
+                  {savingInfo ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i> Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -280,16 +467,23 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
               <div className="medical-alert-empty">Sin alertas médicas críticas registradas.</div>
             )}
 
+            {fieldErrors.general && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
+                {fieldErrors.general}
+              </div>
+            )}
+
             <div className="info-grid">
-              {renderField('Nombre', infoPersonal.nombre, 'nombre', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Edad', String(infoPersonal.edad), 'edad', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Sexo', infoPersonal.sexo, 'sexo', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Correo electrónico', infoPersonal.email, 'email', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Teléfono', infoPersonal.telefono, 'telefono', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Dirección', infoPersonal.direccion, 'direccion', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Seguro médico', infoPersonal.seguroMedico, 'seguro_medico', !modoPanel && editModes[TAB_INFO])}
-              {!modoPanel && renderField('Contacto emergencia', infoPersonal.contactoEmergencia, 'contacto_emergencia', editModes[TAB_INFO])}
-              {!modoPanel && renderField('Teléfono emergencia', infoPersonal.telefonoEmergencia, 'telefono_emergencia', editModes[TAB_INFO])}
+              {renderField('Nombre', 'nombre', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Fecha de nacimiento', 'fecha_nacimiento', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Edad', 'edad', false)}
+              {renderField('Sexo', 'sexo', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Correo electrónico', 'email', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Teléfono', 'telefono', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Dirección', 'direccion', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Seguro médico', 'seguro_medico', !modoPanel && editModes[TAB_INFO])}
+              {!modoPanel && renderField('Contacto emergencia', 'contacto_emergencia', editModes[TAB_INFO])}
+              {!modoPanel && renderField('Teléfono emergencia', 'telefono_emergencia', editModes[TAB_INFO])}
             </div>
             <BtnVerExpediente />
           </div>
@@ -300,11 +494,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Historial Médico</h4>
-              {!modoPanel && (
-                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_HISTORIAL)}>
-                  <i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}
-                </button>
-              )}
             </div>
             <div className="history-grid">
               <div className="history-card">
@@ -369,11 +558,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Documentos y Radiografías</h4>
-              {!modoPanel && (
-                <button className="tab-edit-btn" onClick={() => toggleEdit(TAB_DOCUMENTOS)}>
-                  <i className="fas fa-pen"></i> {editModes[TAB_DOCUMENTOS] ? 'Finalizar' : 'Editar'}
-                </button>
-              )}
             </div>
             {modoPanel ? (
               <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb' }}>
@@ -404,3 +588,5 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true }
 };
 
 export default PatientTabs;
+
+

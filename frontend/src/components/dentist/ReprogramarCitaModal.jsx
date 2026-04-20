@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useState } from 'react';
 import { reprogramarCita } from '../../services/citas.service';
 import '../styles/ReprogramarCitaModal.css';
