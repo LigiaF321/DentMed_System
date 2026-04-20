@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useState } from "react";
 import "./AppointmentsList.css";
 

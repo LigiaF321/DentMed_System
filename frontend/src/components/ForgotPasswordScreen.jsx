@@ -1,3 +1,4 @@
+import './dentist/styles/dentista-global.css';
 import React, { useEffect, useState } from "react";
 import "./ForgotPasswordScreen.css";
 

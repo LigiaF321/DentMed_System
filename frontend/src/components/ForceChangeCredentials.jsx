@@ -1,3 +1,4 @@
+import './dentist/styles/dentista-global.css';
 import React, { useState } from 'react';
 import './ForceChangeCredentials.css';
 

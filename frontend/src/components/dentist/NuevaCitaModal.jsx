@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   buscarPacientes,
