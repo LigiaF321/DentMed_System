@@ -112,6 +112,7 @@
 /* LADO DERECHO - FORMULARIO */
 .login-form-container {
   flex: 1;
+  font-size: 1.05rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,7 +159,7 @@
 
 .form-title {
   color: #1e3a8a;
-  font-size: 2.2rem;
+  font-size: 2.6rem;
   margin-bottom: 30px;
   display: flex;
   align-items: center;
@@ -180,7 +181,7 @@
   color: #374151;
   font-weight: 600;
   margin-bottom: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .form-group label i {
@@ -190,12 +191,16 @@
 
 .form-group input {
   width: 100%;
-  padding: 15px;
+  padding: 17px;
   border: 2px solid #E5E7EB;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   transition: all 0.3s;
   background: white;
+}
+
+.input-hint {
+  font-size: 0.95rem;
 }
 
 .form-group input:focus {
@@ -280,7 +285,7 @@
 .forgot-password {
   color: #4f46e5;
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 1rem;
   transition: color 0.3s;
 }
 
@@ -295,8 +300,8 @@
   background: linear-gradient(135deg, #4f46e5, #db2777);
   color: white;
   border: none;
-  padding: 18px;
-  font-size: 1.1rem;
+  padding: 20px;
+  font-size: 1.2rem;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
@@ -342,7 +347,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .error-message i {
@@ -356,7 +361,7 @@
   justify-content: center;
   gap: 10px;
   color: #059669;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding: 10px;
   background: #F0FDF4;
   border-radius: 8px;
