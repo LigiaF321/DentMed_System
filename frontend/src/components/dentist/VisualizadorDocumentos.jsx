@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { obtenerUrlDocumento } from '../../services/documentos.service';
 import './VisualizadorDocumentos.css';

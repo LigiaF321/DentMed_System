@@ -1,3 +1,4 @@
+import './dentist/styles/dentista-global.css';
 import React, { useState } from "react";
 import "./LoginScreen.css";
 import logoDentMed from "../assets/dentmed-logo.png";
@@ -133,14 +134,12 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         <div className="login-visual">
           <div className="visual-content">
             <div className="visual-fade">
-              <h2>Bienvenido al Sistema de Gestión DentMed</h2>
-              <p className="visual-subtitle">
-                Acceso exclusivo para personal autorizado
-              </p>
-              <div className="dental-icon">
-                <i className="fas fa-tooth"></i>
-                <i className="fas fa-stethoscope"></i>
-                <i className="fas fa-user-md"></i>
+              <h2 className="dentista-titulo-xxl" style={{marginBottom: 16, textShadow: '0 2px 8px #0002'}}>Bienvenido al Sistema de Gestión DentMed</h2>
+              <p className="dentista-titulo" style={{marginBottom: 32, textShadow: '0 1px 4px #0001'}}>Acceso exclusivo para personal autorizado</p>
+              <div style={{display: 'flex', gap: 40, justifyContent: 'center', marginTop: 16}}>
+                <i className="fas fa-tooth dentista-icono-xxl" style={{fontSize: '4.5rem'}}></i>
+                <i className="fas fa-stethoscope dentista-icono-xxl" style={{fontSize: '4.5rem'}}></i>
+                <i className="fas fa-user-md dentista-icono-xxl" style={{fontSize: '4.5rem'}}></i>
               </div>
             </div>
 

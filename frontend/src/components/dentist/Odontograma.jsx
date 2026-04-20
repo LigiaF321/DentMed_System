@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 // frontend/src/components/dentist/Odontograma.jsx
 import React, { useState, useEffect } from 'react';
 

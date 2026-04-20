@@ -1,3 +1,5 @@
+import './styles/dentista-global.css';
+import './styles/dm17-modal.css';
 import React, { useEffect, useState } from "react";
 import ConsultorioSugerido from "./ConsultorioSugerido";
 import { actualizarConsultorioCita, verificarDisponibilidad } from "../../services/citas.service";
@@ -5,6 +7,12 @@ import { obtenerConsultorios } from "../../services/consultorios.service";
 import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
 
 const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
+  // Toast simple
+  const [toast, setToast] = useState("");
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2500);
+  };
   const [consultorios, setConsultorios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -73,8 +81,12 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
         },
       });
 
+
       if (onUpdated) onUpdated(selected);
-      onClose();
+      showToast("Consultorio actualizado correctamente");
+      setTimeout(() => {
+        onClose();
+      }, 1200);
 
     } catch (err) {
       setError(err.message || "No se pudo cambiar el consultorio");
@@ -90,92 +102,88 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
   if (!open || !cita) return null;
 
   return (
-    <div className="dm17-overlay">
-      <div className="dm17-modal">
-
-        {/* Header */}
-        <div className="dm17-modal-header">
-          <h3>Cambiar consultorio</h3>
-          <button
-            type="button"
-            className="dm17-close-btn"
-            onClick={onClose}
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="dm17-form">
-
-          {/* ✅ Consultorio actual */}
-          <div>
-            <b>Consultorio actual:</b>{" "}
-            {cita.consultorio_nombre || cita.id_consultorio}
-          </div>
-
-          {/* ✅ Lista de consultorios */}
-          <ConsultorioSugerido
-            procedimiento={null}
-            consultorios={consultoriosPagina}
-            loading={loading}
-            onSelectConsultorio={setSelected}
-            selectedConsultorio={selected}
-          />
-
-          {/* Paginación */}
-          {consultorios.length > tamanoPagina && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '12px 0' }}>
-              <button
-                className="dm17-btn"
-                disabled={pagina === 1}
-                onClick={() => setPagina(p => Math.max(1, p - 1))}
-              >Anterior</button>
-              <span>Página {pagina} de {totalPaginas}</span>
-              <button
-                className="dm17-btn"
-                disabled={pagina === totalPaginas}
-                onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
-              >Siguiente</button>
-              <select
-                value={tamanoPagina}
-                onChange={e => { setTamanoPagina(Number(e.target.value)); setPagina(1); }}
-                style={{ marginLeft: 8 }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span>por página</span>
-            </div>
-          )}
-
-          {/* Error */}
-          {error && <div className="dm17-error">{error}</div>}
-
-          {/* Acciones */}
-          <div className="dm17-actions">
+    <>
+      <div className="dm17-overlay">
+        <div className="dm17-modal">
+          {/* Header */}
+          <div className="dm17-modal-header">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>Cambiar consultorio</h3>
             <button
               type="button"
-              className="dm17-btn dm17-btn-secondary"
+              className="dm17-close-btn"
               onClick={onClose}
+              aria-label="Cerrar"
             >
-              Cancelar
+              ×
             </button>
-
-            <button
-              type="button"
-              className="dm17-btn dm17-btn-primary"
-              disabled={!selected || saving}
-              onClick={handleGuardar}
-            >
-              {saving ? "Guardando..." : "Guardar cambio"}
-            </button>
+          </div>
+          {/* Body */}
+          <div className="dm17-form">
+            {/* Consultorio actual */}
+            <div style={{ marginBottom: 10 }}>
+              <b>Consultorio actual:</b> {cita.consultorio_nombre || cita.id_consultorio}
+            </div>
+            {/* Lista de consultorios */}
+            <ConsultorioSugerido
+              procedimiento={null}
+              consultorios={consultoriosPagina}
+              loading={loading}
+              onSelectConsultorio={setSelected}
+              selectedConsultorio={selected}
+            />
+            {/* Paginación */}
+            {consultorios.length > tamanoPagina && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '12px 0' }}>
+                <button
+                  className="dm17-btn"
+                  disabled={pagina === 1}
+                  onClick={() => setPagina(p => Math.max(1, p - 1))}
+                >Anterior</button>
+                <span>Página {pagina} de {totalPaginas}</span>
+                <button
+                  className="dm17-btn"
+                  disabled={pagina === totalPaginas}
+                  onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+                >Siguiente</button>
+                <select
+                  value={tamanoPagina}
+                  onChange={e => { setTamanoPagina(Number(e.target.value)); setPagina(1); }}
+                  style={{ marginLeft: 8 }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>por página</span>
+              </div>
+            )}
+            {/* Error */}
+            {error && <div className="dm17-error">{error}</div>}
+            {/* Acciones */}
+            <div className="dm17-actions">
+              <button
+                type="button"
+                className="dm17-btn dm17-btn-secondary"
+                onClick={onClose}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="dm17-btn dm17-btn-primary"
+                disabled={!selected || saving}
+                onClick={handleGuardar}
+              >
+                {saving ? "Guardando..." : "Guardar cambio"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      {/* Toast simple */}
+      {toast && <div className="dm17-toast">{toast}</div>}
+    </>
   );
 };
 

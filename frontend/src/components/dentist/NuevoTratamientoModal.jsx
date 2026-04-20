@@ -1,3 +1,4 @@
+import './styles/dentista-global.css';
 // frontend/src/components/dentist/NuevoTratamientoModal.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { obtenerMateriales } from "./tratamientos.service.jsx";
