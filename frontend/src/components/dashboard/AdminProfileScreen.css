@@ -2,20 +2,27 @@
   padding: 24px;
 }
 
+/* ESTILO ACTUALIZADO: Botón Volver con degradado */
 .dm2-profile-backBtn {
   border: none;
-  background: transparent;
-  color: #344054;
-  font-size: 13px;
+  background: linear-gradient(90deg, #6366f1 0%, #d946ef 100%);
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  padding: 10px 12px;
+  padding: 10px 20px;
   border-radius: 12px;
-  transition: background .15s ease;
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dm2-profile-backBtn:hover {
-  background: rgba(52, 64, 84, .08);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(217, 70, 239, 0.25);
 }
 
 .dm2-card-subtitle {
@@ -154,16 +161,6 @@
   font-size: 13px;
 }
 
-.dm2-profile-form {
-  display: grid;
-  gap: 16px;
-}
-
-.dm2-profile-field {
-  display: grid;
-  gap: 8px;
-}
-
 .dm2-profile-field label {
   color: #1a2635;
   font-size: 13px;
@@ -172,7 +169,7 @@
 
 .dm2-profile-field input[type="text"],
 .dm2-profile-field input[type="email"],
-.dm2-profile-field input[type="file"] {
+.dm2-profile-field input[type="password"] {
   width: 100%;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,.12);
@@ -186,28 +183,10 @@
   color: rgba(26,38,53,.55);
 }
 
-.dm2-profile-field input[type="password"],
-.dm2-profile-field input[type="text"],
-.dm2-profile-field input[type="email"] {
-  color: #1a2635;
-}
-
-.dm2-profile-field input[type="file"] {
-  padding: 10px 14px;
-  color: #f4f7fb;
-}
-
 .dm2-profile-field input:focus {
   outline: none;
   border-color: rgba(24,178,122,.5);
   box-shadow: 0 0 0 3px rgba(24,178,122,.08);
-}
-
-.dm2-profile-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
 }
 
 .dm2-btn-primary {
@@ -258,25 +237,13 @@
 }
 
 @keyframes dm2-save-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes dm2-save-fade-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(6px); }
 }
 
 @media (max-width: 920px) {

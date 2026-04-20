@@ -132,7 +132,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
           <div className="dm2-card-title">Mi configuración</div>
           {onBack ? (
             <button type="button" className="dm2-profile-backBtn" onClick={onBack}>
-              ← Volver
+              Volver
             </button>
           ) : null}
         </div>
