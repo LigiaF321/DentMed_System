@@ -20,6 +20,11 @@ const Usuario = sequelize.define(
       unique: true,
       validate: { isEmail: true },
     },
+    avatar: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "URL de la foto de perfil",
+    },
     password_hash: {
       type: DataTypes.STRING(255),
       allowNull: false,

@@ -44,40 +44,53 @@ function App() {
 
   const goTo = (next) => setScreen(next);
 
-const handleLoginSuccess = async (userData) => {
-  if (!userData) {
-    limpiarSesion();
-    return;
-  }
+  const handleLoginSuccess = async (userData) => {
+    if (!userData) {
+      limpiarSesion();
+      return;
+    }
 
-  try {
-    const token = userData.token;
+    try {
+      const token = userData.token;
 
-    const res = await fetch("http://localhost:3000/api/dentistas/perfil", {
-      headers: {
-        Authorization: `Bearer ${token}`
+      const res = await fetch("http://localhost:3000/api/dentistas/perfil", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const perfil = await res.json();
+
+      const userCompleto = {
+        ...userData,
+        nombre: perfil.nombre,
+        apellidos: perfil.apellidos,
+        especialidad: perfil.especialidad,
+        telefono: perfil.telefono,
+        email: perfil.email || userData.email,
+        avatar: perfil.avatar || userData.avatar,
+      };
+
+      setCurrentUser(userCompleto);
+      setScreen("loading");
+    } catch (error) {
+      console.error("Error cargando perfil:", error);
+      setCurrentUser(userData);
+      setScreen("loading");
+    }
+  };
+
+  const updateCurrentUser = (updates) => {
+    setCurrentUser((prev) => {
+      const next = { ...prev, ...updates };
+      try {
+        localStorage.setItem("currentUser", JSON.stringify(next));
+      } catch (e) {
+        console.warn("No se pudo actualizar currentUser en localStorage", e);
       }
+      return next;
     });
-
-    const perfil = await res.json();
-
-    const userCompleto = {
-      ...userData,
-      nombre: perfil.nombre,
-      especialidad: perfil.especialidad
-    };
-
-    setCurrentUser(userCompleto);
-    setScreen("loading");
-
-  } catch (error) {
-    console.error("Error cargando perfil:", error);
-
-    // fallback
-    setCurrentUser(userData);
-    setScreen("loading");
-  }
-};
+  };
 
   const handleLogout = () => {
     limpiarSesion();
@@ -155,7 +168,11 @@ const handleLoginSuccess = async (userData) => {
       )}
 
       {screen === "dashboard" && (
-        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
+        <DashboardScreen
+          userData={currentUser}
+          onLogout={handleLogout}
+          onUserDataUpdate={updateCurrentUser}
+        />
       )}
     </div>
   );

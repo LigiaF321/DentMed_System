@@ -33,6 +33,7 @@ export default function AdminSidebar({
 
   const userInitial = String(name || "A").charAt(0).toUpperCase();
   const roleLabel = currentRole === "admin" ? "Administrador" : "Doctor(a)";
+  const avatarUrl = userData?.avatar || null;
 
   return (
     <aside className="dm2-side">
@@ -73,13 +74,30 @@ export default function AdminSidebar({
       </div>
 
       <div className="dm2-side-bottom">
-        <div className="dm2-side-user">
-          <div className="dm2-side-avatar">{userInitial}</div>
+        <button
+          className="dm2-side-user dm2-side-user-button"
+          type="button"
+          onClick={() => onSelect('perfil')}
+          aria-label="Abrir configuración de usuario"
+        >
+          <div className="dm2-side-avatar">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={`${name} avatar`} className="dm2-side-avatar-img" />
+            ) : (
+              userInitial
+            )}
+          </div>
           <div className="dm2-side-usertext">
             <div className="dm2-side-username">{name}</div>
             <div className="dm2-side-role">{roleLabel}</div>
+            {userData?.email ? (
+              <div className="dm2-side-usermeta">{userData.email}</div>
+            ) : null}
+            {userData?.telefono ? (
+              <div className="dm2-side-usermeta">{userData.telefono}</div>
+            ) : null}
           </div>
-        </div>
+        </button>
 
         <button className="dm2-side-logout" type="button" onClick={onLogout}>
           <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />

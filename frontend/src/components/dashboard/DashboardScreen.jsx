@@ -15,6 +15,7 @@ import AlertasInventarioWidget from './AlertasInventarioWidget';
 import AlertasSeguridadScreen from './AlertasSeguridadScreen';
 import KardexMovimientosScreen from './KardexMovimientosScreen';
 import ReportesConsumoScreen from './ReportesConsumoScreen';
+import AdminProfileScreen from './AdminProfileScreen';
 import ConsultoriosAdminScreen from '../admin/ConsultoriosAdminScreen';
 import DentistDashboard from '../dentist/DentistDashboard';
 import './dashboard.css';
@@ -104,7 +105,7 @@ function notifLevel(tipo) {
   return 'info';
 }
 
-export default function DashboardScreen({ userData, onLogout }) {
+export default function DashboardScreen({ userData, onLogout, onUserDataUpdate }) {
   const isAdmin = (userData?.role || userData?.rol) === "admin";
   const [adminView, setAdminView] = useState(() => {
     if (!isAdmin) return 'dashboard';
@@ -290,6 +291,8 @@ export default function DashboardScreen({ userData, onLogout }) {
         return 'CATÁLOGO DE INSUMOS';
       case 'reportes-consumo':
         return 'REPORTES DE CONSUMO';
+      case 'perfil':
+        return 'MI PERFIL';
       default:
         return 'PANEL DE CONTROL';
     }
@@ -530,6 +533,7 @@ export default function DashboardScreen({ userData, onLogout }) {
     if (adminView === 'kardex-movimientos') return <KardexMovimientosScreen userData={userData} />;
     if (adminView === 'alertas-seguridad') return <AlertasSeguridadScreen userData={userData} />;
     if (adminView === 'alertas-inventario') return <AlertasInventarioScreen userData={userData} />;
+    if (adminView === 'perfil') return <AdminProfileScreen userData={userData} onUserDataUpdate={onUserDataUpdate} />;
     if (adminView === 'reportes-consumo') return <ReportesConsumoScreen userData={userData} />;
 
     if (adminView !== 'dashboard') {

@@ -1,3 +1,8 @@
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+const sharp = require('sharp');
+const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs'); 
 const { Usuario, Dentista } = require('../models');
@@ -12,6 +17,32 @@ const transporter = nodemailer.createTransport({
         pass: "abwpiloudlqertve" 
     }
 });
+
+const asegurarDirectorio = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+const procesarFotoPerfil = async (buffer, mimeType) => {
+  const output = sharp(buffer).rotate().resize({ width: 900, withoutEnlargement: true });
+
+  if (mimeType === 'image/png') {
+    return output.png({ compressionLevel: 8 }).toBuffer();
+  }
+
+  if (mimeType === 'image/webp') {
+    return output.webp({ quality: 80 }).toBuffer();
+  }
+
+  return output.jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+};
+
+const obtenerExtensionDesdeMime = (mimeType) => {
+  if (mimeType === 'image/png') return 'png';
+  if (mimeType === 'image/webp') return 'webp';
+  return 'jpg';
+};
 
 const dentistaController = {
 
@@ -138,28 +169,120 @@ const dentistaController = {
             res.status(500).json({ error: "No se puede eliminar: registros vinculados" });
         }
     },
+
+    actualizarPerfil: async (req, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Usuario no autenticado" });
+        }
+
+        const { nombre, apellidos, email, telefono, contrasena } = req.body;
+        const usuario = await Usuario.findByPk(userId);
+        if (!usuario) {
+          return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const dentista = await Dentista.findOne({ where: { id_usuario: userId } });
+
+        const usuarioUpdates = {};
+        const dentistaUpdates = {};
+
+        if (email) {
+          usuarioUpdates.email = String(email).trim();
+          if (dentista) {
+            dentistaUpdates.email = String(email).trim();
+          }
+        }
+        if (contrasena) {
+          const hash = await bcrypt.hash(String(contrasena), 10);
+          usuarioUpdates.password_hash = hash;
+        }
+
+        if (nombre) {
+          dentistaUpdates.nombre = String(nombre).trim();
+        }
+        if (apellidos) {
+          dentistaUpdates.apellidos = String(apellidos).trim();
+        }
+        if (telefono) {
+          dentistaUpdates.telefono = String(telefono).trim();
+        }
+
+        if (req.file) {
+          const uploadDir = path.join(__dirname, "../../uploads/avatars");
+          asegurarDirectorio(uploadDir);
+
+          const extension = obtenerExtensionDesdeMime(req.file.mimetype);
+          const filename = `${uuidv4()}.${extension}`;
+          const filePath = path.join(uploadDir, filename);
+          const bufferFinal = await procesarFotoPerfil(req.file.buffer, req.file.mimetype);
+
+          fs.writeFileSync(filePath, bufferFinal);
+          usuarioUpdates.avatar = `/uploads/avatars/${filename}`;
+        }
+
+        if (Object.keys(usuarioUpdates).length > 0) {
+          await Usuario.update(usuarioUpdates, { where: { id: userId } });
+        }
+
+        if (dentista && Object.keys(dentistaUpdates).length > 0) {
+          await Dentista.update(dentistaUpdates, { where: { id_usuario: userId } });
+        }
+
+        const perfilActualizado = await Dentista.findOne({
+          where: { id_usuario: userId },
+          include: [{ model: Usuario, attributes: ['email', 'avatar'] }],
+        });
+
+        if (!perfilActualizado) {
+          return res.status(404).json({ message: "Perfil no encontrado" });
+        }
+
+        res.json({
+          message: "Perfil actualizado",
+          perfil: {
+            nombre: perfilActualizado.nombre,
+            apellidos: perfilActualizado.apellidos,
+            especialidad: perfilActualizado.especialidad,
+            telefono: perfilActualizado.telefono,
+            email: perfilActualizado.email || perfilActualizado.Usuario?.email,
+            avatar: perfilActualizado.Usuario?.avatar || null,
+          },
+        });
+      } catch (error) {
+        console.error("Error actualizando perfil:", error);
+        res.status(500).json({ message: "Error actualizando perfil", detalle: error.message });
+      }
+    },
+
     obtenerPerfil: async (req, res) => {
-  try {
-    const userId = req.user.id;
+      try {
+        const userId = req.user.id;
 
-    const dentista = await Dentista.findOne({
-      where: { id_usuario: userId }
-    });
+        const dentista = await Dentista.findOne({
+          where: { id_usuario: userId },
+          include: [{ model: Usuario, attributes: ['email', 'avatar'] }],
+        });
 
-    if (!dentista) {
-      return res.status(404).json({ message: "Dentista no encontrado" });
+        if (!dentista) {
+          return res.status(404).json({ message: "Dentista no encontrado" });
+        }
+
+        res.json({
+          nombre: dentista.nombre,
+          apellidos: dentista.apellidos,
+          especialidad: dentista.especialidad || "Odontólogo",
+          telefono: dentista.telefono || "",
+          email: dentista.email || dentista.Usuario?.email || "",
+          avatar: dentista.Usuario?.avatar || null,
+        });
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error obteniendo perfil" });
+      }
     }
-
-    res.json({
-      nombre: dentista.nombre,
-      especialidad: dentista.especialidad || "Odontólogo"
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error obteniendo perfil" });
-  }
-}
-};
+  };
 
 module.exports = dentistaController;
