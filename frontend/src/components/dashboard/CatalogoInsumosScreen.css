@@ -1,4 +1,3 @@
-/* Contenedor principal */
 .catalogo-insumos-container {
   display: block;
   width: 100%;
@@ -52,7 +51,6 @@
   margin: 5px 0 0 0;
 }
 
-/* Acciones rápidas - dentro del header */
 .catalogo-acciones {
   display: flex;
   justify-content: flex-end;
@@ -145,7 +143,7 @@
   font-size: 14px;
 }
 
-/* Filtros y búsqueda */
+
 .catalogo-filtros {
   margin-bottom: 20px;
   display: flex;
@@ -298,7 +296,7 @@
   font-weight: 600;
 }
 
-/* Botones de acciones de filtros */
+
 .filtros-acciones {
   display: flex;
   gap: 12px;
@@ -522,7 +520,7 @@
   font-size: 12px;
 }
 
-/* Paginación */
+
 .paginacion-container {
   display: flex;
   align-items: center;
@@ -612,7 +610,7 @@
   color: #f04438;
 }
 
-/* Modal de confirmación */
+
 .modal-overlay {
   position: fixed;
   top: 0;

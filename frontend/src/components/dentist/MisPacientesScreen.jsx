@@ -42,7 +42,7 @@ const formatearFecha = (valor) => {
   try { return new Date(valor).toLocaleDateString('es-HN'); } catch { return '-'; }
 };
 
-// ── Exportar expediente como PDF con colores de marca ────────────────────────
+
 const exportarExpedientePDF = (paciente) => {
   const nombre     = paciente.paciente_nombre || paciente.nombre_completo || paciente.nombre || 'Paciente';
   const edad       = paciente.edad ?? '-';
@@ -216,7 +216,7 @@ const exportarExpedientePDF = (paciente) => {
   if (ventana) { ventana.document.write(html); ventana.document.close(); }
 };
 
-// ── Modal para registrar nuevo paciente ──────────────────────────────────────
+
 const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
   const [form, setForm] = useState({
     nombre: '', telefono: '', email: '', fecha_nacimiento: '',
@@ -349,7 +349,7 @@ const NuevoPacienteModal = ({ open, onClose, onCreado }) => {
   );
 };
 
-// ── Componente principal ──────────────────────────────────────────────────────
+
 const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) => {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
@@ -444,7 +444,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     }
   };
 
-  // ✅ CORREGIDO: Guardar odontograma — envía { estados: condiciones } como espera el backend
+  
   const handleGuardarOdontograma = async (condiciones) => {
     const id = pacienteSeleccionado?.id_paciente || pacienteSeleccionado?.id;
     if (!id) throw new Error('No se encontró el ID del paciente');
@@ -452,7 +452,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     const res = await fetch(`http://localhost:3000/api/pacientes/${id}/odontograma`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estados: condiciones }), // ✅ CORREGIDO: "estados" como espera el backend
+      body: JSON.stringify({ estados: condiciones }), 
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -461,7 +461,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     setPacienteSeleccionado(prev => ({ ...prev, odontograma: condiciones }));
   };
 
-  // ── Vista expediente completo ─────────────────────────────────────────────
+  
   if (pacienteSeleccionado) {
     return (
       <div className="dm20-page">
@@ -505,7 +505,7 @@ const MisPacientesScreen = ({ onSelectPatient, dentistaInfo, pacienteInicial }) 
     );
   }
 
-  // ── Vista lista ───────────────────────────────────────────────────────────
+  
   return (
     <div className="dm20-page">
       <div className="dm20-card">

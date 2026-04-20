@@ -111,7 +111,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
   const [savingInfo,      setSavingInfo]      = useState(false);
   const [savingHistorial, setSavingHistorial] = useState(false);
 
-  // AJUSTE: Mapeo exacto al campo 'id' que vimos en tu tabla de MySQL
+  
   const patientId = useMemo(() => {
     if (!paciente) return null;
     return paciente.id || paciente.id_paciente || paciente.idPaciente || paciente.paciente?.id ||
@@ -308,12 +308,12 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
   };
 
   const renderField = (label, fieldName, canEdit) => {
-    // En modo edición, usar el valor directo de detallePaciente sin fallbacks
-    // En modo lectura, usar los valores procesados de infoPersonal con fallbacks
+  
+  
     let displayValue, editValue;
     
     if (canEdit) {
-      // En edición, usar directamente del estado sin fallbacks
+      
       if (fieldName === 'nombre') {
         editValue = detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '';
       } else if (fieldName === 'fecha_nacimiento') {
@@ -321,7 +321,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
       } else {
         editValue = detallePaciente?.[fieldName] ?? '';
       }
-      // Para mostrar si no está editando, obtener el valor con fallback
+      
       const fallbacks = {
         nombre: '', fecha_nacimiento: '-', edad: '-', sexo: 'No especificado', email: 'No registrado',
         direccion: 'No registrada', telefono: 'No registrado', seguro_medico: 'No registrado',
@@ -331,7 +331,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         ? formatBirthDate(editValue)
         : (editValue || fallbacks[fieldName] || '-');
     } else {
-      // En lectura, usar los valores con fallbacks desde infoPersonal
+      
       const fieldMapping = {
         nombre: 'nombre', fecha_nacimiento: 'fechaNacimiento', edad: 'edad', sexo: 'sexo', email: 'email',
         direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',

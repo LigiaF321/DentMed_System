@@ -1,5 +1,5 @@
 import './styles/dentista-global.css';
-// frontend/src/components/dentist/CitasScreen.jsx
+
 import React, { useState, useEffect } from 'react';
 import { cancelarCita } from '../../services/citas.service';
 import ReprogramarCitaModal from './ReprogramarCitaModal';

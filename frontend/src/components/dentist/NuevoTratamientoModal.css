@@ -1,4 +1,4 @@
-/* frontend/src/components/dentist/NuevoTratamientoModal.css */
+
 
 .nt-overlay {
   position: fixed;
@@ -387,9 +387,6 @@
   .nt-form { padding: 16px; }
 }
 
-/* ───────────────────────────────────────────── */
-/* ── MODAL DE ÉXITO PROFESIONAL (NUEVO) ── */
-/* ───────────────────────────────────────────── */
 
 .nt-success-overlay {
   position: fixed;

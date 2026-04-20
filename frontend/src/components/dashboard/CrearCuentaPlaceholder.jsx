@@ -114,9 +114,7 @@ export default function CrearCuentaPlaceholder() {
 
     setSubmitting(true);
     try {
-      /** * SINCRONIZACIÓN CON EL BACKEND:
-       * Ajustamos el payload para que coincida con lo que funcionó en Postman.
-       */
+      
       const payload = {
         nombre: `${form.nombres.trim()} ${form.apellidos.trim()}`,
         email: form.email.trim().toLowerCase(),
@@ -127,12 +125,12 @@ export default function CrearCuentaPlaceholder() {
 
       const res = await createDentistAccount(payload);
 
-      // Leemos 'mensaje' de la respuesta tal como lo vimos en tu prueba de Postman
+      
       setSuccessMsg(
         res?.mensaje || "✅ Registro exitoso y correo enviado"
       );
 
-      // Resetear campos
+      
       setForm({
         nombres: "",
         apellidos: "",

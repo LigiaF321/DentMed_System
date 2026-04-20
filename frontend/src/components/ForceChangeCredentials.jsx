@@ -31,17 +31,17 @@ const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
   const checkPasswordStrength = (password) => {
     let strength = 0;
     
-    // Longitud mínima
+    
     if (password.length >= 6) strength += 1;
     if (password.length >= 8) strength += 1;
+  
     
-    // Tiene números
     if (/\d/.test(password)) strength += 1;
     
-    // Tiene letras mayúsculas y minúsculas
+    
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
     
-    // Tiene caracteres especiales
+    
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
     
     setPasswordStrength(strength);
@@ -64,7 +64,7 @@ const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
     e.preventDefault();
     setError('');
 
-    // Validaciones
+    
     const usernameError = validateUsername(newUsername);
     if (usernameError) {
       setError(usernameError);
@@ -82,13 +82,13 @@ const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
       return;
     }
 
-    // No puede usar las credenciales maestras
+    
     if (newUsername === 'Admin' && newPassword === 'Admin123') {
       setError('No puede usar las credenciales maestras iniciales');
       return;
     }
 
-    // Contraseña débil
+    
     if (passwordStrength < 3) {
       setError('La contraseña es muy débil. Use mayúsculas, minúsculas y números');
       return;
@@ -97,15 +97,15 @@ const ForceChangeCredentials = ({ userData, onSuccess, onBack }) => {
     setIsLoading(true);
 
     try {
-      // Simular llamada al backend
+      
       console.log('Cambiando credenciales para:', userData.role);
       console.log('Nuevo usuario:', newUsername);
       console.log('Nueva contraseña:', newPassword);
       
-      // Simular delay de red
+    
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Éxito - llamar onSuccess para ir al dashboard
+      
       if (onSuccess) {
         onSuccess();
       }

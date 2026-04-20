@@ -37,7 +37,7 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
 
-  // Determinar si es modo duplicación
+  
   const esDuplicacion = !!datosPrecargados && !titulo;
   const displayTitulo = titulo || (esDuplicacion ? "Duplicar Insumo" : "Registrar Nuevo Insumo");
   const esModoEditar = !!titulo && titulo.includes("Editando");
@@ -113,7 +113,7 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
       ...prev,
       [name]: value
     }));
-    // Limpiar error cuando el usuario escribe
+
     if (errores[name]) {
       setErrores(prev => ({
         ...prev,
@@ -148,10 +148,10 @@ export default function RegistroInsumoScreen({ onGuardar, onCancelar, datosPreca
       
       let response;
       if (esModoEditar && datosPrecargados?.id) {
-        // Modo edición: actualizar
+
         response = await materialService.actualizar(datosPrecargados.id, data);
       } else {
-        // Modo nuevo/duplicación: crear
+
         response = await materialService.crear(data);
       }
       

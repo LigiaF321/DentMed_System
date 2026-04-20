@@ -242,7 +242,7 @@ export default function AlertasInventarioScreen() {
 
   useEffect(() => {
     recargarTodo(filtros);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   async function handleBuscar() {
