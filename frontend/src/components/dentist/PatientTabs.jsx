@@ -150,7 +150,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
   const infoPersonal = {
     nombre:             getValue(source, ['nombre', 'nombre_completo', 'paciente_nombre']),
     edad:               getValue(source, ['edad'], '-'),
-    fechaNacimiento:    getValue(source, ['fecha_nacimiento'], '-'),
     sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
     email:              getValue(source, ['email', 'correo', 'correo_electronico'], 'No registrado'),
     direccion:          getValue(source, ['direccion'], 'No registrada'),
@@ -195,11 +194,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         email: detallePaciente?.email || '',
         telefono: detallePaciente?.telefono || '',
         direccion: detallePaciente?.direccion || '',
-        fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
-        sexo: detallePaciente?.sexo || '',
-        seguro_medico: detallePaciente?.seguro_medico || '',
-        contacto_emergencia: detallePaciente?.contacto_emergencia || '',
-        telefono_emergencia: detallePaciente?.telefono_emergencia || '',
         alergias: detallePaciente?.alergias || '',
       };
       
@@ -281,41 +275,10 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     setActiveTab(tab);
   };
 
-  const computeAgeFromDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return '';
-    const today = new Date();
-    let age = today.getFullYear() - date.getFullYear();
-    const monthDiff = today.getMonth() - date.getMonth();
-    const dayDiff = today.getDate() - date.getDate();
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      age -= 1;
-    }
-    return String(age >= 0 ? age : '');
-  };
-
   const updateField = (field, value) => setDetallePaciente((p) => {
     const nextState = { ...(p || source), [field]: value };
     if (field === 'nombre') {
       nextState.nombre_completo = value;
-    }
-    if (field === 'fecha_nacimiento') {
-      nextState.edad = computeAgeFromDate(value);
-    }
-    if (field === 'edad') {
-      const ageNumber = Number(value);
-      if (!Number.isNaN(ageNumber) && ageNumber >= 0) {
-        const baseDate = p?.fecha_nacimiento ? new Date(p.fecha_nacimiento) : new Date();
-        const month = baseDate.getMonth();
-        const day = baseDate.getDate();
-        const year = new Date().getFullYear() - ageNumber;
-        const dob = new Date(year, month, day);
-        nextState.fecha_nacimiento = dob.toISOString().slice(0, 10);
-        nextState.edad = String(ageNumber);
-      } else {
-        nextState.edad = value;
-      }
     }
     return nextState;
   });
@@ -350,7 +313,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     } else {
       // En lectura, usar los valores con fallbacks desde infoPersonal
       const fieldMapping = {
-        nombre: 'nombre', edad: 'edad', fecha_nacimiento: 'fechaNacimiento', sexo: 'sexo', email: 'email',
+        nombre: 'nombre', edad: 'edad', sexo: 'sexo', email: 'email',
         direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',
         contacto_emergencia: 'contactoEmergencia', telefono_emergencia: 'telefonoEmergencia',
       };
@@ -378,21 +341,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
                   <option value="Femenino">Femenino</option>
                   <option value="Otro">Otro</option>
                 </select>
-              ) : fieldName === 'fecha_nacimiento' ? (
-                <input
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  type="date"
-                  value={editValue || ''}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                />
-              ) : fieldName === 'edad' ? (
-                <input
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  type="number"
-                  min="0"
-                  value={editValue}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                />
               ) : (
                 <input
                   className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
@@ -498,7 +446,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
             <div className="info-grid">
               {renderField('Nombre', 'nombre', !modoPanel && editModes[TAB_INFO])}
               {renderField('Edad', 'edad', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Fecha de nacimiento', 'fecha_nacimiento', !modoPanel && editModes[TAB_INFO])}
               {renderField('Sexo', 'sexo', !modoPanel && editModes[TAB_INFO])}
               {renderField('Correo electrónico', 'email', !modoPanel && editModes[TAB_INFO])}
               {renderField('Teléfono', 'telefono', !modoPanel && editModes[TAB_INFO])}
@@ -516,19 +463,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Historial Médico</h4>
-              {!modoPanel && (
-                <button className="tab-edit-btn" onClick={() => handleEditButtonClick(TAB_HISTORIAL)} disabled={savingHistorial}>
-                  {savingHistorial ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}
-                    </>
-                  )}
-                </button>
-              )}
             </div>
             <div className="history-grid">
               <div className="history-card">
