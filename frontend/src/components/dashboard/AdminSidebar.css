@@ -213,6 +213,8 @@
   display: flex;
   cursor: pointer;
   border-radius: 18px;
+  align-items: center;
+  gap: 12px;
 }
 
 .dm2-side-user-button:hover,
@@ -245,6 +247,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  align-items: center;
+  text-align: center;
 }
 
 .dm2-side-username {

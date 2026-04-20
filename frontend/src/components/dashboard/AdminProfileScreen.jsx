@@ -29,10 +29,8 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate }) {
   }, []);
 
   useEffect(() => {
-    const fullName = userData?.nombre || userData?.username || '';
-    const parts = String(fullName).trim().split(' ');
-    const nombre = parts.shift() || '';
-    const apellido = parts.join(' ') || '';
+    const nombre = userData?.nombre || userData?.username || '';
+    const apellido = userData?.apellidos || userData?.apellido || '';
 
     setForm({
       nombre,

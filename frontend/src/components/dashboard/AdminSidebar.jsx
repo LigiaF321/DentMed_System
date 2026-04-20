@@ -26,12 +26,11 @@ export default function AdminSidebar({
 }) {
   const currentRole = userData?.role || userData?.rol;
 
-  const name =
-    userData?.username ||
-    userData?.email?.split("@")?.[0] ||
-    (currentRole === "admin" ? "Admin" : "Doctor(a)");
+  const firstName = String(userData?.nombre || userData?.username || "").trim().split(" ")[0] || "Admin";
+  const firstSurname = String(userData?.apellidos || userData?.apellido || "").trim().split(" ")[0] || "";
+  const displayName = firstSurname ? `${firstName} ${firstSurname}` : firstName;
 
-  const userInitial = String(name || "A").charAt(0).toUpperCase();
+  const userInitial = String(displayName || "A").charAt(0).toUpperCase();
   const roleLabel = currentRole === "admin" ? "Administrador" : "Doctor(a)";
   const avatarUrl = userData?.avatar || null;
 
@@ -82,20 +81,14 @@ export default function AdminSidebar({
         >
           <div className="dm2-side-avatar">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={`${name} avatar`} className="dm2-side-avatar-img" />
+              <img src={avatarUrl} alt={`${displayName} avatar`} className="dm2-side-avatar-img" />
             ) : (
               userInitial
             )}
           </div>
           <div className="dm2-side-usertext">
-            <div className="dm2-side-username">{name}</div>
+            <div className="dm2-side-username">{displayName}</div>
             <div className="dm2-side-role">{roleLabel}</div>
-            {userData?.email ? (
-              <div className="dm2-side-usermeta">{userData.email}</div>
-            ) : null}
-            {userData?.telefono ? (
-              <div className="dm2-side-usermeta">{userData.telefono}</div>
-            ) : null}
           </div>
         </button>
 
