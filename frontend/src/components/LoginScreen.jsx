@@ -9,6 +9,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const guardarSesion = (token, role, extra = {}) => {
     clearAuthToken();
@@ -113,22 +114,16 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    if (error) {
-      setError("");
-    }
+    if (error) setError("");
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    if (error) {
-      setError("");
-    }
+    if (error) setError("");
   };
 
   return (
     <div className="login-screen">
-
-
       <div className="login-main">
         <div className="login-visual">
           <div className="visual-content">
@@ -143,11 +138,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
                 <i className="fas fa-user-md"></i>
               </div>
             </div>
-
-
-
-      
-
           </div>
         </div>
 
@@ -192,16 +182,25 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
               <label htmlFor="password" className="form-label">
                 <i className="fas fa-lock"></i> Contraseña *
               </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={handlePasswordChange}
-                placeholder="Ingrese su contraseña"
-                required
-                className="form-input"
-              />
-              
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="Ingrese su contraseña"
+                  required
+                  className="form-input"
+                  style={{ paddingRight: 44 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(s => !s)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16 }}
+                >
+                  <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
+                </button>
+              </div>
             </div>
 
             <div className="form-options">
@@ -255,7 +254,6 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
           </form>
         </div>
       </div>
-
     </div>
   );
 }

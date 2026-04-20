@@ -46,24 +46,11 @@
   scrollbar-color: rgba(255,255,255,.2) transparent;
 }
 
-.dm2-side-nav::-webkit-scrollbar{
-  width: 6px;
-}
+.dm2-side-nav::-webkit-scrollbar{ width: 6px; }
+.dm2-side-nav::-webkit-scrollbar-track{ background: transparent; }
+.dm2-side-nav::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.2); border-radius: 3px; }
+.dm2-side-nav::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.3); }
 
-.dm2-side-nav::-webkit-scrollbar-track{
-  background: transparent;
-}
-
-.dm2-side-nav::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,.2);
-  border-radius: 3px;
-}
-
-.dm2-side-nav::-webkit-scrollbar-thumb:hover{
-  background: rgba(255,255,255,.3);
-}
-
-/* CAMBIO PRINCIPAL: CAJA DEL LOGO EN BLANCO */
 .dm2-logoBox{
   width: 100%;
   height: 64px;
@@ -112,14 +99,8 @@
   text-align: left;
 }
 
-.dm2-side-item:hover{
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.12);
-}
-
-.dm2-side-item:active{
-  transform: translateY(1px);
-}
+.dm2-side-item:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); }
+.dm2-side-item:active{ transform: translateY(1px); }
 
 .dm2-side-item.is-active{
   background: rgba(24,178,122,.12);
@@ -138,19 +119,9 @@
   flex: 0 0 auto;
 }
 
-.dm2-side-item.is-active .dm2-side-ico{
-  background: rgba(24,178,122,.14);
-  border-color: rgba(24,178,122,.30);
-}
-
-.dm2-side-ico i{
-  font-size: 16px;
-  color: rgba(242,244,247,.9);
-}
-
-.dm2-side-item.is-active .dm2-side-ico i{
-  color: rgba(24,178,122,1);
-}
+.dm2-side-item.is-active .dm2-side-ico{ background: rgba(24,178,122,.14); border-color: rgba(24,178,122,.30); }
+.dm2-side-ico i{ font-size: 16px; color: rgba(242,244,247,.9); }
+.dm2-side-item.is-active .dm2-side-ico i{ color: rgba(24,178,122,1); }
 
 .dm2-side-label{
   font-size: 14px;
@@ -183,26 +154,18 @@
   transition: background .15s ease, border-color .15s ease, transform .08s ease;
 }
 
-.dm2-side-logout:hover{
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.13);
-}
+.dm2-side-logout:hover{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.13); }
+.dm2-side-logout:active{ transform: translateY(1px); }
+.dm2-side-logout i{ font-size: 16px; }
 
-.dm2-side-logout:active{
-  transform: translateY(1px);
-}
-
-.dm2-side-logout i{
-  font-size: 16px;
-}
-
+/* ── CAMBIO: gap y padding reducidos ── */
 .dm2-side-user{
   width: 100%;
   border-radius: 18px;
-  padding: 12px;
+  padding: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.08);
 }
@@ -243,16 +206,9 @@
 }
 
 @media (max-width: 1100px){
-  .dm2-side{
-    width: 250px;
-    min-width: 250px;
-  }
+  .dm2-side{ width: 250px; min-width: 250px; }
 }
 
 @media (max-width: 900px){
-  .dm2-side{
-    position: relative;
-    top: auto;
-    height: auto;
-  }
+  .dm2-side{ position: relative; top: auto; height: auto; }
 }
