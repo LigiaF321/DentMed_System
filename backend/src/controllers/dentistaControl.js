@@ -15,25 +15,19 @@ const transporter = nodemailer.createTransport({
 
 const dentistaController = {
 
-    // TAREA: Registro (POST) - SINCRONIZADA CON FRONTEND
     registrar: async (req, res) => {
         try {
-            // Extraemos la contraseña que viene directamente del formulario del frontend
             const { nombre, especialidad, telefono, email, password } = req.body;
 
-            // Validación de seguridad
             if (!email || !password) {
                 return res.status(400).json({ error: "Email y contraseña son obligatorios" });
             }
 
-            // 1. Generar Hash usando la contraseña EXACTA del frontend
             const salt = await bcrypt.genSalt(10);
             const hashedPass = await bcrypt.hash(password, salt);
 
-            // 2. Generar nombre de usuario automático basado en el email
             const nombreUsuario = email.split('@')[0];
 
-            // 3. Crear el Usuario en la base de datos
             const nuevoUsuario = await Usuario.create({
                 username: nombreUsuario,
                 email: email,
@@ -43,7 +37,6 @@ const dentistaController = {
                 primer_acceso: true
             });
 
-            // 4. Crear el perfil del Dentista vinculado al usuario
             const nuevoDentista = await Dentista.create({
                 nombre: nombre,
                 especialidad: especialidad,
@@ -52,7 +45,6 @@ const dentistaController = {
                 id_usuario: nuevoUsuario.id 
             });
 
-            // 5. Enviar correo usando la contraseña que el usuario vio en el frontend
             const mailOptions = {
                 from: '"Sistema DentMed" <alejandramonc23@gmail.com>',
                 to: email, 
@@ -72,7 +64,7 @@ const dentistaController = {
                 dentista: nuevoDentista,
                 usuario: {
                     username: nombreUsuario,
-                    password_visualizada: password // Confirmación para depuración
+                    password_visualizada: password
                 }
             });
 
@@ -84,6 +76,7 @@ const dentistaController = {
             });
         }
     },
+
     listarTodos: async (req, res) => {
         try {
             const lista = await Dentista.findAll({
@@ -138,28 +131,100 @@ const dentistaController = {
             res.status(500).json({ error: "No se puede eliminar: registros vinculados" });
         }
     },
+
     obtenerPerfil: async (req, res) => {
-  try {
-    const userId = req.user.id;
+        try {
+            const userId = req.user.id;
 
-    const dentista = await Dentista.findOne({
-      where: { id_usuario: userId }
-    });
+            const dentista = await Dentista.findOne({
+                where: { id_usuario: userId }
+            });
 
-    if (!dentista) {
-      return res.status(404).json({ message: "Dentista no encontrado" });
-    }
+            if (!dentista) {
+                return res.status(404).json({ message: "Dentista no encontrado" });
+            }
 
-    res.json({
-      nombre: dentista.nombre,
-      especialidad: dentista.especialidad || "Odontólogo"
-    });
+            res.json({
+                nombre: dentista.nombre,
+                especialidad: dentista.especialidad || "Odontólogo",
+                foto_url: dentista.foto_url || null,  // ── NUEVO
+            });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error obteniendo perfil" });
-  }
-}
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Error obteniendo perfil" });
+        }
+    },
+
+    editarPerfil: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const { nombre, especialidad, telefono, correo } = req.body;
+
+            const dentista = await Dentista.findOne({ where: { id_usuario: userId } });
+            if (!dentista) return res.status(404).json({ message: 'Dentista no encontrado' });
+
+            await dentista.update({ nombre, especialidad, telefono, email: correo });
+
+            res.json({ message: 'Perfil actualizado correctamente' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Error al actualizar perfil' });
+        }
+    },
+
+    cambiarPassword: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const { passwordActual, passwordNueva } = req.body;
+
+            const usuario = await Usuario.findByPk(userId);
+            if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+            const valida = await bcrypt.compare(passwordActual, usuario.password_hash);
+            if (!valida) return res.status(401).json({ message: 'La contraseña actual es incorrecta' });
+
+            const hash = await bcrypt.hash(passwordNueva, 10);
+            await usuario.update({ password_hash: hash });
+
+            res.json({ message: 'Contraseña actualizada correctamente' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Error al cambiar contraseña' });
+        }
+    },
+
+    subirFoto: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            if (!req.file) return res.status(400).json({ message: 'No se recibió ninguna imagen' });
+
+            const url = `/uploads/fotos/${req.file.filename}`;
+
+            const dentista = await Dentista.findOne({ where: { id_usuario: userId } });
+            if (!dentista) return res.status(404).json({ message: 'Dentista no encontrado' });
+
+            await dentista.update({ foto_url: url });
+            res.json({ message: 'Foto actualizada', url });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Error al subir foto' });
+        }
+    },
+
+    eliminarFoto: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const dentista = await Dentista.findOne({ where: { id_usuario: userId } });
+            if (!dentista) return res.status(404).json({ message: 'Dentista no encontrado' });
+
+            await dentista.update({ foto_url: null });
+            res.json({ message: 'Foto eliminada' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Error al eliminar foto' });
+        }
+    },
 };
 
 module.exports = dentistaController;

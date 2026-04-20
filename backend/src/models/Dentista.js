@@ -27,7 +27,6 @@ const Dentista = sequelize.define(
       allowNull: true,
       comment: "Apellidos (p. ej. Pérez García)",
     },
-    // CORRECCIÓN: Se cambia 'licencia' por 'numero_licencia' para que coincida con el controlador
     numero_licencia: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -45,11 +44,17 @@ const Dentista = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    // ── NUEVO ────────────────────────────────────────────────────────────────
+    foto_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "URL de la foto de perfil del dentista",
+    },
   },
   {
     tableName: "dentistas",
     timestamps: true,
-    underscored: true, // Esto hace que created_at y updated_at funcionen con guion bajo
+    underscored: true,
   }
 );
 

@@ -155,7 +155,6 @@ exports.validarEmail = async (req, res) => {
     }
 };
 
-// Tarea 2 y 3: Crear Dentista (CORREGIDA PARA EVITAR EL NULL VIOLATION)
 exports.crearDentista = async (req, res) => {
     try {
         const { nombres, apellidos, email, telefono, especialidad, numero_licencia, adminId } = req.body;
@@ -175,12 +174,10 @@ exports.crearDentista = async (req, res) => {
             contador++;
         }
         
-        // CORRECCIÓN CRÍTICA: Generamos el Salt y el Hash antes de llamar a Usuario.create
         const passwordTemporal = crypto.randomBytes(6).toString('base64').slice(0, 10); 
         const salt = await bcrypt.genSalt(10);
         const passHash = await bcrypt.hash(passwordTemporal, salt);
         
-        // Creamos el usuario asegurando que passHash no sea null
         const nuevoUsuario = await Usuario.create({ 
             username: usuarioFinal, 
             email, 
@@ -226,7 +223,7 @@ exports.crearDentista = async (req, res) => {
     }
 };
 
-// Tarea 4.1: Login (SIN MODIFICAR TRABAJO DE COMPAÑEROS)
+// Tarea 4.1: Login
 exports.login = async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -234,34 +231,6 @@ exports.login = async (req, res) => {
 
     if (!ident || !password) {
       return res.status(400).json({ message: "Credenciales incompletas" });
-    }
-
-    // =========================================================
-    // ACCESO MAESTRO TEMPORAL PARA ADMIN
-    // =========================================================
-    if (ident === "Admin" && password === "Admin123") {
-      const secret = process.env.JWT_SECRET || "secreto_desarrollo";
-
-      const token = jwt.sign(
-        {
-          id: 0,
-          rol: "admin",
-          username: "Admin",
-          master: true,
-        },
-        secret,
-        { expiresIn: "24h" }
-      );
-
-      return res.json({
-        token,
-        requiresPasswordChange: true,
-        user: {
-          id: 0,
-          rol: "admin",
-          username: "Admin",
-        },
-      });
     }
 
     const user = await Usuario.findOne({
@@ -324,6 +293,7 @@ exports.login = async (req, res) => {
         id: user.id,
         rol: user.rol,
         username: user.username,
+        email: user.email,
       },
     });
   } catch (error) {

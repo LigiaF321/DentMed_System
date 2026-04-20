@@ -40,6 +40,17 @@ const Usuario = sequelize.define(
       allowNull: false,
       defaultValue: true,
     },
+    // ── NUEVO: campos de perfil del admin ──
+    foto_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      defaultValue: null,
+    },
+    telefono: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     tableName: "usuarios",
