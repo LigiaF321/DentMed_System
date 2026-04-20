@@ -1,4 +1,3 @@
-// Controlador base para tratamientos (DM22)
 const { Tratamiento, Paciente, Dentista } = require("../models");
 
 /**
@@ -33,12 +32,8 @@ const listarTodos = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Error al obtener tratamientos" });
   }
-};
+}
 
-/**
- * FUNCIÓN PARA GUARDAR DESDE EL ODONTOGRAMA - CORREGIDA
- * IGNORA COMPLETAMENTE el doctorId del body y usa SOLO el del usuario autenticado
- */
 const guardarTratamiento = async (req, res) => {
   try {
     const { 
@@ -53,8 +48,6 @@ const guardarTratamiento = async (req, res) => {
       materiales 
     } = req.body;
 
-    // IMPORTANTE: doctorId ha sido ELIMINADO de la desestructuración
-    // El backend IGNORA cualquier doctorId que venga del frontend
 
     // Verificar que tenemos usuario autenticado
     if (!req.user || !req.user.id) {
@@ -75,7 +68,7 @@ const guardarTratamiento = async (req, res) => {
       });
     }
 
-    // Usar el ID del dentista autenticado (IGNORAR el del body)
+    // Usar el ID del dentista autenticado 
     const doctorIdCorrecto = dentista.id;
 
     // Crear el tratamiento con el doctor correcto
@@ -84,7 +77,7 @@ const guardarTratamiento = async (req, res) => {
       tipo,
       fecha: fecha || new Date(),
       diente: diente || null,
-      doctorId: doctorIdCorrecto,  // ← AHORA USA EL ID CORRECTO
+      doctorId: doctorIdCorrecto,  
       costo: costo || 0,
       descripcion: descripcion || null,
       diagnostico: diagnostico || null,
@@ -237,5 +230,5 @@ module.exports = {
   obtenerDetalleTratamiento,
   exportarHistorialPDF,
   obtenerSesionesTratamiento,
-  actualizarTratamiento,  // ← AGREGADA: función para cancelar/actualizar estado
+  actualizarTratamiento,  
 };

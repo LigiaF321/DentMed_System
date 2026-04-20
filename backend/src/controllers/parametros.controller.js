@@ -142,7 +142,6 @@ async function upsertValue(clave, value, userId) {
   }
 }
 
-/** Lee desde DB_KEYS y devuelve formato simple para el frontend */
 async function readParamsObject() {
   const dbKeys = Object.values(DB_KEYS);
   const rows = await Configuracion.findAll({ where: { clave: { [Op.in]: dbKeys } } });

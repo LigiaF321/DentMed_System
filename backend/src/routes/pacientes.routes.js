@@ -8,8 +8,6 @@ router.get('/buscar', verifyToken, pacienteController.buscarPacientes);
 router.get('/recientes', verifyToken, pacienteController.obtenerPacientesRecientes);
 router.get('/:id', verifyToken, pacienteController.obtenerPacienteDetalle);
 router.post('/crear-rapido', verifyToken, pacienteController.crearPacienteRapido);
-
-// ✅ Endpoint para guardar odontograma
 router.put('/:id/odontograma', verifyToken, pacienteController.actualizarOdontograma);
 
 module.exports = router;
