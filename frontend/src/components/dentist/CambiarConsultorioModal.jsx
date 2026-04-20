@@ -28,7 +28,7 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     setLoading(true);
     setError("");
     setSelected(null);
-    setPagina(1); // Reiniciar página al abrir
+    setPagina(1); 
     obtenerConsultorios()
       .then((res) => setConsultorios(res.data || []))
       .catch(() => setConsultorios([]))
@@ -42,14 +42,14 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     setError("");
 
     try {
-      // ⚠️ Evitar seleccionar el mismo consultorio
+      
       if (selected.id === cita.id_consultorio) {
         setError("Ya estás usando ese consultorio");
         setSaving(false);
         return;
       }
 
-      // 🔥 Validar disponibilidad del consultorio seleccionado
+      
       const disponibilidad = await verificarDisponibilidad({
         id_consultorio: selected.id,
         fecha: cita.fecha,
@@ -57,17 +57,17 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
         hora_fin: cita.hora_fin,
       });
 
-      // ⚠️ Validación segura
+      
       if (!disponibilidad?.data?.disponible) {
         setError("El consultorio no está disponible en ese horario");
         setSaving(false);
         return;
       }
 
-      // 🔥 Actualizar consultorio en la cita
+      
       await actualizarConsultorioCita(cita.id, selected.id);
 
-      // 🔥 Auditoría
+     
       await registrarAuditoriaConsultorio({
         accion: "cambio_consultorio",
         modulo: "Consultorios",
@@ -95,7 +95,7 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     }
   };
 
-  // Paginación de consultorios
+  
   const totalPaginas = Math.ceil(consultorios.length / tamanoPagina);
   const consultoriosPagina = consultorios.slice((pagina - 1) * tamanoPagina, pagina * tamanoPagina);
 
