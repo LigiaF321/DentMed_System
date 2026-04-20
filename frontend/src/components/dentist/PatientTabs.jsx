@@ -36,6 +36,14 @@ const isValidEmail = (value) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
 };
 
+const formatBirthDate = (value) => {
+  if (!value) return '-';
+  const normalized = String(value).slice(0, 10);
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 // ── Resumen de tratamientos (últimos 3) ───────────────────────────────────────
 const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
   const [items,   setItems]   = useState([]);
@@ -149,6 +157,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 
   const infoPersonal = {
     nombre:             getValue(source, ['nombre', 'nombre_completo', 'paciente_nombre']),
+    fechaNacimiento:    getValue(source, ['fecha_nacimiento']),
     edad:               getValue(source, ['edad'], '-'),
     sexo:               getValue(source, ['sexo', 'genero'], 'No especificado'),
     email:              getValue(source, ['email', 'correo', 'correo_electronico'], 'No registrado'),
@@ -194,6 +203,11 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         email: detallePaciente?.email || '',
         telefono: detallePaciente?.telefono || '',
         direccion: detallePaciente?.direccion || '',
+        sexo: detallePaciente?.sexo || '',
+        seguro_medico: detallePaciente?.seguro_medico || '',
+        contacto_emergencia: detallePaciente?.contacto_emergencia || '',
+        telefono_emergencia: detallePaciente?.telefono_emergencia || '',
+        fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
         alergias: detallePaciente?.alergias || '',
       };
       
@@ -285,6 +299,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 
   const handleFieldChange = (field, value) => {
     updateField(field, value);
+    setFieldErrors((prev) => ({ ...prev, general: '' }));
     if (field === 'email') {
       const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
       setFieldErrors((prev) => ({ ...prev, email: nextError }));
@@ -300,25 +315,31 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
       // En edición, usar directamente del estado sin fallbacks
       if (fieldName === 'nombre') {
         editValue = detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '';
+      } else if (fieldName === 'fecha_nacimiento') {
+        editValue = detallePaciente?.fecha_nacimiento ?? '';
       } else {
         editValue = detallePaciente?.[fieldName] ?? '';
       }
       // Para mostrar si no está editando, obtener el valor con fallback
       const fallbacks = {
-        nombre: '', edad: '-', sexo: 'No especificado', email: 'No registrado',
+        nombre: '', fecha_nacimiento: '-', edad: '-', sexo: 'No especificado', email: 'No registrado',
         direccion: 'No registrada', telefono: 'No registrado', seguro_medico: 'No registrado',
         contacto_emergencia: 'No registrado', telefono_emergencia: 'No registrado',
       };
-      displayValue = editValue || fallbacks[fieldName] || '-';
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(editValue)
+        : (editValue || fallbacks[fieldName] || '-');
     } else {
       // En lectura, usar los valores con fallbacks desde infoPersonal
       const fieldMapping = {
-        nombre: 'nombre', edad: 'edad', sexo: 'sexo', email: 'email',
+        nombre: 'nombre', fecha_nacimiento: 'fechaNacimiento', edad: 'edad', sexo: 'sexo', email: 'email',
         direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',
         contacto_emergencia: 'contactoEmergencia', telefono_emergencia: 'telefonoEmergencia',
       };
       const displayKey = fieldMapping[fieldName];
-      displayValue = infoPersonal[displayKey] || '-';
+      displayValue = fieldName === 'fecha_nacimiento'
+        ? formatBirthDate(infoPersonal[displayKey])
+        : (infoPersonal[displayKey] || '-');
       if (displayValue === 'No registrado' || displayValue === 'No registrada' || displayValue === 'No especificado') {
         displayValue = '-';
       }
@@ -341,12 +362,20 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
                   <option value="Femenino">Femenino</option>
                   <option value="Otro">Otro</option>
                 </select>
+              ) : fieldName === 'fecha_nacimiento' ? (
+                <input
+                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
+                  type="date"
+                  value={editValue}
+                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                />
               ) : (
                 <input
                   className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
                   type={fieldName === 'email' ? 'email' : 'text'}
                   value={editValue}
                   onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                  readOnly={fieldName === 'edad'}
                 />
               )}
               {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
@@ -445,7 +474,8 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 
             <div className="info-grid">
               {renderField('Nombre', 'nombre', !modoPanel && editModes[TAB_INFO])}
-              {renderField('Edad', 'edad', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Fecha de nacimiento', 'fecha_nacimiento', !modoPanel && editModes[TAB_INFO])}
+              {renderField('Edad', 'edad', false)}
               {renderField('Sexo', 'sexo', !modoPanel && editModes[TAB_INFO])}
               {renderField('Correo electrónico', 'email', !modoPanel && editModes[TAB_INFO])}
               {renderField('Teléfono', 'telefono', !modoPanel && editModes[TAB_INFO])}
