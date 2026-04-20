@@ -18,7 +18,7 @@ const ESTADO_STYLE = {
   planificado: { bg:'#eff6ff', color:'#1d4ed8', label:'Planificado', icon:'fa-clock' },
 };
 
-// ── Exportar PDF de historial de tratamientos en frontend ─────────────────────
+
 const exportarHistorialPDF = (pacienteNombre, pacienteId, tratamientos) => {
   const fecha = new Date().toLocaleDateString('es-HN', { day:'2-digit', month:'long', year:'numeric' });
 
@@ -127,7 +127,7 @@ const exportarHistorialPDF = (pacienteNombre, pacienteId, tratamientos) => {
   if (ventana) { ventana.document.write(html); ventana.document.close(); }
 };
 
-// ── Card de tratamiento individual ────────────────────────────────────────────
+
 const TratamientoCard = ({ t, pacienteVisible, onCancelar, onEditar, dentistaInfo }) => {
   const [expandido, setExpandido] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
@@ -275,7 +275,7 @@ const TratamientoCard = ({ t, pacienteVisible, onCancelar, onEditar, dentistaInf
   );
 };
 
-// ── Componente principal ──────────────────────────────────────────────────────
+
 const TreatmentHistory = ({ pacienteId: pacienteIdProp, pacienteNombre: pacienteNombreProp, dentistaInfo }) => {
 
   const [todosLosTratamientos, setTodosLosTratamientos] = useState([]);

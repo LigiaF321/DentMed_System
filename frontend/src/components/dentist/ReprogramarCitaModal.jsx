@@ -31,7 +31,7 @@ const ReprogramarCitaModal = ({
   const formatoFecha = (fecha) => {
     if (!fecha) return '';
     
-    // Si es un string de fecha ISO (YYYY-MM-DD), convertir a Date
+    
     if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
         weekday: 'long',
@@ -41,7 +41,7 @@ const ReprogramarCitaModal = ({
       });
     }
     
-    // Si es un Date object
+    
     return new Date(fecha).toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
@@ -86,7 +86,7 @@ const ReprogramarCitaModal = ({
       const errorMsg = err.message || 'Error al reprogramar la cita';
       setError(errorMsg);
 
-      // Si hay horarios alternativos en el error, mostrarlos
+      
       if (err.response?.data?.horariosAlternativos && err.response.data.horariosAlternativos.length > 0) {
         setHorariosAlternativos(err.response.data.horariosAlternativos);
         setMostrarAlternativas(true);

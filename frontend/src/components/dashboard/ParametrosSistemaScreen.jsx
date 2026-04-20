@@ -29,7 +29,7 @@ async function readJsonSafe(res) {
   }
 }
 
-/** ✅ rol desde userData (agregué más llaves por si tu backend lo manda distinto) */
+
 function getRole(userData) {
   const r =
     userData?.role ??
@@ -64,7 +64,7 @@ function getUserId(userData) {
   return n ?? null;
 }
 
-/** ✅ token (por si tienes middleware JWT) */
+
 function getToken(userData) {
   const t =
     userData?.token ||
@@ -79,7 +79,7 @@ function getToken(userData) {
   return String(t || "").trim();
 }
 
-/** ✅ request con headers x-user-role / x-user-label / x-user-id + Authorization si hay token */
+
 async function requestJSON(url, options, userData) {
   const role = getRole(userData);
   const label = getUserLabel(userData);
@@ -239,7 +239,7 @@ export default function ParametrosSistemaScreen({ userData }) {
   }
 
   async function loadHist(nextPage = page, nextLimit = limit) {
-    // ✅ según tu controller: historial es admin-only (si no, te va a dar 403)
+    
     if (!isAdmin) {
       setHistError("");
       setHistTotal(0);
@@ -271,7 +271,7 @@ export default function ParametrosSistemaScreen({ userData }) {
 
       setHistTotal(total);
 
-      // ✅ mapeo con campos reales del controller: usuario_nombre, fecha, cambio, ip
+
       setHistRows(
         rows.map((r, idx) => ({
           id: r.id ?? `${nextPage}-${idx}`,
@@ -293,7 +293,7 @@ export default function ParametrosSistemaScreen({ userData }) {
   useEffect(() => {
     loadParams();
 
-    // ✅ solo admin carga historial para no comerte Forbidden
+    
     if (isAdmin) {
       loadHist(1, limit);
       setPage(1);
@@ -301,7 +301,7 @@ export default function ParametrosSistemaScreen({ userData }) {
       setHistRows([]);
       setHistTotal(0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [isAdmin]);
 
   useEffect(() => {

@@ -51,7 +51,7 @@ export default function ClinicHoursScreen({ onBack }) {
 
   const [savedAt, setSavedAt] = useState(null);
 
-  // cargar localStorage (si existe)
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -64,7 +64,7 @@ export default function ClinicHoursScreen({ onBack }) {
     } catch {}
   }, []);
 
-  // validaciones
+
   const dayError = useMemo(() => {
     const d = schedule[selectedDay];
     if (!d.open) return '';
@@ -108,7 +108,7 @@ export default function ClinicHoursScreen({ onBack }) {
       return next;
     });
 
-    // limpia selección
+
     setCopyTargets(Object.fromEntries(DAYS.map((d) => [d.key, false])));
   }
 
@@ -128,7 +128,7 @@ export default function ClinicHoursScreen({ onBack }) {
     if (!excForm.date) return;
     if (!excForm.closed && !isValidRange(excForm.start, excForm.end)) return;
 
-    // evitar duplicados por fecha (1 excepción por fecha)
+
     if (exceptions.some((e) => e.date === excForm.date)) return;
 
     const item = {

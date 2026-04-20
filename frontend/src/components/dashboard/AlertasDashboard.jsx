@@ -31,7 +31,7 @@ export default function AlertasDashboard({ token }) {
           </li>
         ))}
       </ul>
-      <a href="/alertas">📋 Ver todas las alertas</a>
+      <a href="/alertas"> Ver todas las alertas</a>
     </div>
   );
 }
