@@ -10,6 +10,13 @@ const TAB_HISTORIAL    = 'historial';
 const TAB_TRATAMIENTOS = 'tratamientos';
 const TAB_DOCUMENTOS   = 'documentos';
 
+// ── CAMBIO: colores de la empresa ──
+const BRAND = {
+  gradient: 'linear-gradient(135deg, #4f46e5, #db2777)',
+  primary:  '#4f46e5',
+  shadow:   'rgba(79,70,229,0.18)',
+};
+
 const toArray = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value !== 'string') return [];
@@ -86,9 +93,14 @@ const ResumenTratamientos = ({ pacienteId, onVerTodos }) => {
           </span>
         </div>
       ))}
-      <button onClick={onVerTodos} className="dentista-label" style={{ width: '100%', marginTop: 6, padding: '8px 0', borderRadius: 8, border: '1.5px solid #2563eb', background: 'transparent', color: '#2563eb', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}
-        onMouseEnter={(e) => { e.target.style.background = '#2563eb'; e.target.style.color = '#fff'; }}
-        onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2563eb'; }}
+      {/* ── CAMBIO: borde y color morado en lugar de azul ── */}
+      <button onClick={onVerTodos} className="dentista-label" style={{
+        width: '100%', marginTop: 6, padding: '8px 0', borderRadius: 8,
+        border: `1.5px solid ${BRAND.primary}`, background: 'transparent',
+        color: BRAND.primary, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+      }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = BRAND.gradient; e.currentTarget.style.color = '#fff'; e.currentTarget.style.border = '1.5px solid transparent'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = BRAND.primary; e.currentTarget.style.border = `1.5px solid ${BRAND.primary}`; }}
       >
         <i className="fas fa-external-link-alt" style={{ marginRight: 6 }}></i>
         Ver todos los tratamientos
@@ -111,7 +123,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
   const [savingInfo,      setSavingInfo]      = useState(false);
   const [savingHistorial, setSavingHistorial] = useState(false);
 
-  
   const patientId = useMemo(() => {
     if (!paciente) return null;
     return paciente.id || paciente.id_paciente || paciente.idPaciente || paciente.paciente?.id ||
@@ -183,20 +194,15 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
   const ultimaActualizacion = source?.updated_at || source?.updatedAt || source?.fecha_actualizacion || source?.created_at || source?.createdAt;
 
   const handleSaveInfoPersonal = async () => {
-    // Validar que tengamos ID de paciente
     if (!patientId) {
-      console.warn('No se encontró ID de paciente para guardar');
       setFieldErrors((prev) => ({ ...prev, general: 'No se puede guardar sin ID de paciente' }));
       return false;
     }
-    
-    // Validar email
     const emailValue = detallePaciente?.email || '';
     if (!isValidEmail(emailValue)) {
       setFieldErrors((prev) => ({ ...prev, email: 'Ingresa un correo electrónico válido.' }));
-      return false; // Error, no guardar
+      return false;
     }
-    
     try {
       setSavingInfo(true);
       const datosActualizados = {
@@ -211,15 +217,13 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         fecha_nacimiento: detallePaciente?.fecha_nacimiento || null,
         alergias: detallePaciente?.alergias || '',
       };
-      
       await actualizarPaciente(patientId, datosActualizados);
       const freshPaciente = await obtenerPacienteDetalle(patientId);
       setDetallePaciente(freshPaciente);
       onPacienteActualizado?.(freshPaciente);
-      setFieldErrors({}); // Limpiar errores si guardó exitosamente
+      setFieldErrors({});
       return true;
     } catch (error) {
-      console.error('Error guardando cambios:', error);
       setFieldErrors((prev) => ({ ...prev, general: error.message }));
       return false;
     } finally {
@@ -235,15 +239,13 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         medicamentos: detallePaciente?.medicamentos || '',
         alergias: detallePaciente?.alergias || '',
       };
-      
       await actualizarPaciente(patientId, datosActualizados);
       const freshPaciente = await obtenerPacienteDetalle(patientId);
       setDetallePaciente(freshPaciente);
       onPacienteActualizado?.(freshPaciente);
-      setFieldErrors({}); // Limpiar errores si guardó exitosamente
+      setFieldErrors({});
       return true;
     } catch (error) {
-      console.error('Error guardando historial:', error);
       setFieldErrors((prev) => ({ ...prev, general: error.message }));
       return false;
     } finally {
@@ -251,26 +253,15 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     }
   };
 
-  const toggleEdit = (tab) => {
-    setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
-  };
+  const toggleEdit = (tab) => setEditModes((p) => ({ ...p, [tab]: !p[tab] }));
 
   const handleEditButtonClick = async (tab) => {
-    // Si estamos en modo edición, intenta guardar
     if (editModes[tab]) {
       let saved = false;
-      if (tab === TAB_INFO) {
-        saved = await handleSaveInfoPersonal();
-      } else if (tab === TAB_HISTORIAL) {
-        saved = await handleSaveHistorialMedico();
-      }
-      
-      // Si se guardó exitosamente, salir del modo edición
-      if (saved) {
-        toggleEdit(tab);
-      }
+      if (tab === TAB_INFO) saved = await handleSaveInfoPersonal();
+      else if (tab === TAB_HISTORIAL) saved = await handleSaveHistorialMedico();
+      if (saved) toggleEdit(tab);
     } else {
-      // Si no estamos editando, entrar en modo edición
       toggleEdit(tab);
     }
   };
@@ -279,21 +270,40 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     if (tab === activeTab) return;
     if (editModes[activeTab]) {
       let saved = false;
-      if (activeTab === TAB_INFO) {
-        saved = await handleSaveInfoPersonal();
-      } else if (activeTab === TAB_HISTORIAL) {
-        saved = await handleSaveHistorialMedico();
-      }
+      if (activeTab === TAB_INFO) saved = await handleSaveInfoPersonal();
+      else if (activeTab === TAB_HISTORIAL) saved = await handleSaveHistorialMedico();
       if (!saved) return;
       setEditModes((prev) => ({ ...prev, [activeTab]: false }));
     }
     setActiveTab(tab);
   };
 
+  const computeAgeFromDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
+    const today = new Date();
+    let age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    const dayDiff = today.getDate() - date.getDate();
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age -= 1;
+    return String(age >= 0 ? age : '');
+  };
+
   const updateField = (field, value) => setDetallePaciente((p) => {
     const nextState = { ...(p || source), [field]: value };
-    if (field === 'nombre') {
-      nextState.nombre_completo = value;
+    if (field === 'nombre') nextState.nombre_completo = value;
+    if (field === 'fecha_nacimiento') nextState.edad = computeAgeFromDate(value);
+    if (field === 'edad') {
+      const ageNumber = Number(value);
+      if (!Number.isNaN(ageNumber) && ageNumber >= 0) {
+        const baseDate = p?.fecha_nacimiento ? new Date(p.fecha_nacimiento) : new Date();
+        const dob = new Date(new Date().getFullYear() - ageNumber, baseDate.getMonth(), baseDate.getDate());
+        nextState.fecha_nacimiento = dob.toISOString().slice(0, 10);
+        nextState.edad = String(ageNumber);
+      } else {
+        nextState.edad = value;
+      }
     }
     return nextState;
   });
@@ -302,26 +312,14 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
     updateField(field, value);
     setFieldErrors((prev) => ({ ...prev, general: '' }));
     if (field === 'email') {
-      const nextError = isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.';
-      setFieldErrors((prev) => ({ ...prev, email: nextError }));
+      setFieldErrors((prev) => ({ ...prev, email: isValidEmail(value) ? '' : 'Ingresa un correo electrónico válido.' }));
     }
   };
 
   const renderField = (label, fieldName, canEdit) => {
-  
-  
     let displayValue, editValue;
-    
     if (canEdit) {
-      
-      if (fieldName === 'nombre') {
-        editValue = detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '';
-      } else if (fieldName === 'fecha_nacimiento') {
-        editValue = detallePaciente?.fecha_nacimiento ?? '';
-      } else {
-        editValue = detallePaciente?.[fieldName] ?? '';
-      }
-      
+      editValue = fieldName === 'nombre' ? (detallePaciente?.nombre ?? detallePaciente?.nombre_completo ?? '') : (detallePaciente?.[fieldName] ?? '');
       const fallbacks = {
         nombre: '', fecha_nacimiento: '-', edad: '-', sexo: 'No especificado', email: 'No registrado',
         direccion: 'No registrada', telefono: 'No registrado', seguro_medico: 'No registrado',
@@ -331,7 +329,6 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         ? formatBirthDate(editValue)
         : (editValue || fallbacks[fieldName] || '-');
     } else {
-      
       const fieldMapping = {
         nombre: 'nombre', fecha_nacimiento: 'fechaNacimiento', edad: 'edad', sexo: 'sexo', email: 'email',
         direccion: 'direccion', telefono: 'telefono', seguro_medico: 'seguroMedico',
@@ -345,48 +342,34 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         displayValue = '-';
       }
     }
-    
+
     return (
       <div className={`info-field ${fieldErrors[fieldName] ? 'has-error' : ''}`} key={label}>
         <span className="info-label dentista-label">{label}</span>
-        {canEdit
-          ? (
-            <>
-              {fieldName === 'sexo' ? (
-                <select
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  value={editValue}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                >
-                  <option value="">Selecciona una opción</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              ) : fieldName === 'fecha_nacimiento' ? (
-                <input
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  type="date"
-                  value={editValue}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                />
-              ) : (
-                <input
-                  className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`}
-                  type={fieldName === 'email' ? 'email' : 'text'}
-                  value={editValue}
-                  onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                  readOnly={fieldName === 'edad'}
-                />
-              )}
-              {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
-            </>
-          )
-          : <span className="info-value">{displayValue}</span>}
+        {canEdit ? (
+          <>
+            {fieldName === 'sexo' ? (
+              <select className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`} value={editValue} onChange={(e) => handleFieldChange(fieldName, e.target.value)}>
+                <option value="">Selecciona una opción</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
+            ) : fieldName === 'fecha_nacimiento' ? (
+              <input className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`} type="date" value={editValue || ''} onChange={(e) => handleFieldChange(fieldName, e.target.value)} />
+            ) : fieldName === 'edad' ? (
+              <input className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`} type="number" min="0" value={editValue} onChange={(e) => handleFieldChange(fieldName, e.target.value)} />
+            ) : (
+              <input className={`info-input ${fieldErrors[fieldName] ? 'input-error' : ''}`} type={fieldName === 'email' ? 'email' : 'text'} value={editValue} onChange={(e) => handleFieldChange(fieldName, e.target.value)} />
+            )}
+            {fieldErrors[fieldName] ? <span className="info-error">{fieldErrors[fieldName]}</span> : null}
+          </>
+        ) : <span className="info-value">{displayValue}</span>}
       </div>
     );
   };
 
+  // ── CAMBIO: botón "Ver expediente completo" con degradado de la empresa ──
   const BtnVerExpediente = () => {
     if (!modoPanel) return null;
     return (
@@ -394,10 +377,10 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
         onClick={onVerExpediente}
         style={{
           width: '100%', padding: '11px 0', borderRadius: 12, border: 'none',
-          background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white',
-          fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', gap: 8,
-          boxShadow: '0 6px 16px rgba(37,99,235,0.18)', marginTop: 12,
+          background: BRAND.gradient, color: 'white',
+          fontWeight: 800, fontSize: 13, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          boxShadow: `0 6px 16px ${BRAND.shadow}`, marginTop: 12,
         }}
       >
         <i className="fas fa-folder-open"></i> Ver expediente completo
@@ -436,43 +419,29 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
       <div className="tabs-content">
         {loadingDetalle ? <div className="tab-loading">Cargando expediente del paciente...</div> : null}
 
-        {/* ── Info Personal ── */}
         {activeTab === TAB_INFO && (
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Información Personal</h4>
               {!modoPanel && (
                 <button className="tab-edit-btn" onClick={() => handleEditButtonClick(TAB_INFO)} disabled={savingInfo}>
-                  {savingInfo ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}
-                    </>
-                  )}
+                  {savingInfo ? <><i className="fas fa-spinner fa-spin"></i> Guardando...</> : <><i className="fas fa-pen"></i> {editModes[TAB_INFO] ? 'Finalizar' : 'Editar'}</>}
                 </button>
               )}
             </div>
-
             {alertasMedicas.length > 0 ? (
               <div className="medical-alert-banner">
                 <div className="medical-alert-title"><i className="fas fa-exclamation-triangle"></i> Alertas médicas</div>
-                <div className="medical-alert-items">
-                  {alertasMedicas.map((a, i) => <span key={i}>{a.tipo}: {a.valor}</span>)}
-                </div>
+                <div className="medical-alert-items">{alertasMedicas.map((a, i) => <span key={i}>{a.tipo}: {a.valor}</span>)}</div>
               </div>
             ) : (
               <div className="medical-alert-empty">Sin alertas médicas críticas registradas.</div>
             )}
-
             {fieldErrors.general && (
               <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
                 {fieldErrors.general}
               </div>
             )}
-
             <div className="info-grid">
               {renderField('Nombre', 'nombre', !modoPanel && editModes[TAB_INFO])}
               {renderField('Fecha de nacimiento', 'fecha_nacimiento', !modoPanel && editModes[TAB_INFO])}
@@ -489,11 +458,15 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
           </div>
         )}
 
-        {/* ── Historial Médico ── */}
         {activeTab === TAB_HISTORIAL && (
           <div className="tab-pane">
             <div className="tab-toolbar">
               <h4>Historial Médico</h4>
+              {!modoPanel && (
+                <button className="tab-edit-btn" onClick={() => handleEditButtonClick(TAB_HISTORIAL)} disabled={savingHistorial}>
+                  {savingHistorial ? <><i className="fas fa-spinner fa-spin"></i> Guardando...</> : <><i className="fas fa-pen"></i> {editModes[TAB_HISTORIAL] ? 'Finalizar' : 'Editar'}</>}
+                </button>
+              )}
             </div>
             <div className="history-grid">
               <div className="history-card">
@@ -525,40 +498,22 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
           </div>
         )}
 
-        {/* ── Tratamientos (Integrado con Odontograma) ── */}
         {activeTab === TAB_TRATAMIENTOS && (
           <div className="tab-pane">
-            <div className="tab-toolbar">
-              <h4>Tratamientos y Odontograma</h4>
-            </div>
-            
+            <div className="tab-toolbar"><h4>Tratamientos y Odontograma</h4></div>
             <div style={{ marginBottom: '20px', background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-               <Odontograma 
-                 pacienteId={patientId} 
-                 pacienteNombre={nombrePaciente}
-                 // AJUSTE: Pasamos 'tipo' preventivamente si el componente lo usa como prop
-                 tipoTratamiento="Odontograma" 
-                 onGuardar={() => {
-                   if (patientId) obtenerPacienteDetalle(patientId).then(setDetallePaciente);
-                 }} 
-               />
+              <Odontograma pacienteId={patientId} pacienteNombre={nombrePaciente} tipoTratamiento="Odontograma"
+                onGuardar={() => { if (patientId) obtenerPacienteDetalle(patientId).then(setDetallePaciente); }} />
             </div>
-
             <h5 style={{ fontSize: '14px', color: '#64748b', marginBottom: '10px' }}>Historial Reciente</h5>
-            <ResumenTratamientos
-              pacienteId={patientId}
-              onVerTodos={onVerTodos}
-            />
+            <ResumenTratamientos pacienteId={patientId} onVerTodos={onVerTodos} />
             <BtnVerExpediente />
           </div>
         )}
 
-        {/* ── Documentos ── */}
         {activeTab === TAB_DOCUMENTOS && (
           <div className="tab-pane">
-            <div className="tab-toolbar">
-              <h4>Documentos y Radiografías</h4>
-            </div>
+            <div className="tab-toolbar"><h4>Documentos y Radiografías</h4></div>
             {modoPanel ? (
               <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb' }}>
                 <i className="fas fa-file-medical" style={{ fontSize: 24, marginBottom: 8, display: 'block', opacity: 0.4 }}></i>
@@ -574,9 +529,7 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
                 ) : notaDocumentos ? (
                   <div className="tab-quick-preview">{notaDocumentos}</div>
                 ) : null}
-                <div className="documentos-embedded">
-                  <DocumentosTab paciente={source} />
-                </div>
+                <div className="documentos-embedded"><DocumentosTab paciente={source} /></div>
               </>
             )}
             <BtnVerExpediente />
@@ -588,5 +541,3 @@ const PatientTabs = ({ paciente, onVerTodos, onVerExpediente, modoPanel = true, 
 };
 
 export default PatientTabs;
-
-

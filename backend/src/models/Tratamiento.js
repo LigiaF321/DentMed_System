@@ -11,7 +11,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'pacientes', 
+      model: 'pacientes',
       key: 'id',
     },
   },
@@ -22,7 +22,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
   fecha: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW, // Recomendado para evitar nulos de fecha
+    defaultValue: DataTypes.NOW,
   },
   diente: {
     type: DataTypes.STRING,
@@ -32,7 +32,7 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'dentistas', 
+      model: 'dentistas',
       key: 'id',
     },
   },
@@ -67,8 +67,19 @@ const Tratamiento = sequelize.define('Tratamiento', {
       this.setDataValue('materiales', Array.isArray(val) ? JSON.stringify(val) : val);
     }
   },
+  // ── NUEVO: estado del tratamiento ──
+  estado: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: 'planificado',
+  },
+  // ── NUEVO: motivo de cancelación ──
+  motivo_cancelacion: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
 }, {
-  tableName: 'tratamientos', 
+  tableName: 'tratamientos',
   timestamps: false,
 });
 

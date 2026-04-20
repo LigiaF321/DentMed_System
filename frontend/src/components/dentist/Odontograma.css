@@ -11,6 +11,26 @@
   margin-top: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border: 1px solid #e9ecef;
+  scrollbar-width: thin;
+  scrollbar-color: #c4b5fd #f0effe;
+}
+
+.odontograma::-webkit-scrollbar {
+  width: 6px;
+}
+
+.odontograma::-webkit-scrollbar-track {
+  background: #f0effe;
+  border-radius: 999px;
+}
+
+.odontograma::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 999px;
+}
+
+.odontograma::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
 }
 
 .odontograma-empty {
@@ -41,12 +61,12 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 14px;
-  border-bottom: 2px solid #0088cc;
+  border-bottom: 2px solid #c4b5fd;  /* morado suave de marca */
   flex-wrap: wrap;
 }
 
 .odontograma-titulo i {
-  color: #0088cc;
+  color: #7c3aed;  /* morado de marca */
   margin-right: 8px;
 }
 
@@ -130,7 +150,7 @@
 .diente:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  border-color: #0088cc;
+  border-color: #a78bfa;  /* morado suave de marca */
 }
 
 .diente-numero {
@@ -142,12 +162,12 @@
 
 /* Estados */
 .diente.planificado {
-  background: #eaf5fb;
-  border-color: #0088cc;
+  background: #f0effe;  /* lila suave de marca */
+  border-color: #a78bfa;
 }
 
 .diente.planificado .diente-numero {
-  color: #0088cc;
+  color: #7c3aed;
 }
 
 .diente.realizado {
@@ -201,8 +221,8 @@
 }
 
 .leyenda-item .diente-planificado {
-  background: #eaf5fb;
-  border-color: #0088cc;
+  background: #f0effe;
+  border-color: #a78bfa;
 }
 
 .leyenda-item .diente-realizado {
