@@ -8,6 +8,8 @@ const {
   cancelarCita,
   reprogramarCita,
   obtenerCitasDentista,
+  confirmarCita,
+  completarCita
 } = require("../controllers/citas.controller");
 
 const {
@@ -21,6 +23,8 @@ router.get("/verificar-disponibilidad", verifyToken, verificarDisponibilidad);
 router.post("/", verifyToken, crearCita);
 router.patch("/:id/cancelar", verifyToken, cancelarCita);
 router.patch("/:id/reprogramar", verifyToken, reprogramarCita);
+router.patch("/:id/confirmar", verifyToken, confirmarCita);
+router.patch("/:id/completar", verifyToken, completarCita);
 
 router.post("/pre-reserva", verifyToken, crearPreReserva);
 router.put("/:id/consultorio", verifyToken, actualizarConsultorioCita);
