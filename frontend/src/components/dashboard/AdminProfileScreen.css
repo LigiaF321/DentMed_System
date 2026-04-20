@@ -2,6 +2,22 @@
   padding: 24px;
 }
 
+.dm2-profile-backBtn {
+  border: none;
+  background: transparent;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 12px;
+  transition: background .15s ease;
+}
+
+.dm2-profile-backBtn:hover {
+  background: rgba(52, 64, 84, .08);
+}
+
 .dm2-card-subtitle {
   color: #60728c;
   font-size: 13px;

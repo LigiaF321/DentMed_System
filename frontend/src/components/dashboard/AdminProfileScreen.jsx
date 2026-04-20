@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '../../utils/auth';
 import './AdminProfileScreen.css';
 
-export default function AdminProfileScreen({ userData, onUserDataUpdate }) {
+export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack }) {
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',
@@ -130,7 +130,11 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate }) {
       <div className="dm2-card dm2-profile-card">
         <div className="dm2-card-head">
           <div className="dm2-card-title">Mi configuración</div>
-          <div className="dm2-card-subtitle">Actualiza tus datos básicos de administrador.</div>
+          {onBack ? (
+            <button type="button" className="dm2-profile-backBtn" onClick={onBack}>
+              ← Volver
+            </button>
+          ) : null}
         </div>
         <div className="dm2-profile-grid">
           <div className="dm2-profile-summary">

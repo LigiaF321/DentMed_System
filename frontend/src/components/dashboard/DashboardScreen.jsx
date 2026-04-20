@@ -111,6 +111,12 @@ export default function DashboardScreen({ userData, onLogout, onUserDataUpdate }
     if (!isAdmin) return 'dashboard';
     return localStorage.getItem('adminView') || 'dashboard';
   });
+  const [prevAdminView, setPrevAdminView] = useState('dashboard');
+
+  const handleSelectView = (view) => {
+    setPrevAdminView((currentPrev) => (adminView === 'perfil' ? currentPrev : adminView));
+    setAdminView(view);
+  };
 
   useEffect(() => {
     if (!isAdmin) {
@@ -533,7 +539,7 @@ export default function DashboardScreen({ userData, onLogout, onUserDataUpdate }
     if (adminView === 'kardex-movimientos') return <KardexMovimientosScreen userData={userData} />;
     if (adminView === 'alertas-seguridad') return <AlertasSeguridadScreen userData={userData} />;
     if (adminView === 'alertas-inventario') return <AlertasInventarioScreen userData={userData} />;
-    if (adminView === 'perfil') return <AdminProfileScreen userData={userData} onUserDataUpdate={onUserDataUpdate} />;
+    if (adminView === 'perfil') return <AdminProfileScreen userData={userData} onUserDataUpdate={onUserDataUpdate} onBack={() => setAdminView(prevAdminView || 'dashboard')} />;
     if (adminView === 'reportes-consumo') return <ReportesConsumoScreen userData={userData} />;
 
     if (adminView !== 'dashboard') {
@@ -563,7 +569,7 @@ export default function DashboardScreen({ userData, onLogout, onUserDataUpdate }
         {isAdmin ? (
           <AdminSidebar
             activeView={adminView}
-            onSelect={setAdminView}
+            onSelect={handleSelectView}
             userData={userData}
             onLogout={onLogout}
             alertCount={alertCount}
