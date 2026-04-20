@@ -59,14 +59,27 @@ function parseLocalYMD(ymd) {
 function normalizeDateLabel(fechaFromApi) {
   if (!fechaFromApi) return '';
   const s = String(fechaFromApi).trim();
+
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const d = parseLocalYMD(s);
-    return d.toLocaleDateString('es-HN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString('es-HN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
   }
+
   const d = new Date(s);
   if (!Number.isNaN(d.getTime())) {
-    return d.toLocaleDateString('es-HN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString('es-HN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
   }
+
   return s;
 }
 
@@ -74,9 +87,11 @@ function inventoryLevel(actual, minimo, nivelFromApi) {
   const n = String(nivelFromApi || '').toLowerCase();
   if (n === 'critico') return 'crit';
   if (n === 'alerta' || n === 'preventivo') return 'warn';
+
   const a = Number(actual ?? 0);
   const m = Math.max(1, Number(minimo ?? 1));
   const ratio = a / m;
+
   if (ratio <= 1) return 'crit';
   if (ratio <= 1.5) return 'warn';
   return 'ok';
@@ -89,8 +104,7 @@ function notifLevel(tipo) {
   return 'info';
 }
 
-// ── CAMBIO: se agrega onPerfilActualizado a los props ──
-export default function DashboardScreen({ userData, onLogout, onPerfilActualizado }) {
+export default function DashboardScreen({ userData, onLogout }) {
   const isAdmin = (userData?.role || userData?.rol) === "admin";
   const [adminView, setAdminView] = useState(() => {
     if (!isAdmin) return 'dashboard';
@@ -99,7 +113,9 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
 
   useEffect(() => {
     if (!isAdmin) {
-      if (adminView !== 'dashboard') setAdminView('dashboard');
+      if (adminView !== 'dashboard') {
+        setAdminView('dashboard');
+      }
       return;
     }
     localStorage.setItem('adminView', adminView);
@@ -110,125 +126,267 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
   const [fechaLabel, setFechaLabel] = useState('');
   const [lastUpdated, setLastUpdated] = useState('—');
   const [resumen, setResumen] = useState({
-    citasHoy: 0, pendientes: 0, atendidos: 0, canceladas: 0,
-    consultoriosOcupados: 0, consultoriosTotales: 0, pacientes: 0, profesionales: 0,
+    citasHoy: 0,
+    pendientes: 0,
+    atendidos: 0,
+    canceladas: 0,
+    consultoriosOcupados: 0,
+    consultoriosTotales: 0,
+    pacientes: 0,
+    profesionales: 0,
   });
   const [weekly, setWeekly] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [notifs, setNotifs] = useState([]);
-  const [alertasSeguridad, setAlertasSeguridad] = useState({ criticas: 0, advertencias: 0, informativas: 0, ultimas: [] });
+  const [alertasSeguridad, setAlertasSeguridad] = useState({
+    criticas: 0,
+    advertencias: 0,
+    informativas: 0,
+    ultimas: []
+  });
   const [alertasVisorAbierto, setAlertasVisorAbierto] = useState(false);
 
   const loadPanel = useCallback(async () => {
     try {
       setLoading(true);
-      if (!isAdmin) { setLoading(false); return; }
+      if (!isAdmin) {
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch('/api/admin/panel-principal');
       if (!res.ok) throw new Error('No se pudo cargar panel principal');
+
       const data = await res.json();
+
       setFechaLabel(normalizeDateLabel(data.fecha));
+
       const r = data.resumen_dia ?? {};
       setResumen({
-        citasHoy: r.citas_totales ?? 0, pendientes: r.citas_pendientes ?? 0,
-        atendidos: r.citas_atendidas ?? 0, canceladas: r.citas_canceladas ?? 0,
-        consultoriosOcupados: r.consultorios_ocupados ?? 0, consultoriosTotales: r.consultorios_totales ?? 0,
-        pacientes: r.pacientes_hoy ?? 0, profesionales: r.profesionales_activos ?? 0,
+        citasHoy: r.citas_totales ?? 0,
+        pendientes: r.citas_pendientes ?? 0,
+        atendidos: r.citas_atendidas ?? 0,
+        canceladas: r.citas_canceladas ?? 0,
+        consultoriosOcupados: r.consultorios_ocupados ?? 0,
+        consultoriosTotales: r.consultorios_totales ?? 0,
+        pacientes: r.pacientes_hoy ?? 0,
+        profesionales: r.profesionales_activos ?? 0,
       });
+
       const etiquetas = data.movimiento_citas?.etiquetas ?? [];
       const datos = data.movimiento_citas?.datos ?? [];
       setWeekly(etiquetas.map((label, i) => ({ day: label, count: datos[i] ?? 0 })));
+
       const productos = data.stock_critico?.productos ?? [];
-      setStockItems(productos.map((p, idx) => ({ id: idx + 1, producto: p.nombre, stock_actual: p.stock_actual, stock_minimo: p.stock_minimo, nivel: p.nivel })));
-      const mappedNotifs = (data.notificaciones ?? []).map((n, idx) => ({ id: idx + 1, tipo: n.tipo, mensaje: n.mensaje, accion: n.accion }));
+      setStockItems(
+        productos.map((p, idx) => ({
+          id: idx + 1,
+          producto: p.nombre,
+          stock_actual: p.stock_actual,
+          stock_minimo: p.stock_minimo,
+          nivel: p.nivel,
+        }))
+      );
+
+      const mappedNotifs = (data.notificaciones ?? []).map((n, idx) => ({
+        id: idx + 1,
+        tipo: n.tipo,
+        mensaje: n.mensaje,
+        accion: n.accion,
+      }));
       setNotifs(mappedNotifs);
       setAlertCount(mappedNotifs.length);
+
       const ua = data.ultima_actualizacion ? new Date(data.ultima_actualizacion) : null;
-      setLastUpdated(ua && !Number.isNaN(ua.getTime()) ? ua.toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' }) : '—');
+      setLastUpdated(
+        ua && !Number.isNaN(ua.getTime())
+          ? ua.toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' })
+          : '—'
+      );
     } catch (e) {
       console.error('Error cargando panel principal:', e);
+
       try {
         const alertasRes = await fetch('/api/admin/seguridad/alertas/resumen');
         if (alertasRes.ok) {
           const alertasData = await alertasRes.json();
-          setAlertasSeguridad({ criticas: alertasData.total_criticas || 0, advertencias: alertasData.total_advertencias || 0, informativas: alertasData.total_informativas || 0, ultimas: alertasData.ultimas_alertas || [] });
+          setAlertasSeguridad({
+            criticas: alertasData.total_criticas || 0,
+            advertencias: alertasData.total_advertencias || 0,
+            informativas: alertasData.total_informativas || 0,
+            ultimas: alertasData.ultimas_alertas || []
+          });
         }
-      } catch (err) { console.error('Error cargando resumen de alertas de seguridad:', err); }
-    } finally { setLoading(false); }
+      } catch (err) {
+        console.error('Error cargando resumen de alertas de seguridad:', err);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [isAdmin]);
 
-  useEffect(() => { loadPanel(); }, [loadPanel]);
+  useEffect(() => {
+    loadPanel();
+  }, [loadPanel]);
+
   useEffect(() => {
     if (!isAdmin) return;
     const id = setInterval(() => loadPanel(), 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [isAdmin, loadPanel]);
 
-  const inventarioAlertCount = useMemo(() => stockItems.filter(item => item.nivel === 'crit' || item.nivel === 'warn').length, [stockItems]);
-  const totalAlertasSeguridad = useMemo(() => Number(alertasSeguridad.criticas || 0) + Number(alertasSeguridad.advertencias || 0) + Number(alertasSeguridad.informativas || 0), [alertasSeguridad]);
-  const topDate = useMemo(() => fechaLabel || new Date().toLocaleDateString('es-HN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }), [fechaLabel]);
+  const inventarioAlertCount = useMemo(
+    () => stockItems.filter(item => item.nivel === 'crit' || item.nivel === 'warn').length,
+    [stockItems]
+  );
+
+  const totalAlertasSeguridad = useMemo(
+    () =>
+      Number(alertasSeguridad.criticas || 0) +
+      Number(alertasSeguridad.advertencias || 0) +
+      Number(alertasSeguridad.informativas || 0),
+    [alertasSeguridad]
+  );
+
+  const topDate = useMemo(() => {
+    return (
+      fechaLabel ||
+      new Date().toLocaleDateString('es-HN', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    );
+  }, [fechaLabel]);
 
   const topbarTitle = useMemo(() => {
     if (!isAdmin) return '';
+
     switch (adminView) {
-      case 'consultorios':       return 'GESTIÓN DE CONSULTORIOS';
-      case 'alertas-inventario': return 'ALERTAS DE INVENTARIO';
-      case 'alertas-seguridad':  return 'ALERTAS DE SEGURIDAD';
-      case 'kardex-movimientos': return 'KARDEX / MOVIMIENTOS';
-      case 'gestionar-cuentas':  return 'GESTIONAR CUENTAS';
-      case 'crear-cuenta':       return 'CREAR CUENTA';
-      case 'horarios':           return 'HORARIOS DE ATENCIÓN';
-      case 'parametros':         return 'PARÁMETROS DEL SISTEMA';
-      case 'monitoreo':          return 'MONITOREO DEL SISTEMA';
-      case 'auditoria':          return 'AUDITORÍA Y ACTIVIDAD';
-      case 'restauracion':       return 'RESTAURACIÓN DEL SISTEMA';
-      case 'catalogo-insumos':   return 'CATÁLOGO DE INSUMOS';
-      case 'reportes-consumo':   return 'REPORTES DE CONSUMO';
-      default:                   return 'PANEL DE CONTROL';
+      case 'consultorios':
+        return 'GESTIÓN DE CONSULTORIOS';
+      case 'alertas-inventario':
+        return 'ALERTAS DE INVENTARIO';
+      case 'alertas-seguridad':
+        return 'ALERTAS DE SEGURIDAD';
+      case 'kardex-movimientos':
+        return 'KARDEX / MOVIMIENTOS';
+      case 'gestionar-cuentas':
+        return 'GESTIONAR CUENTAS';
+      case 'crear-cuenta':
+        return 'CREAR CUENTA';
+      case 'horarios':
+        return 'HORARIOS DE ATENCIÓN';
+      case 'parametros':
+        return 'PARÁMETROS DEL SISTEMA';
+      case 'monitoreo':
+        return 'MONITOREO DEL SISTEMA';
+      case 'auditoria':
+        return 'AUDITORÍA Y ACTIVIDAD';
+      case 'restauracion':
+        return 'RESTAURACIÓN DEL SISTEMA';
+      case 'catalogo-insumos':
+        return 'CATÁLOGO DE INSUMOS';
+      case 'reportes-consumo':
+        return 'REPORTES DE CONSUMO';
+      default:
+        return 'PANEL DE CONTROL';
     }
   }, [adminView, isAdmin]);
 
   const renderDashboard = () => (
     <div className="dm2-page">
       <div className="dm2-statsRow">
-        <StatCard label="Citas hoy"   icon="fa-solid fa-calendar-day"    value={resumen.citasHoy}    variant="info" />
-        <StatCard label="Pendientes"  icon="fa-solid fa-hourglass-half"  value={resumen.pendientes}  variant="warn" />
-        <StatCard label="Atendidos"   icon="fa-solid fa-circle-check"    value={resumen.atendidos}   variant="ok" />
-        <StatCard label="Canceladas"  icon="fa-solid fa-xmark"           value={resumen.canceladas}  variant="crit" />
+        <StatCard label="Citas hoy" icon="fa-solid fa-calendar-day" value={resumen.citasHoy} variant="info" />
+        <StatCard label="Pendientes" icon="fa-solid fa-hourglass-half" value={resumen.pendientes} variant="warn" />
+        <StatCard label="Atendidos" icon="fa-solid fa-circle-check" value={resumen.atendidos} variant="ok" />
+        <StatCard label="Canceladas" icon="fa-solid fa-xmark" value={resumen.canceladas} variant="crit" />
       </div>
+
       <div className="dm2-grid">
         <div className="dm2-colLeft">
           <CardSection title="Actividad del día">
             <div className="dm2-miniStats">
-              <div className="dm2-miniStat"><div className="dm2-miniLabel">Consultorios</div><div className="dm2-miniValue">{resumen.consultoriosTotales ? `${resumen.consultoriosOcupados}/${resumen.consultoriosTotales}` : resumen.consultoriosOcupados}</div></div>
-              <div className="dm2-miniStat"><div className="dm2-miniLabel">Pacientes</div><div className="dm2-miniValue">{resumen.pacientes}</div></div>
-              <div className="dm2-miniStat"><div className="dm2-miniLabel">Profesionales</div><div className="dm2-miniValue">{resumen.profesionales}</div></div>
+              <div className="dm2-miniStat">
+                <div className="dm2-miniLabel">Consultorios</div>
+                <div className="dm2-miniValue">
+                  {resumen.consultoriosTotales
+                    ? `${resumen.consultoriosOcupados}/${resumen.consultoriosTotales}`
+                    : resumen.consultoriosOcupados}
+                </div>
+              </div>
+              <div className="dm2-miniStat">
+                <div className="dm2-miniLabel">Pacientes</div>
+                <div className="dm2-miniValue">{resumen.pacientes}</div>
+              </div>
+              <div className="dm2-miniStat">
+                <div className="dm2-miniLabel">Profesionales</div>
+                <div className="dm2-miniValue">{resumen.profesionales}</div>
+              </div>
             </div>
           </CardSection>
+
           <CardSection title="Movimiento de citas (últimos 14 días)">
-            <div className="dm2-chartWrap"><div className="dm2-chartBox"><div style={{ height: 290 }} className="dm2-chartInner"><WeeklyAppointmentsChart data={weekly.map(({ day, count }) => ({ day, count }))} /></div></div></div>
+            <div className="dm2-chartWrap">
+              <div className="dm2-chartBox">
+                <div style={{ height: 290 }} className="dm2-chartInner">
+                  <WeeklyAppointmentsChart
+                    data={weekly.map(({ day, count }) => ({ day, count }))}
+                  />
+                </div>
+              </div>
+            </div>
           </CardSection>
+
           {isAdmin ? (
-            <CardSection title="Alertas de Seguridad" rightAction={<button className="dm2-linkBtn" onClick={() => setAdminView('alertas-seguridad')}>Ver todas</button>}>
+            <CardSection
+              title="Alertas de Seguridad"
+              rightAction={
+                <button className="dm2-linkBtn" onClick={() => setAdminView('alertas-seguridad')}>
+                  Ver todas
+                </button>
+              }
+            >
               <div className="dm2-alertsWidget">
                 <div className="dm2-alertsWidget-badges">
-                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--critica">🔴 Críticas: {alertasSeguridad.criticas}</span>
-                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--advertencia">🟡 Advertencias: {alertasSeguridad.advertencias}</span>
-                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--informativa">ℹ️ Informativas: {alertasSeguridad.informativas}</span>
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--critica">
+                    🔴 Críticas: {alertasSeguridad.criticas}
+                  </span>
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--advertencia">
+                    🟡 Advertencias: {alertasSeguridad.advertencias}
+                  </span>
+                  <span className="dm2-alertsWidget-badge dm2-alertsWidget-badge--informativa">
+                    ℹ️ Informativas: {alertasSeguridad.informativas}
+                  </span>
                 </div>
+
                 <div className="dm2-alertsWidget-list">
-                  {alertasSeguridad.ultimas.length > 0 ? alertasSeguridad.ultimas.slice(0, 3).map((alerta) => (
-                    <div key={alerta.id} className="dm2-alertsWidget-item">
-                      <span className={`dm2-alertsWidget-dot dm2-alertsWidget-dot--${alerta.prioridad}`} />
-                      <span className="dm2-alertsWidget-text">{alerta.descripcion}</span>
-                    </div>
-                  )) : <div className="dm2-alertsWidget-empty">No hay alertas activas</div>}
+                  {alertasSeguridad.ultimas.length > 0 ? (
+                    alertasSeguridad.ultimas.slice(0, 3).map((alerta) => (
+                      <div key={alerta.id} className="dm2-alertsWidget-item">
+                        <span
+                          className={`dm2-alertsWidget-dot dm2-alertsWidget-dot--${alerta.prioridad}`}
+                        />
+                        <span className="dm2-alertsWidget-text">
+                          {alerta.descripcion}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="dm2-alertsWidget-empty">No hay alertas activas</div>
+                  )}
                 </div>
               </div>
             </CardSection>
           ) : null}
+
           <CardSection title="Actualización">
             <div className="dm2-updateRow">
-              <div className="dm2-updateLeft"><span className="dm2-muted">Última actualización:</span> <span className="dm2-strong">{lastUpdated}</span></div>
+              <div className="dm2-updateLeft">
+                <span className="dm2-muted">Última actualización:</span>{' '}
+                <span className="dm2-strong">{lastUpdated}</span>
+              </div>
               <button className="dm2-updateBtn" type="button" onClick={loadPanel} disabled={loading}>
                 <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />
                 <span>{loading ? 'ACTUALIZANDO...' : 'ACTUALIZAR AHORA'}</span>
@@ -236,36 +394,109 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
             </div>
             <div className="dm2-muted">Actualización automática cada 5 minutos</div>
           </CardSection>
-          <CardSection title="Accesos rápidos" rightAction={<span style={{ fontSize: '12px' }}>Ahora disponible en barra superior</span>}>
+
+          <CardSection
+            title="Accesos rápidos"
+            rightAction={<span style={{ fontSize: '12px' }}>Ahora disponible en barra superior</span>}
+          >
             <div className="dm2-quickbar">
-              {isAdmin ? (<>
-                <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('consultorios')}><i className="fa-solid fa-door-open" /><span>CONSULTORIOS</span></button>
-                <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-seguridad')}><i className="fa-solid fa-shield-alt" /><span>ALERTAS DE SEGURIDAD</span></button>
-              </>) : null}
-              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-inventario')}><i className="fa-solid fa-boxes-stacked" /><span>ALERTAS DE INVENTARIO</span></button>
+              {isAdmin ? (
+                <>
+                  <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('consultorios')}>
+                    <i className="fa-solid fa-door-open" />
+                    <span>CONSULTORIOS</span>
+                  </button>
+                  <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-seguridad')}>
+                    <i className="fa-solid fa-shield-alt" />
+                    <span>ALERTAS DE SEGURIDAD</span>
+                  </button>
+                </>
+              ) : null}
+
+              <button className="dm2-quickbtn" type="button" onClick={() => setAdminView('alertas-inventario')}>
+                <i className="fa-solid fa-boxes-stacked" />
+                <span>ALERTAS DE INVENTARIO</span>
+              </button>
             </div>
           </CardSection>
         </div>
+
         <div className="dm2-colRight">
           <AlertasInventarioWidget onViewAll={() => setAdminView('alertas-inventario')} />
-          <CardSection title="Stock crítico" rightAction={<button type="button" className="dm2-linkBtn" onClick={() => setAdminView('catalogo-insumos')}>Ver inventario →</button>}>
+
+          <CardSection
+            title="Stock crítico"
+            rightAction={
+              <button type="button" className="dm2-linkBtn" onClick={() => setAdminView('catalogo-insumos')}>
+                Ver inventario →
+              </button>
+            }
+          >
             <div className="dm2-table">
-              <div className="dm2-thead"><div>Producto</div><div className="dm2-tcenter">Actual</div><div className="dm2-tcenter">Mínimo</div><div className="dm2-tcenter">Estado</div></div>
-              {stockItems.length === 0 ? <div className="dm2-empty">No hay productos en stock crítico</div> : stockItems.map((it) => {
-                const lvl = inventoryLevel(it.stock_actual, it.stock_minimo, it.nivel);
-                return (<div key={it.id} className="dm2-trow"><div className="dm2-tprod">{it.producto}</div><div className="dm2-tcenter">{it.stock_actual}</div><div className="dm2-tcenter">{it.stock_minimo}</div><div className="dm2-tcenter"><Dot variant={lvl} /></div></div>);
-              })}
+              <div className="dm2-thead">
+                <div>Producto</div>
+                <div className="dm2-tcenter">Actual</div>
+                <div className="dm2-tcenter">Mínimo</div>
+                <div className="dm2-tcenter">Estado</div>
+              </div>
+
+              {stockItems.length === 0 ? (
+                <div className="dm2-empty">No hay productos en stock crítico</div>
+              ) : (
+                stockItems.map((it) => {
+                  const lvl = inventoryLevel(it.stock_actual, it.stock_minimo, it.nivel);
+                  return (
+                    <div key={it.id} className="dm2-trow">
+                      <div className="dm2-tprod">{it.producto}</div>
+                      <div className="dm2-tcenter">{it.stock_actual}</div>
+                      <div className="dm2-tcenter">{it.stock_minimo}</div>
+                      <div className="dm2-tcenter">
+                        <Dot variant={lvl} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </CardSection>
-          <CardSection title="Notificaciones" rightAction={<button type="button" className="dm2-linkBtn" onClick={() => (isAdmin ? setAdminView('alertas-seguridad') : setAdminView('dashboard'))}>Ver centro →</button>}>
+
+          <CardSection
+            title="Notificaciones"
+            rightAction={
+              <button
+                type="button"
+                className="dm2-linkBtn"
+                onClick={() => (isAdmin ? setAdminView('alertas-seguridad') : setAdminView('dashboard'))}
+              >
+                Ver centro →
+              </button>
+            }
+          >
             <div className="dm2-notifs">
-              {notifs.length === 0 ? <div className="dm2-empty">Sin notificaciones</div> : notifs.map((n) => {
-                const lvl = notifLevel(n.tipo);
-                return (<div key={n.id} className="dm2-notifRow" role={n.accion ? 'button' : undefined} tabIndex={n.accion ? 0 : undefined} onClick={() => n.accion && (window.location.href = n.accion)} onKeyDown={(e) => n.accion && e.key === 'Enter' && (window.location.href = n.accion)} style={n.accion ? { cursor: 'pointer' } : undefined}>
-                  <Dot variant={lvl} />
-                  <div className="dm2-notifText"><span className="dm2-notifKind">{String(n.tipo || 'INFO').toUpperCase()}:</span> {n.mensaje}</div>
-                </div>);
-              })}
+              {notifs.length === 0 ? (
+                <div className="dm2-empty">Sin notificaciones</div>
+              ) : (
+                notifs.map((n) => {
+                  const lvl = notifLevel(n.tipo);
+                  return (
+                    <div
+                      key={n.id}
+                      className="dm2-notifRow"
+                      role={n.accion ? 'button' : undefined}
+                      tabIndex={n.accion ? 0 : undefined}
+                      onClick={() => n.accion && (window.location.href = n.accion)}
+                      onKeyDown={(e) => n.accion && e.key === 'Enter' && (window.location.href = n.accion)}
+                      style={n.accion ? { cursor: 'pointer' } : undefined}
+                    >
+                      <Dot variant={lvl} />
+                      <div className="dm2-notifText">
+                        <span className="dm2-notifKind">{String(n.tipo || 'INFO').toUpperCase()}:</span>{' '}
+                        {n.mensaje}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </CardSection>
         </div>
@@ -274,26 +505,51 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
   );
 
   const renderMainContent = () => {
-    if (!isAdmin) return <DentistDashboard userData={userData} onLogout={onLogout} />;
-    if (adminView === 'consultorios')       return <ConsultoriosAdminScreen />;
-    if (adminView === 'gestionar-cuentas')  return <GestionarCuentasScreen />;
-    if (adminView === 'crear-cuenta')       return <CrearCuentaPlaceholder />;
-    if (adminView === 'horarios')           return <HorariosAtencionScreen userData={userData} />;
-    if (adminView === 'parametros')         return <ParametrosSistemaScreen userData={userData} />;
-    if (adminView === 'monitoreo')          return <ErrorBoundary title="Error en Monitoreo" message="La pantalla de monitoreo encontró un error inesperado."><MonitoringScreen /></ErrorBoundary>;
-    if (adminView === 'auditoria')          return <AuditScreen />;
-    if (adminView === 'restauracion')       return <RestauracionScreen userData={userData} />;
-    if (adminView === 'catalogo-insumos')   return <CatalogoInsumosScreen />;
+    if (!isAdmin) {
+      return <DentistDashboard userData={userData} onLogout={onLogout} />;
+    }
+
+    if (adminView === 'consultorios') return <ConsultoriosAdminScreen />;
+    if (adminView === 'gestionar-cuentas') return <GestionarCuentasScreen />;
+    if (adminView === 'crear-cuenta') return <CrearCuentaPlaceholder />;
+    if (adminView === 'horarios') return <HorariosAtencionScreen userData={userData} />;
+    if (adminView === 'parametros') return <ParametrosSistemaScreen userData={userData} />;
+    if (adminView === 'monitoreo') {
+      return (
+        <ErrorBoundary
+          title="Error en Monitoreo"
+          message="La pantalla de monitoreo encontró un error inesperado."
+        >
+          <MonitoringScreen />
+        </ErrorBoundary>
+      );
+    }
+    if (adminView === 'auditoria') return <AuditScreen />;
+    if (adminView === 'restauracion') return <RestauracionScreen userData={userData} />;
+    if (adminView === 'catalogo-insumos') return <CatalogoInsumosScreen />;
     if (adminView === 'kardex-movimientos') return <KardexMovimientosScreen userData={userData} />;
-    if (adminView === 'alertas-seguridad')  return <AlertasSeguridadScreen userData={userData} />;
+    if (adminView === 'alertas-seguridad') return <AlertasSeguridadScreen userData={userData} />;
     if (adminView === 'alertas-inventario') return <AlertasInventarioScreen userData={userData} />;
-    if (adminView === 'reportes-consumo')   return <ReportesConsumoScreen userData={userData} />;
-    if (adminView !== 'dashboard') return (
-      <div className="dm2-page"><div className="dm2-card">
-        <div className="dm2-card-head"><div className="dm2-card-title">Vista: {adminView.toUpperCase()}</div><button className="dm2-linkBtn" type="button" onClick={() => setAdminView('dashboard')}>← Volver al panel de control</button></div>
-        <div className="dm2-card-body"><div className="dm2-empty">Cargando configuración de {adminView}...</div></div>
-      </div></div>
-    );
+    if (adminView === 'reportes-consumo') return <ReportesConsumoScreen userData={userData} />;
+
+    if (adminView !== 'dashboard') {
+      return (
+        <div className="dm2-page">
+          <div className="dm2-card">
+            <div className="dm2-card-head">
+              <div className="dm2-card-title">Vista: {adminView.toUpperCase()}</div>
+              <button className="dm2-linkBtn" type="button" onClick={() => setAdminView('dashboard')}>
+                ← Volver al panel de control
+              </button>
+            </div>
+            <div className="dm2-card-body">
+              <div className="dm2-empty">Cargando configuración de {adminView}...</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return renderDashboard();
   };
 
@@ -307,9 +563,9 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
             userData={userData}
             onLogout={onLogout}
             alertCount={alertCount}
-            onPerfilActualizado={onPerfilActualizado}
           />
         ) : null}
+
         <main className="dm2-main">
           <div className="dm2-topbar">
             {isAdmin ? (
@@ -318,31 +574,67 @@ export default function DashboardScreen({ userData, onLogout, onPerfilActualizad
                   <div className="dm2-topbar-title">{topbarTitle}</div>
                   <div className="dm2-topbar-sub">Clínica DentMed</div>
                 </div>
+
                 <div className="dm2-topbar-right">
                   <div className="dm2-alertas-dropdown-wrap">
-                    <button className="dm2-alertas-secondary" onClick={() => setAlertasVisorAbierto((prev) => !prev)}>
+                    <button
+                      className="dm2-alertas-secondary"
+                      onClick={() => setAlertasVisorAbierto((prev) => !prev)}
+                    >
                       <i className="fa-solid fa-bell" /> Alertas{' '}
-                      {totalAlertasSeguridad + inventarioAlertCount > 0 && <span className="dm2-alertas-badge">{totalAlertasSeguridad + inventarioAlertCount}</span>}{' '}
+                      {totalAlertasSeguridad + inventarioAlertCount > 0 && (
+                        <span className="dm2-alertas-badge">
+                          {totalAlertasSeguridad + inventarioAlertCount}
+                        </span>
+                      )}{' '}
                       <i className="fa-solid fa-chevron-down dm2-alertas-chevron" />
                     </button>
+
                     {alertasVisorAbierto && (
                       <div className="dm2-alertas-dropdown">
-                        <button className="dm2-alertas-dropdown-item" onClick={() => { setAdminView('alertas-seguridad'); setAlertasVisorAbierto(false); }}>
-                          <i className="fa-solid fa-shield-alt" /><span>Seguridad</span>
-                          {totalAlertasSeguridad > 0 && <span className="dm2-alertas-badge dm2-alertas-badge--crit">{totalAlertasSeguridad}</span>}
+                        <button
+                          className="dm2-alertas-dropdown-item"
+                          onClick={() => {
+                            setAdminView('alertas-seguridad');
+                            setAlertasVisorAbierto(false);
+                          }}
+                        >
+                          <i className="fa-solid fa-shield-alt" />
+                          <span>Seguridad</span>
+                          {totalAlertasSeguridad > 0 && (
+                            <span className="dm2-alertas-badge dm2-alertas-badge--crit">
+                              {totalAlertasSeguridad}
+                            </span>
+                          )}
                         </button>
-                        <button className="dm2-alertas-dropdown-item" onClick={() => { setAdminView('alertas-inventario'); setAlertasVisorAbierto(false); }}>
-                          <i className="fa-solid fa-boxes-stacked" /><span>Inventario</span>
-                          {inventarioAlertCount > 0 && <span className="dm2-alertas-badge dm2-alertas-badge--warn">{inventarioAlertCount}</span>}
+
+                        <button
+                          className="dm2-alertas-dropdown-item"
+                          onClick={() => {
+                            setAdminView('alertas-inventario');
+                            setAlertasVisorAbierto(false);
+                          }}
+                        >
+                          <i className="fa-solid fa-boxes-stacked" />
+                          <span>Inventario</span>
+                          {inventarioAlertCount > 0 && (
+                            <span className="dm2-alertas-badge dm2-alertas-badge--warn">
+                              {inventarioAlertCount}
+                            </span>
+                          )}
                         </button>
                       </div>
                     )}
                   </div>
-                  <div className="dm2-datePill" title="Fecha">{topDate}</div>
+
+                  <div className="dm2-datePill" title="Fecha">
+                    {topDate}
+                  </div>
                 </div>
               </>
             ) : null}
           </div>
+
           <div className="dm2-content">{renderMainContent()}</div>
         </main>
       </div>

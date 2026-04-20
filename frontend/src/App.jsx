@@ -4,9 +4,11 @@ import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
 import ResetPasswordScreen from "./components/ResetPasswordScreen";
+import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
 function App() {
+  // Restore session on mount if exists, clear only on logout
   const [screen, setScreen] = useState(() => {
     try {
       return localStorage.getItem("screen") || "login";
@@ -14,7 +16,7 @@ function App() {
       return "login";
     }
   });
-
+  
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem("currentUser");
@@ -24,9 +26,11 @@ function App() {
     }
   });
 
+  // Tokens reset (no persist)
   const [resetToken, setResetToken] = useState(null);
   const [resetEmail, setResetEmail] = useState(null);
 
+  // Sincronizar estado con localStorage
   useEffect(() => {
     try {
       localStorage.setItem("screen", screen);
@@ -40,39 +44,44 @@ function App() {
 
   const goTo = (next) => setScreen(next);
 
-  // ── CAMBIO: detectar rol y cargar perfil del endpoint correcto ──
-  const handleLoginSuccess = async (userData) => {
-    if (!userData) {
-      limpiarSesion();
-      return;
-    }
+const handleLoginSuccess = async (userData) => {
+  if (!userData) {
+    limpiarSesion();
+    return;
+  }
 
-    try {
-      const token = userData.token;
-      const rol   = userData.rol || userData.role || userData.user?.rol;
+  try {
+    const token = userData.token;
 
-      if (rol === 'admin') {
-        const res    = await fetch("http://localhost:3000/api/admin/perfil", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const perfil = await res.json();
-        setCurrentUser({ ...userData, username: perfil.nombre, foto_url: perfil.foto_url || null });
-      } else {
-        const res    = await fetch("http://localhost:3000/api/dentistas/perfil", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const perfil = await res.json();
-        setCurrentUser({ ...userData, nombre: perfil.nombre, especialidad: perfil.especialidad, foto_url: perfil.foto_url || null });
+    const res = await fetch("http://localhost:3000/api/dentistas/perfil", {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error cargando perfil:", error);
-      setCurrentUser(userData);
-    }
+    });
 
+    const perfil = await res.json();
+
+    const userCompleto = {
+      ...userData,
+      nombre: perfil.nombre,
+      especialidad: perfil.especialidad
+    };
+
+    setCurrentUser(userCompleto);
     setScreen("loading");
-  };
 
-  const handleLogout = () => limpiarSesion();
+  } catch (error) {
+    console.error("Error cargando perfil:", error);
+
+    // fallback
+    setCurrentUser(userData);
+    setScreen("loading");
+  }
+};
+
+  const handleLogout = () => {
+    limpiarSesion();
+  };
 
   const limpiarSesion = () => {
     setCurrentUser(null);
@@ -97,21 +106,22 @@ function App() {
     goTo("login");
   };
 
-  // ── Sin ForceChange: siempre va al dashboard ──────────────────────────────
   const handleLoadingComplete = () => {
-    goTo("dashboard");
+    const mustChange = currentUser?.mustChangePassword === true ||
+      currentUser?.forcePasswordChange === true ||
+      currentUser?.firstLogin === true ||
+      currentUser?.requiresPasswordChange === true;
+
+    goTo(mustChange ? "forceChange" : "dashboard");
   };
 
-  // ── CAMBIO: actualizar currentUser cuando el admin edita su perfil ──
-  const handlePerfilActualizado = (datos) => {
-    setCurrentUser(prev => ({ ...prev, ...datos }));
+  const handleBackToLogin = () => {
+    limpiarSesion();
   };
 
   return (
     <div className="App">
-      {screen === "loading" && (
-        <WelcomeScreen onEnter={handleLoadingComplete} />
-      )}
+      {screen === "loading" && <WelcomeScreen onEnter={handleLoadingComplete} />}
 
       {screen === "login" && (
         <LoginScreen
@@ -136,12 +146,16 @@ function App() {
         />
       )}
 
-      {screen === "dashboard" && (
-        <DashboardScreen
+      {screen === "forceChange" && (
+        <ForceChangeCredentials
           userData={currentUser}
-          onLogout={handleLogout}
-          onPerfilActualizado={handlePerfilActualizado}
+          onSuccess={() => goTo("dashboard")}
+          onBack={handleBackToLogin}
         />
+      )}
+
+      {screen === "dashboard" && (
+        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
       )}
     </div>
   );
