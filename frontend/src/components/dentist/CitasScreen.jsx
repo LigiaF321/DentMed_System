@@ -1,6 +1,22 @@
 import './styles/dentista-global.css';
 
 import React, { useState, useEffect } from 'react';
+// Refuerza los datos de la cita antes de abrir el modal
+function prepararCitaParaModal(cita) {
+  if (cita.procedimiento && cita.fecha && cita.hora_inicio && cita.hora_fin) return cita;
+  const fechaObj = new Date(cita.fecha_hora);
+  const fecha = fechaObj.toISOString().split('T')[0];
+  const hora_inicio = fechaObj.toTimeString().slice(0, 5);
+  const finObj = new Date(fechaObj.getTime() + (cita.duracion_estimada || 30) * 60000);
+  const hora_fin = finObj.toTimeString().slice(0, 5);
+  return {
+    ...cita,
+    procedimiento: cita.procedimiento || cita.motivo || 'Consulta general',
+    fecha,
+    hora_inicio,
+    hora_fin,
+  };
+}
 import { cancelarCita } from '../../services/citas.service';
 import ReprogramarCitaModal from './ReprogramarCitaModal';
 import CambiarConsultorioModal from './CambiarConsultorioModal';
@@ -268,8 +284,13 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                         <i className="fas fa-calendar-alt" style={{ marginRight: 4 }}></i>Reprogramar
                       </button>
                     )}
+<<<<<<< HEAD
+                    <button onClick={() => setCitaCambioC(prepararCitaParaModal(cita))} disabled={isSaving}
+                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
+=======
                     <button onClick={() => setCitaCambioC(cita)} disabled={isSaving}
                       style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: BRAND.light, color: BRAND.primary, fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
+>>>>>>> 6b8000709363ad75f2afca7fde23a4bb0c32cf12
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>Consultorio
                     </button>
                     {puedeCancelar && (
