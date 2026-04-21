@@ -890,19 +890,12 @@ const actualizarConsultorioCita = async (req, res) => {
       });
     }
 
-    const { fecha, hora } = convertirFechaHoraCitaAParametros(cita.fecha_hora);
-    const duracion = cita.duracion_estimada || 30;
-
-    const validacion = await validarDisponibilidadConsultorio({
-      id_consultorio,
-      fecha,
-      hora,
-      duracion,
-      excluirCitaId: cita.id,
-    });
-
-    if (!validacion.ok) {
-      return res.status(validacion.status || 409).json(validacion);
+    const consultorio = await Consultorio.findByPk(id_consultorio);
+    if (!consultorio) {
+      return res.status(404).json({
+        ok: false,
+        message: "Consultorio no encontrado",
+      });
     }
 
     cita.id_consultorio = id_consultorio;

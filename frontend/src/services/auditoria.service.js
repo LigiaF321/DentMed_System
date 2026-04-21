@@ -6,7 +6,7 @@ import api from "./api";
  * @returns {Promise<Object>} Respuesta del backend
  */
 export async function registrarAuditoriaConsultorio(payload) {
-  // El endpoint esperado es /api/auditoria/consultorios
-  const { data } = await api.post("/auditoria/consultorios", payload);
+  // Ruta real en backend: /api/admin/auditoria/consultorios
+  const { data } = await api.post("/admin/auditoria/consultorios", payload);
   return data;
 }

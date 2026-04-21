@@ -69,10 +69,16 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
   const cambiarEstado = async (cita, nuevoEstado) => {
     try {
       setSaving(cita.id);
-      const res = await fetch(`http://localhost:3000/api/citas/${cita.id}`, {
-        method: 'PUT',
+      const endpointByEstado = {
+        confirmada: `http://localhost:3000/api/citas/${cita.id}/confirmar`,
+        completada: `http://localhost:3000/api/citas/${cita.id}/completar`,
+      };
+      const endpoint = endpointByEstado[nuevoEstado];
+      if (!endpoint) throw new Error('Estado no soportado');
+
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
         headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || 'Error al actualizar');
@@ -284,13 +290,8 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                         <i className="fas fa-calendar-alt" style={{ marginRight: 4 }}></i>Reprogramar
                       </button>
                     )}
-<<<<<<< HEAD
-                    <button onClick={() => setCitaCambioC(prepararCitaParaModal(cita))} disabled={isSaving}
-                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
-=======
                     <button onClick={() => setCitaCambioC(cita)} disabled={isSaving}
                       style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: BRAND.light, color: BRAND.primary, fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
->>>>>>> 6b8000709363ad75f2afca7fde23a4bb0c32cf12
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>Consultorio
                     </button>
                     {puedeCancelar && (

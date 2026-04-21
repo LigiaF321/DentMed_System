@@ -2,9 +2,26 @@ import './styles/dentista-global.css';
 import './styles/dm17-modal.css';
 import React, { useEffect, useState } from "react";
 import ConsultorioSugerido from "./ConsultorioSugerido";
-import { actualizarConsultorioCita, verificarDisponibilidad } from "../../services/citas.service";
+import { actualizarConsultorioCita } from "../../services/citas.service";
 import { sugerirConsultorios } from "../../services/consultorios.service";
 import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
+
+const getHorarioCita = (cita) => {
+  const fechaHora = cita?.fecha_hora ? new Date(cita.fecha_hora) : null;
+  const esFechaHoraValida = fechaHora instanceof Date && !Number.isNaN(fechaHora.getTime());
+
+  const fecha = cita?.fecha
+    || (esFechaHoraValida
+      ? `${fechaHora.getFullYear()}-${String(fechaHora.getMonth() + 1).padStart(2, "0")}-${String(fechaHora.getDate()).padStart(2, "0")}`
+      : "");
+  const hora = cita?.hora_inicio
+    || (esFechaHoraValida
+      ? `${String(fechaHora.getHours()).padStart(2, "0")}:${String(fechaHora.getMinutes()).padStart(2, "0")}`
+      : "");
+  const duracion = Number(cita?.duracion_estimada || 30);
+
+  return { fecha, hora, duracion };
+};
 
 const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
   // Toast simple
@@ -29,8 +46,9 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     setError("");
     setSelected(null);
     setPagina(1);
-    // Usar sugerirConsultorios para obtener sugerencias según el procedimiento de la cita
-    sugerirConsultorios({ procedimiento: cita.procedimiento, fecha: cita.fecha, hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin })
+    const { fecha, hora, duracion } = getHorarioCita(cita);
+    // El backend espera fecha, hora y duracion para sugerir consultorios.
+    sugerirConsultorios({ fecha, hora, duracion })
       .then((res) => setConsultorios(res.data || []))
       .catch(() => setConsultorios([]))
       .finally(() => setLoading(false));
@@ -51,22 +69,7 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
       }
 
       
-      const disponibilidad = await verificarDisponibilidad({
-        id_consultorio: selected.id,
-        fecha: cita.fecha,
-        hora_inicio: cita.hora_inicio,
-        hora_fin: cita.hora_fin,
-      });
-
-      
-      if (!disponibilidad?.data?.disponible) {
-        setError("El consultorio no está disponible en ese horario");
-        setSaving(false);
-        return;
-      }
-
-      
-      await actualizarConsultorioCita(cita.id, selected.id);
+      const respActualizacion = await actualizarConsultorioCita(cita.id, selected.id);
 
      
       await registrarAuditoriaConsultorio({
@@ -83,7 +86,21 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
       });
 
 
-      if (onUpdated) onUpdated(selected);
+      if (onUpdated) {
+        const citaActualizada = respActualizacion?.data
+          ? {
+              ...cita,
+              ...respActualizacion.data,
+              id_consultorio: selected.id,
+              consultorio_nombre: selected.nombre,
+            }
+          : {
+              ...cita,
+              id_consultorio: selected.id,
+              consultorio_nombre: selected.nombre,
+            };
+        onUpdated(citaActualizada);
+      }
       showToast("Consultorio actualizado correctamente");
       setTimeout(() => {
         onClose();
