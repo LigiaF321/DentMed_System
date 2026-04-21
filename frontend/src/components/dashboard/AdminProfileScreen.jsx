@@ -1,7 +1,52 @@
 import React, { useEffect, useState } from 'react';
+import Cropper from 'react-easy-crop';
 import { getAuthToken } from '../../utils/auth';
 import { resolveMediaUrl } from '../../utils/media';
 import './AdminProfileScreen.css';
+
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+const getCroppedAvatarFile = async (imageSrc, pixelCrop) => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const size = Math.min(pixelCrop.width, pixelCrop.height);
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    size,
+    size,
+    0,
+    0,
+    size,
+    size
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('No se pudo crear la imagen recortada'));
+          return;
+        }
+        resolve(new File([blob], `avatar-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+      },
+      'image/jpeg',
+      0.92
+    );
+  });
+};
 
 export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack }) {
   const [form, setForm] = useState({
@@ -9,14 +54,33 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
     apellido: '',
     email: '',
     telefono: '',
-    contrasena: '',
     fotoPreview: '',
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [saved, setSaved] = useState(false);
   const [isSavingNoticeClosing, setIsSavingNoticeClosing] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordVisibility, setPasswordVisibility] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [cropSource, setCropSource] = useState('');
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedPixels, setCroppedPixels] = useState(null);
   const savedTimeoutRef = React.useRef(null);
   const closeTimeoutRef = React.useRef(null);
+  const previewObjectUrlRef = React.useRef(null);
 
   useEffect(() => {
     return () => {
@@ -25,6 +89,9 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
       }
       if (closeTimeoutRef.current) {
         window.clearTimeout(closeTimeoutRef.current);
+      }
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
       }
     };
   }, []);
@@ -38,7 +105,6 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
       apellido,
       email: userData?.email || '',
       telefono: userData?.telefono || userData?.phone || '',
-      contrasena: '',
       fotoPreview: resolveMediaUrl(userData?.avatar),
     });
   }, [userData]);
@@ -47,11 +113,126 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
+  const handlePasswordFieldChange = (field) => (event) => {
+    setPasswordForm((prev) => ({ ...prev, [field]: event.target.value }));
+    if (passwordError) setPasswordError('');
+    if (passwordSuccess) setPasswordSuccess('');
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setPasswordVisibility((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
   const handlePhoto = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setForm((prev) => ({ ...prev, fotoPreview: URL.createObjectURL(file) }));
+    const objectUrl = URL.createObjectURL(file);
+    setCropSource(objectUrl);
+    setIsCropOpen(true);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedPixels(null);
+    event.target.value = '';
+  };
+
+  const handleCropApply = async () => {
+    if (!cropSource || !croppedPixels) return;
+    try {
+      const croppedFile = await getCroppedAvatarFile(cropSource, croppedPixels);
+      const previewUrl = URL.createObjectURL(croppedFile);
+
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+      previewObjectUrlRef.current = previewUrl;
+
+      setPhotoFile(croppedFile);
+      setForm((prev) => ({ ...prev, fotoPreview: previewUrl }));
+      setIsCropOpen(false);
+      URL.revokeObjectURL(cropSource);
+      setCropSource('');
+    } catch (error) {
+      console.error('Error recortando imagen:', error);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropOpen(false);
+    if (cropSource) {
+      URL.revokeObjectURL(cropSource);
+    }
+    setCropSource('');
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedPixels(null);
+  };
+
+  const openPasswordModal = () => {
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPasswordVisibility({ currentPassword: false, newPassword: false, confirmPassword: false });
+    setPasswordError('');
+    setPasswordSuccess('');
+    setIsPasswordSaving(false);
+    setIsPasswordModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    if (isPasswordSaving) return;
+    setIsPasswordModalOpen(false);
+  };
+
+  const handlePasswordSubmit = async (event) => {
+    event.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    const currentPassword = passwordForm.currentPassword.trim();
+    const newPassword = passwordForm.newPassword.trim();
+    const confirmPassword = passwordForm.confirmPassword.trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Todos los campos son obligatorios.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('La nueva contraseña y su confirmación no coinciden.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    try {
+      setIsPasswordSaving(true);
+      const token = getAuthToken();
+
+      const response = await fetch('/api/dentistas/perfil/cambiar-contrasena', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'No se pudo cambiar la contraseña.');
+      }
+
+      setPasswordSuccess('Contraseña actualizada correctamente.');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      window.setTimeout(() => {
+        setIsPasswordModalOpen(false);
+      }, 900);
+    } catch (error) {
+      setPasswordError(error.message || 'No se pudo cambiar la contraseña.');
+    } finally {
+      setIsPasswordSaving(false);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -71,9 +252,6 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
       formData.append('apellidos', form.apellido || '');
       formData.append('email', form.email || '');
       formData.append('telefono', form.telefono || '');
-      if (form.contrasena) {
-        formData.append('contrasena', form.contrasena);
-      }
       if (photoFile) {
         formData.append('avatar', photoFile);
       }
@@ -97,7 +275,6 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
       setForm((prev) => ({
         ...prev,
         fotoPreview: resolveMediaUrl(updated.avatar) || prev.fotoPreview,
-        contrasena: '',
       }));
 
       if (typeof onUserDataUpdate === 'function') {
@@ -128,6 +305,126 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
 
   return (
     <div className="dm2-page">
+      {isPasswordModalOpen ? (
+        <div className="dm2-password-modal-backdrop">
+          <div className="dm2-password-modal">
+            <div className="dm2-password-modal-head">
+              <h3><i className="fa-solid fa-lock" /> Cambiar contraseña</h3>
+              <button type="button" className="dm2-password-close" onClick={closePasswordModal} aria-label="Cerrar">
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+            <form className="dm2-password-modal-body" onSubmit={handlePasswordSubmit}>
+              <div className="dm2-password-input-group">
+                <label>Contraseña actual</label>
+                <div className="dm2-password-input-wrap">
+                  <input
+                    type={passwordVisibility.currentPassword ? 'text' : 'password'}
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordFieldChange('currentPassword')}
+                    autoComplete="current-password"
+                  />
+                  <button type="button" className="dm2-password-toggle" onClick={() => togglePasswordVisibility('currentPassword')}>
+                    <i className={`fa-solid ${passwordVisibility.currentPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="dm2-password-input-group">
+                <label>Nueva contraseña</label>
+                <div className="dm2-password-input-wrap">
+                  <input
+                    type={passwordVisibility.newPassword ? 'text' : 'password'}
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordFieldChange('newPassword')}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="dm2-password-toggle" onClick={() => togglePasswordVisibility('newPassword')}>
+                    <i className={`fa-solid ${passwordVisibility.newPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="dm2-password-input-group">
+                <label>Confirmar contraseña nueva</label>
+                <div className="dm2-password-input-wrap">
+                  <input
+                    type={passwordVisibility.confirmPassword ? 'text' : 'password'}
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordFieldChange('confirmPassword')}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="dm2-password-toggle" onClick={() => togglePasswordVisibility('confirmPassword')}>
+                    <i className={`fa-solid ${passwordVisibility.confirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {passwordError ? <div className="dm2-password-error">{passwordError}</div> : null}
+              {passwordSuccess ? <div className="dm2-password-success">{passwordSuccess}</div> : null}
+
+              <div className="dm2-password-modal-actions">
+                <button type="button" className="dm2-password-cancel" onClick={closePasswordModal}>
+                  Cancelar
+                </button>
+                <button type="submit" className="dm2-password-submit" disabled={isPasswordSaving}>
+                  {isPasswordSaving ? 'Guardando...' : 'Cambiar contraseña'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isCropOpen ? (
+        <div className="dm2-crop-modal-backdrop">
+          <div className="dm2-crop-modal">
+            <div className="dm2-crop-header">
+              <h3>Editar imagen</h3>
+              <button type="button" className="dm2-crop-close" onClick={handleCropCancel} aria-label="Cerrar">
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+
+            <div className="dm2-crop-area">
+              <Cropper
+                image={cropSource}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, croppedAreaPixels) => setCroppedPixels(croppedAreaPixels)}
+              />
+            </div>
+
+            <div className="dm2-crop-slider">
+              <i className="fa-regular fa-image" />
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+              />
+              <i className="fa-solid fa-image" />
+            </div>
+
+            <div className="dm2-crop-actions">
+              <button type="button" className="dm2-crop-cancel" onClick={handleCropCancel}>
+                Cancelar
+              </button>
+              <button type="button" className="dm2-crop-apply" onClick={handleCropApply}>
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="dm2-card dm2-profile-card">
         <div className="dm2-card-head">
           <div className="dm2-card-title">Mi configuración</div>
@@ -139,7 +436,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
         </div>
         <div className="dm2-profile-grid">
           <div className="dm2-profile-summary">
-            <div className="dm2-profile-photoWrap">
+            <label htmlFor="admin-photo-upload" className="dm2-profile-photoWrap dm2-profile-photoWrap--clickable" title="Cambiar foto de perfil">
               {form.fotoPreview ? (
                 <img src={form.fotoPreview} alt="Foto de perfil" className="dm2-profile-photo" />
               ) : (
@@ -147,12 +444,12 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
                   {String(profileLabel).charAt(0).toUpperCase()}
                 </div>
               )}
-            </div>
+              <div className="dm2-profile-photoOverlay" aria-hidden="true">
+                <i className="fa-solid fa-pen" />
+              </div>
+            </label>
             <div className="dm2-photo-upload">
               <div className="dm2-photo-upload-label">Foto de perfil</div>
-              <label htmlFor="admin-photo-upload" className="dm2-photo-upload-button">
-                Elegir archivo
-              </label>
               <input
                 id="admin-photo-upload"
                 type="file"
@@ -201,12 +498,19 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
             </div>
             <div className="dm2-profile-field">
               <label>Contraseña</label>
-              <input
-                type="password"
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-                placeholder="Nueva contraseña"
-              />
+              <div className="dm2-password-row">
+                <div className="dm2-password-fieldWrap dm2-password-fieldWrap--readonly">
+                  <input
+                    type="password"
+                    value="************"
+                    readOnly
+                    aria-label="Contraseña actual oculta"
+                  />
+                </div>
+                <button type="button" className="dm2-profile-backBtn" onClick={openPasswordModal}>
+                  Cambiar contraseña
+                </button>
+              </div>
             </div>
             <div className="dm2-profile-field dm2-profile-field-full">
               <label>Teléfono</label>

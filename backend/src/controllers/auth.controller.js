@@ -41,6 +41,26 @@ function isStrongPassword(p) {
   );
 }
 
+async function ensureAdminUsuario() {
+  let adminUsuario = await Usuario.findOne({
+    where: { username: "Admin", rol: "admin" },
+  });
+
+  if (adminUsuario) return adminUsuario;
+
+  const hashAdminTemporal = await bcrypt.hash("Admin123", 10);
+  adminUsuario = await Usuario.create({
+    username: "Admin",
+    email: "admin@dentmed.com",
+    password_hash: hashAdminTemporal,
+    rol: "admin",
+    activo: true,
+    primer_acceso: false,
+  });
+
+  return adminUsuario;
+}
+
 exports.forgotPassword = async (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
   const generic = { message: "Si el correo existe, se enviará un código." };
@@ -236,32 +256,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Credenciales incompletas" });
     }
 
-    // =========================================================
-    // ACCESO MAESTRO TEMPORAL PARA ADMIN
-    // =========================================================
-    if (ident === "Admin" && password === "Admin123") {
-      const secret = process.env.JWT_SECRET || "secreto_desarrollo";
-
-      const token = jwt.sign(
-        {
-          id: 0,
-          rol: "admin",
-          username: "Admin",
-          master: true,
-        },
-        secret,
-        { expiresIn: "24h" }
-      );
-
-      return res.json({
-        token,
-        requiresPasswordChange: false,
-        user: {
-          id: 0,
-          rol: "admin",
-          username: "Admin",
-        },
-      });
+    if (ident.toLowerCase() === "admin") {
+      await ensureAdminUsuario();
     }
 
     const user = await Usuario.findOne({

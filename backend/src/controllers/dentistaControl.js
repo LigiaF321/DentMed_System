@@ -350,6 +350,65 @@ const dentistaController = {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo perfil" });
       }
+    },
+
+    cambiarContrasena: async (req, res) => {
+      try {
+        const authUser = req.user || {};
+        const isAdminMaster = authUser?.master === true && authUser?.rol === "admin";
+        let usuario = null;
+
+        if (isAdminMaster) {
+          usuario = await ensureAdminUsuario();
+        } else {
+          const userId = authUser?.id;
+          if (!userId) {
+            return res.status(401).json({ message: "Usuario no autenticado" });
+          }
+          usuario = await Usuario.findByPk(userId);
+        }
+
+        if (!usuario) {
+          return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const currentPassword = String(req.body?.currentPassword || "");
+        const newPassword = String(req.body?.newPassword || "");
+        const confirmPassword = String(req.body?.confirmPassword || "");
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          return res.status(400).json({ message: "Todos los campos son obligatorios." });
+        }
+
+        if (newPassword !== confirmPassword) {
+          return res.status(400).json({ message: "La nueva contraseña y su confirmación no coinciden." });
+        }
+
+        if (newPassword.length < 6) {
+          return res.status(400).json({ message: "La nueva contraseña debe tener al menos 6 caracteres." });
+        }
+
+        const isCurrentValid = await bcrypt.compare(currentPassword, usuario.password_hash);
+        if (!isCurrentValid) {
+          return res.status(400).json({ message: "La contraseña actual es incorrecta." });
+        }
+
+        const isSamePassword = await bcrypt.compare(newPassword, usuario.password_hash);
+        if (isSamePassword) {
+          return res.status(400).json({ message: "La nueva contraseña debe ser diferente a la actual." });
+        }
+
+        const newHash = await bcrypt.hash(newPassword, 10);
+        await Usuario.update(
+          { password_hash: newHash, primer_acceso: false },
+          { where: { id: usuario.id } }
+        );
+
+        return res.json({ message: "Contraseña actualizada correctamente." });
+      } catch (error) {
+        console.error("Error cambiando contraseña:", error);
+        return res.status(500).json({ message: "Error al cambiar contraseña." });
+      }
     }
   };
 

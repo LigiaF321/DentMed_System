@@ -27,6 +27,7 @@ router.post('/', dentistaController.registrar);
 // Perfil
 router.get('/perfil', verifyToken, dentistaController.obtenerPerfil);
 router.put('/perfil', verifyToken, upload.single('avatar'), dentistaController.actualizarPerfil);
+router.put('/perfil/cambiar-contrasena', verifyToken, dentistaController.cambiarContrasena);
 
 // Listar
 router.get('/', dentistaController.listarTodos);

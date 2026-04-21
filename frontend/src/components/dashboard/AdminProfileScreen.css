@@ -2,6 +2,239 @@
   padding: 24px;
 }
 
+.dm2-crop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.dm2-crop-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #0b1220;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.dm2-password-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  background: rgba(15, 23, 42, 0.2);
+  padding: 20px;
+}
+
+.dm2-password-modal {
+  width: 100%;
+  max-width: 620px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 22px 55px rgba(2, 8, 23, 0.3);
+}
+
+.dm2-password-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  background: linear-gradient(90deg, #5865f2 0%, #d946ef 100%);
+  color: #ffffff;
+}
+
+.dm2-password-modal-head h3 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.dm2-password-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dm2-password-modal-body {
+  padding: 22px 24px 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.dm2-password-input-group {
+  display: grid;
+  gap: 8px;
+}
+
+.dm2-password-input-group label {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.dm2-password-input-wrap {
+  position: relative;
+}
+
+.dm2-password-input-wrap input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  padding: 12px 48px 12px 14px;
+  font-size: 18px;
+}
+
+.dm2-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.dm2-password-modal-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dm2-password-cancel,
+.dm2-password-submit {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dm2-password-cancel {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.dm2-password-submit {
+  background: linear-gradient(90deg, #5865f2 0%, #d946ef 100%);
+  color: #ffffff;
+}
+
+.dm2-password-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dm2-password-error {
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.dm2-password-success {
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.dm2-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dm2-crop-header h3 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.dm2-crop-close {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.dm2-crop-area {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111827;
+}
+
+.dm2-crop-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.dm2-crop-slider input[type="range"] {
+  width: 100%;
+}
+
+.dm2-crop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.dm2-crop-cancel,
+.dm2-crop-apply {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dm2-crop-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.dm2-crop-apply {
+  background: #5865f2;
+  color: #ffffff;
+}
+
 /* ESTILO ACTUALIZADO: Botón Volver con degradado */
 .dm2-profile-backBtn {
   border: none;
@@ -53,18 +286,40 @@
 .dm2-profile-photoWrap {
   width: 120px;
   height: 120px;
-  border-radius: 22px;
+  border-radius: 50%;
   overflow: hidden;
   background: rgba(255,255,255,.08);
   display: grid;
   place-items: center;
+  position: relative;
+}
+
+.dm2-profile-photoWrap--clickable {
+  cursor: pointer;
+}
+
+.dm2-profile-photoOverlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.4);
+  color: #ffffff;
+  font-size: 22px;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.dm2-profile-photoWrap--clickable:hover .dm2-profile-photoOverlay,
+.dm2-profile-photoWrap--clickable:focus-within .dm2-profile-photoOverlay {
+  opacity: 1;
 }
 
 .dm2-photo-upload {
   width: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   text-align: center;
   align-items: center;
 }
@@ -74,27 +329,6 @@
   font-size: 13px;
   font-weight: 700;
   text-align: center;
-}
-
-.dm2-photo-upload-button {
-  min-width: 180px;
-  border-radius: 14px;
-  border: 1px solid rgba(44,110,236,.18);
-  background: rgba(44,110,236,.08);
-  color: #000000;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  transition: background .15s ease, transform .15s ease;
-}
-
-.dm2-photo-upload-button:hover {
-  background: rgba(44,110,236,.14);
-  transform: translateY(-1px);
 }
 
 .dm2-photo-upload-input {
@@ -179,6 +413,21 @@
   font-size: 14px;
 }
 
+.dm2-password-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.dm2-password-fieldWrap {
+  position: relative;
+  flex: 1;
+}
+
+.dm2-password-fieldWrap--readonly input {
+  cursor: default;
+}
+
 .dm2-profile-field input::placeholder {
   color: rgba(26,38,53,.55);
 }
@@ -249,5 +498,10 @@
 @media (max-width: 920px) {
   .dm2-profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dm2-password-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
