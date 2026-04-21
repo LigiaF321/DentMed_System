@@ -1,4 +1,5 @@
-// frontend/src/components/dentist/CitasScreen.jsx
+import './styles/dentista-global.css';
+
 import React, { useState, useEffect } from 'react';
 import { cancelarCita } from '../../services/citas.service';
 import ReprogramarCitaModal from './ReprogramarCitaModal';

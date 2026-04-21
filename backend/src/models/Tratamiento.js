@@ -11,7 +11,6 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      // CORRECCIÓN: En tu base de datos la tabla suele llamarse 'pacientes' (minúsculas)
       model: 'pacientes', 
       key: 'id',
     },
@@ -33,7 +32,6 @@ const Tratamiento = sequelize.define('Tratamiento', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      // CORRECCIÓN: Tu tabla en phpMyAdmin se llama 'dentistas' en minúsculas
       model: 'dentistas', 
       key: 'id',
     },
@@ -70,7 +68,6 @@ const Tratamiento = sequelize.define('Tratamiento', {
     }
   },
 }, {
-  // CORRECCIÓN: En tu captura de phpMyAdmin, la tabla aparece como 'tratamientos' (minúsculas)
   tableName: 'tratamientos', 
   timestamps: false,
 });

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 export default function RestauracionScreen() {
-  // --- ESTADOS DE CONTROL DE FLUJO ---
+  
   const [view, setView] = useState('auth'); // auth, list, step1, step2, step3, step4, step5, progress, report
   const [pass, setPass] = useState("");
   const [attempts, setAttempts] = useState(0);
 
-  // --- DATOS DEL SISTEMA ---
+  
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [restoreType, setRestoreType] = useState("completa"); 
@@ -14,13 +14,13 @@ export default function RestauracionScreen() {
   const [percent, setPercent] = useState(0);
   const [currentStepText, setCurrentStepText] = useState("");
 
-  // --- SELECCION DE TABLAS (PASO 2) ---
+  
   const [tablasSeleccionadas, setTablasSeleccionadas] = useState({
     USUARIOS: true, DENTISTAS: true, PACIENTES: true, CITAS: true,
     INSUMOS: true, INVENTARIO: true, CONFIGURACION: true, AUDITORIA: false
   });
 
-  // Carga de datos iniciales segun documentacion
+  
   useEffect(() => {
     setBackups([
       { id: 1, fecha: "21/02/2026 03:00", tamano: "2.5 GB", tipo: "Completo", estado: "Valido" },
@@ -31,7 +31,7 @@ export default function RestauracionScreen() {
     ]);
   }, []);
 
-  // --- LOGICA DE PROCESOS ---
+  
   const handleVerify = () => {
     if (pass === "Seguridad2026!") {
       setView('list');
@@ -64,9 +64,9 @@ export default function RestauracionScreen() {
     });
   };
 
-  // --- VISTAS DEL COMPONENTE ---
+  
 
-  // 0. Autenticacion Especial
+  
   if (view === 'auth') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{maxWidth:'500px', margin:'60px auto', borderTop:'5px solid #c0392b'}}>
@@ -85,7 +85,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 1. Seleccion de Backup
+
   if (view === 'list') return (
     <div className="dm2-page">
       <div className="dm2-card">
@@ -112,7 +112,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 2. Paso 1: Tipo de Restauracion
+  
   if (view === 'step1') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{borderTop:'4px solid #2980b9'}}>
@@ -136,7 +136,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 3. Paso 2: Tablas
+  
   if (view === 'step2') return (
     <div className="dm2-page">
       <div className="dm2-card">
@@ -159,7 +159,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 4. Paso 3: Simulacion de Impacto
+  
   if (view === 'step3') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{borderTop:'4px solid #f39c12'}}>
@@ -183,7 +183,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 5. Paso 4: Backup de Seguridad
+  
   if (view === 'step4') return (
     <div className="dm2-page">
       <div className="dm2-card">
@@ -204,7 +204,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 6. Paso 5: Confirmacion Final
+  
   if (view === 'step5') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{borderTop:'5px solid #c0392b'}}>
@@ -226,7 +226,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 7. Pantalla de Progreso
+  
   if (view === 'progress') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{textAlign:'center', padding:'50px'}}>
@@ -241,7 +241,7 @@ export default function RestauracionScreen() {
     </div>
   );
 
-  // 8. Reporte Final
+  
   if (view === 'report') return (
     <div className="dm2-page">
       <div className="dm2-card" style={{borderTop:'5px solid #27ae60'}}>

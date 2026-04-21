@@ -26,11 +26,11 @@ function App() {
     }
   });
 
-  // Tokens reset (no persist)
+  
   const [resetToken, setResetToken] = useState(null);
   const [resetEmail, setResetEmail] = useState(null);
 
-  // Sincronizar estado con localStorage
+  
   useEffect(() => {
     try {
       localStorage.setItem("screen", screen);

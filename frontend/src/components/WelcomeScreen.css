@@ -1,4 +1,4 @@
-/* WelcomeScreen.css - COLORES MÁS SUAVES */
+
 * {
   margin: 0;
   padding: 0;
@@ -40,7 +40,7 @@
   }
 }
 
-/* Logo DentMed con colores más suaves */
+
 .logo-title {
   font-size: 6.5rem;
   font-weight: 900;
@@ -67,7 +67,7 @@
   }
 }
 
-/* Azul más oscuro pero suave */
+
 .dent-text {
   background: linear-gradient(135deg, #1e3a8a, #3b82f6);
   background-clip: text;
@@ -93,7 +93,7 @@
   }
 }
 
-/* Rosado más oscuro pero suave */
+
 .med-text {
   background: linear-gradient(135deg, #be185d, #db2777);
   background-clip: text;
@@ -193,7 +193,7 @@
   }
 }
 
-/* Loading area - replaces enter-button */
+
 .loading-area {
   display: flex;
   flex-direction: column;

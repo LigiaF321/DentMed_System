@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 const { verifyToken } = require("../middlewares/auth.middleware");
-// Si ya tienes middleware soloAdmin, puedes usarlo en PUT
-// const soloAdmin = require("../middlewares/soloAdmin");
 
 const {
   listarConsultorios,
@@ -26,7 +24,7 @@ router.get("/calendario", verifyToken, obtenerCalendarioConsultorios);
 router.get("/equipamiento", verifyToken, listarEquipamientoConsultorios);
 router.get("/filtrar", verifyToken, filtrarConsultoriosPorEquipamiento);
 router.put("/:id/equipos", verifyToken, actualizarEquiposConsultorio);
-// mejor así si quieres restringir admin:
+
 // router.put("/:id/equipos", verifyToken, soloAdmin, actualizarEquiposConsultorio);
 
 router.post("/pre-reserva", verifyToken, crearPreReserva);

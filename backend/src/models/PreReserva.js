@@ -29,7 +29,6 @@ const PreReserva = sequelize.define("PreReserva", {
   },
 }, {
   tableName: "pre_reservas",
-  // DESACTIVADO: Así no da error si no tienes esas columnas en MySQL
   timestamps: false, 
 });
 

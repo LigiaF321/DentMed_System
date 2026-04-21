@@ -1,4 +1,5 @@
-// frontend/src/components/dentist/Odontograma.jsx
+import './styles/dentista-global.css';
+
 import React, { useState, useEffect } from 'react';
 
 const PALETTE = [
@@ -128,14 +129,14 @@ const Tooth = ({ numero, isUpper, condition, onToothClick, soloLectura }) => {
   );
 };
 
-// ── Odontograma principal ─────────────────────────────────────────────────────
+
 const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
   const [teethStates,   setTeethStates]   = useState(INITIAL_TEETH);
   const [selectedPaint, setSelectedPaint] = useState(null);
   const [saving,        setSaving]        = useState(false);
   const [savedMsg,      setSavedMsg]      = useState('');
   const [hasChanges,    setHasChanges]    = useState(false);
-  // ── NUEVO: modo edición — arranca en solo lectura, el médico pulsa Editar para activar
+
   const [modoEdicion,   setModoEdicion]   = useState(false);
 
   const pacienteKey = paciente?.id_paciente || paciente?.id || null;
@@ -152,7 +153,7 @@ const Odontograma = ({ paciente, soloLectura = false, onGuardar }) => {
     setModoEdicion(false);
   }, [pacienteKey]);
 
-  // Si viene soloLectura desde prop (agenda) nunca se puede editar
+  
   const esInteractivo = !soloLectura && modoEdicion;
 
   const handleToothClick = (n) => {

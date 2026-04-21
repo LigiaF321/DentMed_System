@@ -10,9 +10,9 @@ export default function AuditScreen() {
   const [usuarios, setUsuarios] = useState([]);
   const [registros, setRegistros] = useState([]);
 
-  // Utilidades de fecha
+  
   function formatDateInput(date) {
-    // yyyy-MM-ddTHH:mm para input type="datetime-local"
+  
     return date.toISOString().slice(0, 16);
   }
 
@@ -50,7 +50,7 @@ export default function AuditScreen() {
     };
   }
 
-  // Estado inicial: últimos 7 días
+  
   const [filtros, setFiltros] = useState(() => {
     const { desde, hasta } = getLastNDaysRange(7);
     return {
@@ -72,14 +72,14 @@ export default function AuditScreen() {
   const [vistaTimeline, setVistaTimeline] = useState(false);
 
   useEffect(() => {
-    // Cargar usuarios reales para el filtro
+    
     getAuditUsers()
       .then((users) => {
         setUsuarios(users || []);
       })
       .catch(() => setUsuarios([]));
 
-    // Cargar registros reales de auditoría
+    
     getAuditRecords()
       .then((data) => {
         setRegistros(Array.isArray(data) ? data : []);

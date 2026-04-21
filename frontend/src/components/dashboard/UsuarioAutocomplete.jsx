@@ -2,7 +2,7 @@ import React from 'react';
 import AsyncSelect from 'react-select/async';
 
 export default function UsuarioAutocomplete({ usuarios, value, onChange }) {
-  // Formatea las opciones para mostrar usuario y nombre completo
+
   const options = usuarios.map(u => ({
     value: u.usuario_id,
     label: u.usuario_nombre + (u.nombre_completo ? ' - ' + u.nombre_completo : '')

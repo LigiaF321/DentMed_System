@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiCall } from "../../services/api";
-// import io from 'socket.io-client'; // Preparado para WebSocket
+
 
 const MOCK_ALERTAS = [
   {
@@ -82,12 +82,7 @@ export default function AlertasSeguridadScreen() {
   useEffect(() => {
     cargarAlertas();
 
-    // Configurar WebSocket para actualizaciones en tiempo real
-    // const socket = io('http://localhost:3000'); // Preparado para WebSocket
-    // socket.on('nueva-alerta-seguridad', (nuevaAlerta) => {
-    //   setAlertas(prev => [nuevaAlerta, ...prev]);
-    // });
-    // return () => socket.disconnect();
+
   }, []);
 
   const cargarAlertas = async () => {

@@ -228,7 +228,6 @@ const obtenerPacienteDetalle = async (req, res) => {
 
     const plain = paciente.get({ plain: true });
     
-    // ✅ FORZAR LECTURA CORRECTA DEL ODONTOGRAMA
     let odontograma = {};
     
     console.log('🔍 [GET] Valor raw del odontograma en BD:', plain.odontograma);
@@ -402,16 +401,13 @@ const crearPacienteRapido = async (req, res) => {
   }
 };
 
-// ✅ FUNCIÓN CORREGIDA: Actualizar odontograma del paciente
 // Endpoint: PUT /api/pacientes/:id/odontograma
-// Recibe: { "estados": { "41": "caries", "42": "obturado" } }
 const actualizarOdontograma = async (req, res) => {
   try {
     console.log('📥 [ODONTOGRAMA] Body recibido:', req.body);
     
     const { id } = req.params;
-    
-    // ✅ Aceptar tanto "estados" como "odontograma" en el body
+
     const estados = req.body.estados || req.body.odontograma;
     
     console.log('📥 [ODONTOGRAMA] Estados a guardar:', estados);
@@ -433,11 +429,9 @@ const actualizarOdontograma = async (req, res) => {
       });
     }
 
-    // Guardar el odontograma (como string en la BD)
     const odontogramaString = JSON.stringify(estados);
     await paciente.update({ odontograma: odontogramaString });
 
-    // Verificar qué se guardó
     const pacienteActualizado = await Paciente.findByPk(id);
     console.log('[ODONTOGRAMA] Odontograma guardado en BD:', pacienteActualizado.odontograma);
 

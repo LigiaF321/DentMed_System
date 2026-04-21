@@ -1,4 +1,5 @@
-// frontend/src/components/dentist/NuevoTratamientoModal.jsx
+import './styles/dentista-global.css';
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { obtenerMateriales } from "./tratamientos.service.jsx";
 import './NuevoTratamientoModal.css';
@@ -14,7 +15,7 @@ const BRAND = {
   border:        '#c4b5fd',
 };
 
-// ── Plantillas de notas de evolución ─────────────────────────────────────────
+
 const PLANTILLAS_NOTAS = [
   'Evolución favorable, sin complicaciones.',
   'Paciente presenta mejoría significativa.',
