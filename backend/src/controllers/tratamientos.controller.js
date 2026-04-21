@@ -34,50 +34,32 @@ const listarTodos = async (req, res) => {
   }
 }
 
+/**
+ * Guarda un nuevo tratamiento
+ * Ignora el doctorId del body y usa el del usuario autenticado
+ */
 const guardarTratamiento = async (req, res) => {
   try {
-    const { 
-      pacienteId, 
-      tipo, 
-      fecha, 
-      diente, 
-      costo, 
-      descripcion, 
-      diagnostico, 
-      observaciones, 
-      materiales 
-    } = req.body;
+    const { pacienteId, tipo, fecha, diente, costo, descripcion, diagnostico, observaciones, materiales } = req.body;
 
-
-    // Verificar que tenemos usuario autenticado
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ 
-        error: "No hay usuario autenticado" 
-      });
+      return res.status(401).json({ error: "No hay usuario autenticado" });
     }
 
-    // Buscar el dentista asociado al usuario autenticado
-    const dentista = await Dentista.findOne({ 
-      where: { id_usuario: req.user.id } 
-    });
-    
+    const dentista = await Dentista.findOne({ where: { id_usuario: req.user.id } });
     if (!dentista) {
       console.error(`Usuario ${req.user.id} no tiene dentista asociado`);
-      return res.status(403).json({ 
-        error: "El usuario no está registrado como dentista" 
-      });
+      return res.status(403).json({ error: "El usuario no está registrado como dentista" });
     }
 
-    // Usar el ID del dentista autenticado 
     const doctorIdCorrecto = dentista.id;
 
-    // Crear el tratamiento con el doctor correcto
     const nuevoTratamiento = await Tratamiento.create({
       pacienteId,
       tipo,
       fecha: fecha || new Date(),
       diente: diente || null,
-      doctorId: doctorIdCorrecto,  
+      doctorId: doctorIdCorrecto,
       costo: costo || 0,
       descripcion: descripcion || null,
       diagnostico: diagnostico || null,
@@ -93,20 +75,18 @@ const guardarTratamiento = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al guardar tratamiento:", error);
-    return res.status(500).json({ 
-      error: "Error interno al guardar el tratamiento",
-      detalle: error.message 
-    });
+    return res.status(500).json({ error: "Error interno al guardar el tratamiento", detalle: error.message });
   }
 };
 
 /**
  * Obtiene tratamientos específicos de un paciente
+ * ── CAMBIO: usar req.params.id en lugar de req.params.pacienteId ──
  */
 const listarTratamientosPaciente = async (req, res) => {
   try {
-    const { pacienteId } = req.params;
-    const { tipo, fechaInicio, fechaFin, page = 1, limit = 10 } = req.query;
+    const pacienteId = req.params.id || req.params.pacienteId;
+    const { tipo, fechaInicio, fechaFin, page = 1, limit = 50 } = req.query;
     const where = { pacienteId };
     if (tipo) where.tipo = tipo;
     if (fechaInicio || fechaFin) {
@@ -196,30 +176,30 @@ const obtenerSesionesTratamiento = async (req, res) => {
 };
 
 /**
- * Actualiza el estado de un tratamiento (cancelar, completar, etc.)
+ * Actualiza el estado de un tratamiento
+ * ── CAMBIO: también actualiza observaciones y motivo_cancelacion ──
  */
 const actualizarTratamiento = async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado } = req.body;
-    
+    const { estado, observaciones, motivo_cancelacion } = req.body;
+
     const tratamiento = await Tratamiento.findByPk(id);
     if (!tratamiento) {
       return res.status(404).json({ error: "Tratamiento no encontrado" });
     }
-    
-    await tratamiento.update({ estado });
-    
-    return res.json({ 
-      message: "Tratamiento actualizado correctamente", 
-      tratamiento 
-    });
+
+    const updates = {};
+    if (estado             !== undefined) updates.estado             = estado;
+    if (observaciones      !== undefined) updates.observaciones      = observaciones;
+    if (motivo_cancelacion !== undefined) updates.motivo_cancelacion = motivo_cancelacion;
+
+    await tratamiento.update(updates);
+
+    return res.json({ message: "Tratamiento actualizado correctamente", tratamiento });
   } catch (error) {
     console.error("Error al actualizar tratamiento:", error);
-    return res.status(500).json({ 
-      error: "Error interno al actualizar el tratamiento",
-      detalle: error.message 
-    });
+    return res.status(500).json({ error: "Error interno al actualizar el tratamiento", detalle: error.message });
   }
 };
 
@@ -230,5 +210,5 @@ module.exports = {
   obtenerDetalleTratamiento,
   exportarHistorialPDF,
   obtenerSesionesTratamiento,
-  actualizarTratamiento,  
+  actualizarTratamiento,
 };

@@ -93,20 +93,20 @@
 }
 
 .tab-btn:hover {
-  background: #eef4f8;
-  color: #0088cc;
+  background: #f0effe;       /* lila suave de marca */
+  color: #7c3aed;            /* morado de marca */
 }
 
 .tab-btn.active {
   background: #ffffff;
-  color: #0088cc;
-  box-shadow: 0 2px 6px rgba(0, 136, 204, 0.12);
-  border: 1px solid #dbeaf3;
+  color: #7c3aed;            /* morado de marca */
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.12);
+  border: 1px solid #c4b5fd; /* morado suave de marca */
 }
 
 .tab-btn.active i,
 .tab-btn:hover i {
-  color: #0088cc;
+  color: #7c3aed;            /* morado de marca */
 }
 
 .tabs-content {
@@ -114,6 +114,27 @@
   max-height: 620px;
   overflow-y: auto;
   background: #ffffff;
+  /* scrollbar en colores de marca */
+  scrollbar-width: thin;
+  scrollbar-color: #c4b5fd #f0effe;
+}
+
+.tabs-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tabs-content::-webkit-scrollbar-track {
+  background: #f0effe;
+  border-radius: 999px;
+}
+
+.tabs-content::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 999px;
+}
+
+.tabs-content::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
 }
 
 .tab-loading {
@@ -137,9 +158,9 @@
 }
 
 .tab-edit-btn {
-  border: 1px solid #bdd7eb;
-  background: #f4faff;
-  color: #005a8e;
+  border: 1px solid #c4b5fd;   /* morado suave de marca */
+  background: #f0effe;
+  color: #7c3aed;
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 12px;
@@ -151,7 +172,7 @@
 }
 
 .tab-edit-btn:hover {
-  background: #e8f4ff;
+  background: #e5d9fd;
 }
 
 .medical-alert-banner {
@@ -333,10 +354,10 @@
 .tab-quick-preview {
   margin-bottom: 14px;
   padding: 10px;
-  border-left: 3px solid #4f84ab;
-  background: #f3f9fd;
+  border-left: 3px solid #a78bfa;  /* morado suave de marca */
+  background: #f8f4ff;
   border-radius: 8px;
-  color: #28506b;
+  color: #5b21b6;
   font-size: 13px;
 }
 

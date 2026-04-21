@@ -7,6 +7,13 @@ import CambiarConsultorioModal from './CambiarConsultorioModal';
 
 const getToken = () => localStorage.getItem('token') || '';
 
+const BRAND = {
+  primary: '#4f46e5',
+  secondary: '#db2777',
+  border: '#c4b5fd',
+  light: '#f0effe',
+};
+
 const ESTADO_COLORS = {
   confirmada:   { bg: '#dcfce7', color: '#166534', label: 'Confirmada' },
   pendiente:    { bg: '#e0f2fe', color: '#0369a1', label: 'Pendiente' },
@@ -102,29 +109,42 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
     return `${Math.floor(min / 60)}h ${min % 60 ? min % 60 + 'min' : ''}`;
   };
 
+  // ── Datos de las tarjetas ──
+  const estadisticas = [
+    { label: 'Total',       value: citas.length,
+      icon: 'fa-calendar-alt', bg: BRAND.light,    border: BRAND.border,  color: BRAND.primary },
+    { label: 'Pendientes',  value: citas.filter(c => ['pendiente','programada','confirmada'].includes(normEstado(c.estado))).length,
+      icon: 'fa-hourglass-half', bg: '#dcfce7', border: '#bbf7d0', color: '#166534' },
+    { label: 'Confirmadas', value: citas.filter(c => normEstado(c.estado) === 'confirmada').length,
+      icon: 'fa-check-circle',   bg: '#dbeafe', border: '#bfdbfe', color: '#1d4ed8' },
+    { label: 'Completadas', value: citas.filter(c => normEstado(c.estado) === 'completada').length,
+      icon: 'fa-check-double',   bg: '#f3f4f6', border: '#e5e7eb', color: '#374151' },
+  ];
+
+  const cardStyle = {
+    background: 'white', borderRadius: 12, padding: '18px 16px',
+    border: `1px solid ${BRAND.border}`, display: 'flex', flexDirection: 'column', gap: 10,
+    boxShadow: '0 2px 8px rgba(79,70,229,0.06)', flex: 1,
+  };
+
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-      {/* ── Tarjetas de estadísticas — centradas ── */}
-      <div style={{
-        display: 'flex', gap: 12, marginBottom: 20,
-        flexWrap: 'wrap', justifyContent: 'center',
-      }}>
-        {[
-          { label: 'Total',       value: citas.length,                                                                                        bg: 'white',    border: '#e9ecef', color: '#111827' },
-          { label: 'Pendientes',  value: citas.filter(c => ['pendiente','programada','confirmada'].includes(normEstado(c.estado))).length,     bg: '#dcfce7',  border: '#bbf7d0', color: '#166534' },
-          { label: 'Confirmadas', value: citas.filter(c => normEstado(c.estado) === 'confirmada').length,                                      bg: '#dbeafe',  border: '#bfdbfe', color: '#1d4ed8' },
-          { label: 'Completadas', value: citas.filter(c => normEstado(c.estado) === 'completada').length,                                      bg: '#f3f4f6',  border: '#e5e7eb', color: '#374151' },
-        ].map(s => (
-          <div key={s.label} style={{
-            textAlign: 'center', background: s.bg, border: `1px solid ${s.border}`,
-            borderRadius: 12, padding: '12px 28px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-          }}>
-            <div className="dentista-label" style={{ color: s.color, marginBottom: 4, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-              {s.label}
+      {/* ── Tarjetas de estadísticas estilo tratamientos ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
+        {estadisticas.map((s, i) => (
+          <div key={i} style={cardStyle}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 8, background: s.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `1px solid ${s.border}`,
+            }}>
+              <i className={`fas ${s.icon}`} style={{ fontSize: 14, color: s.color }}></i>
             </div>
-            <div className="dentista-titulo" style={{ color: s.color }}>{s.value}</div>
+            <div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{s.label}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -132,26 +152,26 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
       {/* ── Filtros ── */}
       <div style={{
         background: 'white', borderRadius: 12, padding: '14px 20px',
-        marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-        border: '1px solid #e9ecef',
+        marginBottom: 16, boxShadow: '0 1px 4px rgba(79,70,229,0.06)',
+        border: `1px solid ${BRAND.border}`,
         display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center',
       }}>
         <input
           placeholder="Buscar paciente..."
           value={filtroPaciente}
           onChange={e => setFiltroPaciente(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', flex: 1, minWidth: 150 }} className="dentista-texto-pequeno"
+          style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, flex: 1, minWidth: 150, outline: 'none' }} className="dentista-texto-pequeno"
         />
         <input
           type="date"
           value={filtroFecha}
           onChange={e => setFiltroFecha(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db' }} className="dentista-texto-pequeno"
+          style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, outline: 'none' }} className="dentista-texto-pequeno"
         />
         <select
           value={filtroEstado}
           onChange={e => setFiltroEstado(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db' }} className="dentista-texto-pequeno"
+          style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, outline: 'none' }} className="dentista-texto-pequeno"
         >
           <option value="">Todos los estados</option>
           <option value="pendiente">Pendiente</option>
@@ -163,7 +183,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
         </select>
         <button
           onClick={() => { setFiltroPaciente(''); setFiltroFecha(''); setFiltroEstado(''); }}
-          style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer', color: '#374151' }} className="dentista-texto-pequeno"
+          style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${BRAND.border}`, background: BRAND.light, cursor: 'pointer', color: BRAND.primary, fontWeight: 600 }} className="dentista-texto-pequeno"
         >
           Limpiar
         </button>
@@ -172,7 +192,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
       {/* ── Lista de citas ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {citasFiltradas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af', background: 'white', borderRadius: 12, border: '1px solid #e9ecef' }}>
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af', background: 'white', borderRadius: 12, border: `1px solid ${BRAND.border}` }}>
             <i className="fas fa-calendar-times dentista-titulo" style={{ marginBottom: 12, display: 'block', opacity: 0.4 }}></i>
             <p style={{ margin: 0 }}>No hay citas que coincidan con los filtros</p>
           </div>
@@ -190,8 +210,9 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
             return (
               <div key={cita.id} style={{
                 background: 'white', borderRadius: 14, overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e9ecef',
+                boxShadow: '0 2px 8px rgba(79,70,229,0.07)', border: `1px solid ${BRAND.border}`,
               }}>
+                <div style={{ height: 3, background: `linear-gradient(90deg, ${estObj.color}, ${BRAND.secondary})`, opacity: 0.5 }} />
                 <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
 
                   <div style={{ minWidth: 130 }}>
@@ -199,7 +220,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                       {formatFechaHora(cita.fecha_hora)}
                     </div>
                     <div className="dentista-texto-pequeno" style={{ color: '#6b7280', marginTop: 2 }}>
-                      <i className="fas fa-clock" style={{ marginRight: 4 }}></i>
+                      <i className="fas fa-clock" style={{ marginRight: 4, color: BRAND.primary, opacity: 0.6 }}></i>
                       {formatDuracion(cita.duracion_estimada)}
                     </div>
                   </div>
@@ -215,7 +236,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
 
                   {cita.id_consultorio && (
                     <div className="dentista-texto-pequeno" style={{ color: '#6b7280', minWidth: 80 }}>
-                      <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>
+                      <i className="fas fa-door-open" style={{ marginRight: 4, color: BRAND.primary, opacity: 0.6 }}></i>
                       Consul. {cita.id_consultorio}
                     </div>
                   )}
@@ -223,6 +244,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                   <span className="dentista-label" style={{
                     background: estObj.bg, color: estObj.color,
                     padding: '4px 12px', borderRadius: 20, fontWeight: 700, whiteSpace: 'nowrap',
+                    border: `1px solid ${estObj.bg}`,
                   }}>
                     {estObj.label}
                   </span>
@@ -247,7 +269,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                       </button>
                     )}
                     <button onClick={() => setCitaCambioC(cita)} disabled={isSaving}
-                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
+                      style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: BRAND.light, color: BRAND.primary, fontWeight: 700, cursor: 'pointer' }} className="dentista-label">
                       <i className="fas fa-door-open" style={{ marginRight: 4 }}></i>Consultorio
                     </button>
                     {puedeCancelar && (
@@ -258,7 +280,7 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                       </button>
                     )}
                     <button onClick={() => setExpandedId(isOpen ? null : cita.id)}
-                      style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', cursor: 'pointer' }} className="dentista-texto-pequeno">
+                      style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, background: isOpen ? BRAND.light : 'white', color: BRAND.primary, cursor: 'pointer' }} className="dentista-texto-pequeno">
                       <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`}></i>
                     </button>
                   </div>
@@ -266,8 +288,8 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
 
                 {isOpen && (
                   <div style={{
-                    borderTop: '1px solid #f3f4f6', padding: '14px 20px',
-                    background: '#fafafa',
+                    borderTop: `1px solid ${BRAND.border}`, padding: '14px 20px',
+                    background: BRAND.light + '44',
                     display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12,
                   }}>
                     {[
@@ -280,8 +302,8 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
                       { label: 'Fecha',       value: new Date(cita.fecha_hora).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) },
                       { label: 'Hora',        value: new Date(cita.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) },
                     ].map(f => (
-                      <div key={f.label} style={{ background: 'white', borderRadius: 8, padding: '8px 12px', border: '1px solid #e5e7eb' }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: 3 }}>{f.label}</div>
+                      <div key={f.label} style={{ background: 'white', borderRadius: 8, padding: '8px 12px', border: `1px solid ${BRAND.border}` }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: BRAND.primary, textTransform: 'uppercase', marginBottom: 3, opacity: 0.8 }}>{f.label}</div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{f.value}</div>
                       </div>
                     ))}
@@ -315,11 +337,11 @@ const CitasScreen = ({ citas: citasProp, onCitaActualizada, onCitaCancelada, den
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 1300,
-          background: '#111827', color: 'white', padding: '12px 20px',
+          background: BRAND.gradient, color: 'white', padding: '12px 20px',
           borderRadius: 12, fontSize: 14, fontWeight: 600,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          boxShadow: '0 8px 24px rgba(79,70,229,0.3)',
         }}>
-          {toast}
+          <i className="fas fa-check-circle" style={{ marginRight: 8 }}></i>{toast}
         </div>
       )}
     </div>
