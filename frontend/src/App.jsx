@@ -169,10 +169,6 @@ function App() {
           onUserDataUpdate={updateCurrentUser}
         />
       )}
-
-      {screen === "dashboard" && (
-        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
-      )}
     </div>
   );
 }
