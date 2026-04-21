@@ -44,6 +44,46 @@ const obtenerExtensionDesdeMime = (mimeType) => {
   return 'jpg';
 };
 
+const ensureAdminUsuario = async () => {
+  let adminUsuario = await Usuario.findOne({
+    where: { username: "Admin", rol: "admin" },
+  });
+
+  if (adminUsuario) {
+    return adminUsuario;
+  }
+
+  const hashAdminTemporal = await bcrypt.hash("Admin123", 10);
+  adminUsuario = await Usuario.create({
+    username: "Admin",
+    email: "admin@dentmed.com",
+    password_hash: hashAdminTemporal,
+    rol: "admin",
+    activo: true,
+    primer_acceso: false,
+  });
+
+  return adminUsuario;
+};
+
+const ensureAdminPerfil = async (adminUsuario) => {
+  let adminPerfil = await Dentista.findOne({ where: { id_usuario: adminUsuario.id } });
+
+  if (!adminPerfil) {
+    adminPerfil = await Dentista.create({
+      id_usuario: adminUsuario.id,
+      nombre: "Admin",
+      apellidos: "",
+      especialidad: "Administrador",
+      telefono: "",
+      email: adminUsuario.email,
+      numero_licencia: "ADMIN",
+    });
+  }
+
+  return adminPerfil;
+};
+
 const dentistaController = {
 
     // TAREA: Registro (POST) - SINCRONIZADA CON FRONTEND
@@ -172,18 +212,29 @@ const dentistaController = {
 
     actualizarPerfil: async (req, res) => {
       try {
-        const userId = req.user?.id;
-        if (!userId) {
+        const authUser = req.user || {};
+        const isAdminMaster = authUser?.master === true && authUser?.rol === "admin";
+        let usuario = null;
+
+        if (isAdminMaster) {
+          usuario = await ensureAdminUsuario();
+        } else {
+          const userId = authUser?.id;
+          if (!userId) {
+            return res.status(401).json({ message: "Usuario no autenticado" });
+          }
+          usuario = await Usuario.findByPk(userId);
+        }
+
+        if (!usuario) {
           return res.status(401).json({ message: "Usuario no autenticado" });
         }
 
         const { nombre, apellidos, email, telefono, contrasena } = req.body;
-        const usuario = await Usuario.findByPk(userId);
-        if (!usuario) {
-          return res.status(404).json({ message: "Usuario no encontrado" });
+        let dentista = await Dentista.findOne({ where: { id_usuario: usuario.id } });
+        if (usuario.rol === "admin") {
+          dentista = await ensureAdminPerfil(usuario);
         }
-
-        const dentista = await Dentista.findOne({ where: { id_usuario: userId } });
 
         const usuarioUpdates = {};
         const dentistaUpdates = {};
@@ -223,15 +274,15 @@ const dentistaController = {
         }
 
         if (Object.keys(usuarioUpdates).length > 0) {
-          await Usuario.update(usuarioUpdates, { where: { id: userId } });
+          await Usuario.update(usuarioUpdates, { where: { id: usuario.id } });
         }
 
         if (dentista && Object.keys(dentistaUpdates).length > 0) {
-          await Dentista.update(dentistaUpdates, { where: { id_usuario: userId } });
+          await Dentista.update(dentistaUpdates, { where: { id_usuario: usuario.id } });
         }
 
         const perfilActualizado = await Dentista.findOne({
-          where: { id_usuario: userId },
+          where: { id_usuario: usuario.id },
           include: [{ model: Usuario, attributes: ['email', 'avatar'] }],
         });
 
@@ -258,15 +309,32 @@ const dentistaController = {
 
     obtenerPerfil: async (req, res) => {
       try {
-        const userId = req.user.id;
+        const authUser = req.user || {};
+        const isAdminMaster = authUser?.master === true && authUser?.rol === "admin";
+        let usuario = null;
+
+        if (isAdminMaster) {
+          usuario = await ensureAdminUsuario();
+          await ensureAdminPerfil(usuario);
+        } else {
+          const userId = authUser?.id;
+          if (!userId) {
+            return res.status(401).json({ message: "Usuario no autenticado" });
+          }
+          usuario = await Usuario.findByPk(userId);
+        }
+
+        if (!usuario) {
+          return res.status(404).json({ message: "Usuario no encontrado" });
+        }
 
         const dentista = await Dentista.findOne({
-          where: { id_usuario: userId },
+          where: { id_usuario: usuario.id },
           include: [{ model: Usuario, attributes: ['email', 'avatar'] }],
         });
 
         if (!dentista) {
-          return res.status(404).json({ message: "Dentista no encontrado" });
+          return res.status(404).json({ message: "Perfil no encontrado" });
         }
 
         res.json({

@@ -255,7 +255,7 @@ exports.login = async (req, res) => {
 
       return res.json({
         token,
-        requiresPasswordChange: true,
+        requiresPasswordChange: false,
         user: {
           id: 0,
           rol: "admin",
@@ -319,7 +319,7 @@ exports.login = async (req, res) => {
 
     return res.json({
       token,
-      requiresPasswordChange: user.primer_acceso,
+      requiresPasswordChange: false,
       user: {
         id: user.id,
         rol: user.rol,

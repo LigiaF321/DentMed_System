@@ -4,14 +4,15 @@ import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
 import ResetPasswordScreen from "./components/ResetPasswordScreen";
-import ForceChangeCredentials from "./components/ForceChangeCredentials";
+import { resolveMediaUrl } from "./utils/media";
 import "./App.css";
 
 function App() {
   // Restore session on mount if exists, clear only on logout
   const [screen, setScreen] = useState(() => {
     try {
-      return localStorage.getItem("screen") || "login";
+      const storedScreen = localStorage.getItem("screen");
+      return storedScreen === "forceChange" ? "login" : (storedScreen || "login");
     } catch {
       return "login";
     }
@@ -20,7 +21,13 @@ function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem("currentUser");
-      return stored ? JSON.parse(stored) : null;
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (!parsed) return null;
+      return {
+        ...parsed,
+        avatar: resolveMediaUrl(parsed.avatar),
+      };
     } catch {
       return null;
     }
@@ -68,7 +75,7 @@ function App() {
         especialidad: perfil.especialidad,
         telefono: perfil.telefono,
         email: perfil.email || userData.email,
-        avatar: perfil.avatar || userData.avatar,
+        avatar: resolveMediaUrl(perfil.avatar || userData.avatar),
       };
 
       setCurrentUser(userCompleto);
@@ -120,12 +127,7 @@ function App() {
   };
 
   const handleLoadingComplete = () => {
-    const mustChange = currentUser?.mustChangePassword === true ||
-      currentUser?.forcePasswordChange === true ||
-      currentUser?.firstLogin === true ||
-      currentUser?.requiresPasswordChange === true;
-
-    goTo(mustChange ? "forceChange" : "dashboard");
+    goTo("dashboard");
   };
 
   const handleBackToLogin = () => {
@@ -156,14 +158,6 @@ function App() {
           email={resetEmail}
           onBack={() => goTo("login")}
           onSuccess={handleResetDone}
-        />
-      )}
-
-      {screen === "forceChange" && (
-        <ForceChangeCredentials
-          userData={currentUser}
-          onSuccess={() => goTo("dashboard")}
-          onBack={handleBackToLogin}
         />
       )}
 

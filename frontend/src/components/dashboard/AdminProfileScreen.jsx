@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '../../utils/auth';
+import { resolveMediaUrl } from '../../utils/media';
 import './AdminProfileScreen.css';
 
 export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack }) {
@@ -38,7 +39,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
       email: userData?.email || '',
       telefono: userData?.telefono || userData?.phone || '',
       contrasena: '',
-      fotoPreview: userData?.avatar || '',
+      fotoPreview: resolveMediaUrl(userData?.avatar),
     });
   }, [userData]);
 
@@ -95,7 +96,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
 
       setForm((prev) => ({
         ...prev,
-        fotoPreview: updated.avatar || prev.fotoPreview,
+        fotoPreview: resolveMediaUrl(updated.avatar) || prev.fotoPreview,
         contrasena: '',
       }));
 
@@ -105,7 +106,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
           apellidos: updated.apellidos || form.apellido,
           email: updated.email || form.email,
           telefono: updated.telefono || form.telefono,
-          avatar: updated.avatar || form.fotoPreview,
+          avatar: resolveMediaUrl(updated.avatar) || form.fotoPreview,
         });
       }
 

@@ -90,7 +90,7 @@ const LoginScreen = ({ onBack, onLoginSuccess, onForgotPassword }) => {
         requiresPasswordChange:
           resultado?.data?.requiresPasswordChange ??
           resultado?.data?.data?.requiresPasswordChange ??
-          true,
+          false,
       });
 
       setIsLoading(false);
