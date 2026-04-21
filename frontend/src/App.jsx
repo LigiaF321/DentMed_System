@@ -132,6 +132,7 @@ function App() {
 
   const handleBackToLogin = () => {
     limpiarSesion();
+    goTo("dashboard");
   };
 
   return (
@@ -167,6 +168,10 @@ function App() {
           onLogout={handleLogout}
           onUserDataUpdate={updateCurrentUser}
         />
+      )}
+
+      {screen === "dashboard" && (
+        <DashboardScreen userData={currentUser} onLogout={handleLogout} />
       )}
     </div>
   );

@@ -37,7 +37,7 @@ Dentista.belongsTo(Usuario, { foreignKey: "id_usuario" });
 // ===============================
 // USUARIO -> AUDITORIA / TOKEN
 // ===============================
-Usuario.hasMany(Auditoria, { foreignKey: "id_usuario" });
+Usuario.hasMany(Auditoria, { foreignKey: "id_usuario", indexes: false });
 Auditoria.belongsTo(Usuario, { foreignKey: "id_usuario" });
 
 Usuario.hasMany(TokenRecuperacion, { foreignKey: "id_usuario" });
@@ -58,13 +58,13 @@ HistorialConfiguracion.belongsTo(Configuracion, {
 // ===============================
 // PACIENTE / DENTISTA / CONSULTORIO -> CITA
 // ===============================
-Paciente.hasMany(Cita, { foreignKey: "id_paciente" });
+Paciente.hasMany(Cita, { foreignKey: "id_paciente", indexes: false });
 Cita.belongsTo(Paciente, { foreignKey: "id_paciente" });
 
-Dentista.hasMany(Cita, { foreignKey: "id_dentista" });
+Dentista.hasMany(Cita, { foreignKey: "id_dentista", indexes: false });
 Cita.belongsTo(Dentista, { foreignKey: "id_dentista" });
 
-Consultorio.hasMany(Cita, { foreignKey: "id_consultorio" });
+Consultorio.hasMany(Cita, { foreignKey: "id_consultorio", indexes: false });
 Cita.belongsTo(Consultorio, { foreignKey: "id_consultorio" });
 
 // ===============================
@@ -74,6 +74,7 @@ Cita.hasMany(PreReserva, {
   foreignKey: "id_cita",
   sourceKey: "id",
   as: "preReservas",
+  indexes: false,
 });
 PreReserva.belongsTo(Cita, {
   foreignKey: "id_cita",
@@ -85,6 +86,7 @@ Consultorio.hasMany(PreReserva, {
   foreignKey: "id_consultorio",
   sourceKey: "id",
   as: "preReservas",
+  indexes: false,
 });
 PreReserva.belongsTo(Consultorio, {
   foreignKey: "id_consultorio",
@@ -99,6 +101,7 @@ Consultorio.hasMany(EquipoConsultorio, {
   foreignKey: "id_consultorio",
   sourceKey: "id",
   as: "equipos",
+  indexes: false,
 });
 
 EquipoConsultorio.belongsTo(Consultorio, {
@@ -110,10 +113,10 @@ EquipoConsultorio.belongsTo(Consultorio, {
 // ===============================
 // PACIENTE / DENTISTA -> TRATAMIENTO
 // ===============================
-Paciente.hasMany(Tratamiento, { foreignKey: "pacienteId" });
+Paciente.hasMany(Tratamiento, { foreignKey: "pacienteId", indexes: false });
 Tratamiento.belongsTo(Paciente, { foreignKey: "pacienteId" });
 
-Dentista.hasMany(Tratamiento, { foreignKey: "doctorId" });
+Dentista.hasMany(Tratamiento, { foreignKey: "doctorId", indexes: false });
 Tratamiento.belongsTo(Dentista, { foreignKey: "doctorId" });
 
 // ===============================
@@ -134,6 +137,7 @@ Usuario.hasMany(DocumentoPaciente, {
   foreignKey: "id_usuario_subio",
   sourceKey: "id",
   as: "documentosSubidos",
+  indexes: false,
 });
 DocumentoPaciente.belongsTo(Usuario, {
   foreignKey: "id_usuario_subio",
@@ -143,7 +147,7 @@ DocumentoPaciente.belongsTo(Usuario, {
 
 // ===============================
 // DENTISTA -> BLOQUE
-// ===============================
+// ===============================, indexes: false
 Dentista.hasMany(Bloque, { foreignKey: "id_dentista" });
 Bloque.belongsTo(Dentista, { foreignKey: "id_dentista" });
 
@@ -153,6 +157,7 @@ Bloque.belongsTo(Dentista, { foreignKey: "id_dentista" });
 Material.hasMany(AlertaInventario, {
   foreignKey: "id_insumo",
   sourceKey: "id",
+  indexes: false,
 });
 AlertaInventario.belongsTo(Material, {
   foreignKey: "id_insumo",
@@ -163,6 +168,7 @@ AlertaInventario.belongsTo(Material, {
 Usuario.hasMany(AlertaInventario, {
   foreignKey: "tratada_por",
   sourceKey: "id",
+  indexes: false,
 });
 AlertaInventario.belongsTo(Usuario, {
   foreignKey: "tratada_por",
@@ -176,7 +182,7 @@ AlertaInventario.belongsTo(Usuario, {
 Usuario.hasMany(AlertaSeguridad, {
   foreignKey: "usuario_id",
   sourceKey: "id",
-  as: "alertasSeguridad",
+  indexes: false,
 });
 AlertaSeguridad.belongsTo(Usuario, {
   foreignKey: "usuario_id",
@@ -188,6 +194,7 @@ Usuario.hasMany(AlertaSeguridad, {
   foreignKey: "silenciada_por",
   sourceKey: "id",
   as: "alertasSilenciadas",
+  indexes: false,
 });
 AlertaSeguridad.belongsTo(Usuario, {
   foreignKey: "silenciada_por",
@@ -199,6 +206,7 @@ Usuario.hasMany(AlertaSeguridad, {
   foreignKey: "revisada_por",
   sourceKey: "id",
   as: "alertasRevisadas",
+  indexes: false,
 });
 AlertaSeguridad.belongsTo(Usuario, {
   foreignKey: "revisada_por",
@@ -224,6 +232,7 @@ Usuario.hasMany(MovimientoInventario, {
   foreignKey: "usuario_registra",
   sourceKey: "id",
   as: "movimientosRegistrados",
+  indexes: false,
 });
 MovimientoInventario.belongsTo(Usuario, {
   foreignKey: "usuario_registra",
@@ -235,6 +244,7 @@ Dentista.hasMany(MovimientoInventario, {
   foreignKey: "id_doctor",
   sourceKey: "id",
   as: "movimientosComoDoctor",
+  indexes: false,
 });
 MovimientoInventario.belongsTo(Dentista, {
   foreignKey: "id_doctor",
@@ -246,6 +256,7 @@ Cita.hasMany(MovimientoInventario, {
   foreignKey: "id_cita",
   sourceKey: "id",
   as: "movimientosCita",
+  indexes: false,
 });
 MovimientoInventario.belongsTo(Cita, {
   foreignKey: "id_cita",
@@ -257,6 +268,7 @@ MovimientoInventario.belongsTo(Cita, {
 // MOVIMIENTOS ELIMINADOS
 // ===============================
 Usuario.hasMany(MovimientoEliminado, {
+  indexes: false,
   foreignKey: "eliminado_por",
   sourceKey: "id",
   as: "movimientosEliminadosUsuario",
