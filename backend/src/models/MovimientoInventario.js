@@ -115,9 +115,7 @@ const MovimientoInventario = sequelize.define(
     updatedAt: false,
     indexes: [
       { fields: ["id_insumo"] },
-      { fields: ["fecha_movimiento"] },
-      { fields: ["tipo_movimiento"] },
-      { fields: ["eliminado"] },
+      { fields: ["fecha_movimiento"] }
     ],
   }
 );

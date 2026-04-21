@@ -67,9 +67,7 @@ const AlertaInventario = sequelize.define(
     underscored: true,
     indexes: [
       { fields: ["id_insumo"] },
-      { fields: ["fecha_alerta"] },
-      { fields: ["activa"] },
-      { fields: ["nivel"] },
+      { fields: ["fecha_alerta"] }
     ],
   }
 );
