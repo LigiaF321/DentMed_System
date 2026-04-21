@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Cropper from 'react-easy-crop';
+import Swal from 'sweetalert2';
 import { getAuthToken } from '../../utils/auth';
 import { resolveMediaUrl } from '../../utils/media';
 import './AdminProfileScreen.css';
@@ -111,6 +112,33 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
 
   const handleChange = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleEmailBlur = async () => {
+    const emailIngresado = String(form.email || '').trim().toLowerCase();
+    const emailActualUsuario = String(userData?.email || '').trim().toLowerCase();
+
+    if (!emailIngresado || emailIngresado === emailActualUsuario) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/auth/dentistas/validar-email?email=${encodeURIComponent(emailIngresado)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+
+      if (data?.disponible === false && data?.rol === 'dentista') {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Correo ya registrado',
+          text: 'Este correo ya está registrado como doctor. Por favor use otro correo.',
+          confirmButtonText: 'Entendido',
+        });
+        setForm((prev) => ({ ...prev, email: emailActualUsuario || '' }));
+      }
+    } catch (error) {
+      console.error('No se pudo validar el correo:', error);
+    }
   };
 
   const handlePasswordFieldChange = (field) => (event) => {
@@ -493,6 +521,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
                 type="email"
                 value={form.email}
                 onChange={handleChange('email')}
+                onBlur={handleEmailBlur}
                 placeholder="admin@dentmed.com"
               />
             </div>
@@ -522,15 +551,15 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
               />
             </div>
             <div className="dm2-profile-actions">
-              <button type="submit" className="dm2-btn-primary">
-                Guardar cambios
-              </button>
               {saved ? (
                 <div className={`dm2-save-notice ${isSavingNoticeClosing ? 'dm2-save-notice--out' : ''}`}>
                   <span className="dm2-save-icon">✓</span>
                   <span>Guardado correctamente</span>
                 </div>
               ) : null}
+              <button type="submit" className="dm2-btn-primary">
+                Guardar cambios
+              </button>
             </div>
           </form>
         </div>

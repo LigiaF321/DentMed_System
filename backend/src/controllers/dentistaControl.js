@@ -240,9 +240,22 @@ const dentistaController = {
         const dentistaUpdates = {};
 
         if (email) {
-          usuarioUpdates.email = String(email).trim();
+          const normalizedEmail = String(email).trim().toLowerCase();
+          const currentEmail = String(usuario.email || "").trim().toLowerCase();
+
+          if (normalizedEmail !== currentEmail) {
+            const emailEnUso = await Usuario.findOne({ where: { email: normalizedEmail } });
+            if (emailEnUso && emailEnUso.id !== usuario.id) {
+              if (emailEnUso.rol === "dentista") {
+                return res.status(400).json({ message: "Este correo ya está registrado como doctor." });
+              }
+              return res.status(400).json({ message: "Este correo ya está registrado en el sistema." });
+            }
+          }
+
+          usuarioUpdates.email = normalizedEmail;
           if (dentista) {
-            dentistaUpdates.email = String(email).trim();
+            dentistaUpdates.email = normalizedEmail;
           }
         }
         if (contrasena) {

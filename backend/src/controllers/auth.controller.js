@@ -169,7 +169,11 @@ exports.validarEmail = async (req, res) => {
         const { email } = req.query;
         if (!email) return res.status(400).json({ message: "Email requerido" });
         const existe = await Usuario.findOne({ where: { email } });
-        return res.json({ disponible: !existe });
+        return res.json({
+          disponible: !existe,
+          rol: existe ? existe.rol : null,
+          usuarioId: existe ? existe.id : null,
+        });
     } catch (error) {
         return res.status(500).json({ message: "Error al validar email" });
     }
