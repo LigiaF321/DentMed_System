@@ -2,6 +2,12 @@ import './styles/dentista-global.css';
 import React, { useEffect, useState } from "react";
 import "./AppointmentsList.css";
 
+const BRAND = {
+  gradient: 'linear-gradient(135deg, #4f46e5, #db2777)',
+  primary:  '#4f46e5',
+  shadow:   'rgba(79,70,229,0.2)',
+};
+
 const AppointmentsList = ({
   citas,
   onSelectCita,
@@ -21,7 +27,6 @@ const AppointmentsList = ({
   const fechaBase = selectedDate ? new Date(selectedDate) : new Date();
   const esHoy     = fechaBase.toDateString() === new Date().toDateString();
 
-  // Cita a mostrar: la seleccionada o la próxima pendiente
   const ahora = new Date();
   const citaAMostrar = citasLocal.find(c => String(c.id) === String(selectedCitaId))
     || citasLocal.find(c => {
@@ -45,7 +50,7 @@ const AppointmentsList = ({
     pendiente:    '#17a2b8',
     completada:   '#6c757d',
     cancelada:    '#dc3545',
-    programada:   '#2563eb',
+    programada:   BRAND.primary,
     reprogramada: '#f59e0b',
   };
 
@@ -68,10 +73,9 @@ const AppointmentsList = ({
           </div>
         ) : (
           <>
-            {/* ── Resumen de la cita activa ── */}
             {citaAMostrar && (
               <div
-                className={`appointment-item selected`}
+                className="appointment-item selected"
                 onClick={() => onSelectCita(citaAMostrar)}
                 style={{ cursor: 'pointer' }}
               >
@@ -79,7 +83,6 @@ const AppointmentsList = ({
                   <i className="fas fa-clock"></i>
                   <span>{formatHora(citaAMostrar.fecha_hora)}</span>
                 </div>
-
                 <div className="appointment-info">
                   <div className="appointment-patient dentista-texto-pequeno">
                     {citaAMostrar.paciente_nombre}
@@ -94,43 +97,39 @@ const AppointmentsList = ({
                     </div>
                   )}
                 </div>
-
-                <div
-                  className={`appointment-status dentista-label`}
-                  style={{
-                    color: estadoColor[String(citaAMostrar.estado || '').toLowerCase()] || '#374151',
-                    fontWeight: 700,
-                  }}
-                >
+                <div className="appointment-status dentista-label" style={{
+                  color: estadoColor[String(citaAMostrar.estado || '').toLowerCase()] || '#374151',
+                  fontWeight: 700,
+                }}>
                   {estadoLabel[String(citaAMostrar.estado || '').toLowerCase()] || citaAMostrar.estado}
                 </div>
               </div>
             )}
 
-            {/* ── Contador de citas del día ── */}
             <div className="dentista-texto-xxpequeno" style={{ color: '#6b7280', padding: '6px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>
                 <i className="fas fa-list" style={{ marginRight: 5 }}></i>
                 {citasLocal.length} cita{citasLocal.length !== 1 ? 's' : ''} este día
               </span>
-              <span style={{ color: '#28a745', fontWeight: 700 }}>
+              {/* ── CAMBIO: morado en lugar de verde ── */}
+              <span style={{ color: BRAND.primary, fontWeight: 700 }}>
                 {citasLocal.filter(c => !['cancelada','completada'].includes(String(c.estado||'').toLowerCase())).length} pendientes
               </span>
             </div>
 
-            {/* ── Botón Ver detalles ── */}
+            {/* ── CAMBIO: degradado de la empresa en lugar de azul ── */}
             <button
               onClick={onVerDetalles}
-                        style={{
-                          width: '100%', padding: '10px 0', borderRadius: 10,
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                          color: 'white', fontWeight: 800,
-                          cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                          boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
-                          marginTop: 6,
-                        }} className="dentista-label"
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 10,
+                border: 'none',
+                background: BRAND.gradient,
+                color: 'white', fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: `0 4px 12px ${BRAND.shadow}`,
+                marginTop: 6,
+              }} className="dentista-label"
             >
               <i className="fas fa-calendar-check"></i> Ver todas las citas
             </button>

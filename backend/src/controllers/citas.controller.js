@@ -1092,10 +1092,68 @@ const obtenerCitasDentista = async (req, res) => {
   }
 };
 
+const confirmarCita = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cita = await Cita.findByPk(id);
+    if (!cita) {
+      return res.status(404).json({ ok: false, message: "Cita no encontrada" });
+    }
+
+    const estado = normalizarEstado(cita.estado);
+
+    if (estado === "confirmada") {
+      return res.status(409).json({ ok: false, message: "Ya está confirmada" });
+    }
+
+    if (estado === "cancelada") {
+      return res.status(409).json({ ok: false, message: "Está cancelada" });
+    }
+
+    cita.estado = "Confirmada";
+    await cita.save();
+
+    return res.json({ ok: true, message: "Cita confirmada" });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: "Error" });
+  }
+};
+
+const completarCita = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cita = await Cita.findByPk(id);
+    if (!cita) {
+      return res.status(404).json({ ok: false, message: "Cita no encontrada" });
+    }
+
+    const estado = normalizarEstado(cita.estado);
+
+    if (estado === "completada") {
+      return res.status(409).json({ ok: false, message: "Ya está completada" });
+    }
+
+    if (estado === "cancelada") {
+      return res.status(409).json({ ok: false, message: "Está cancelada" });
+    }
+
+    cita.estado = "Completada";
+    await cita.save();
+
+    return res.json({ ok: true, message: "Cita completada" });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: "Error" });
+  }
+};
+
 module.exports = {
   verificarDisponibilidad,
   crearCita,
   cancelarCita,
   reprogramarCita,
   obtenerCitasDentista,
+  confirmarCita,
+  completarCita,
 };
