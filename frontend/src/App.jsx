@@ -4,7 +4,6 @@ import LoginScreen from "./components/LoginScreen";
 import DashboardScreen from "./components/dashboard/DashboardScreen";
 import ForgotPasswordScreen from "./components/ForgotPasswordScreen";
 import ResetPasswordScreen from "./components/ResetPasswordScreen";
-import ForceChangeCredentials from "./components/ForceChangeCredentials";
 import "./App.css";
 
 function App() {
@@ -107,16 +106,7 @@ const handleLoginSuccess = async (userData) => {
   };
 
   const handleLoadingComplete = () => {
-    const mustChange = currentUser?.mustChangePassword === true ||
-      currentUser?.forcePasswordChange === true ||
-      currentUser?.firstLogin === true ||
-      currentUser?.requiresPasswordChange === true;
-
-    goTo(mustChange ? "forceChange" : "dashboard");
-  };
-
-  const handleBackToLogin = () => {
-    limpiarSesion();
+    goTo("dashboard");
   };
 
   return (
@@ -143,14 +133,6 @@ const handleLoginSuccess = async (userData) => {
           email={resetEmail}
           onBack={() => goTo("login")}
           onSuccess={handleResetDone}
-        />
-      )}
-
-      {screen === "forceChange" && (
-        <ForceChangeCredentials
-          userData={currentUser}
-          onSuccess={() => goTo("dashboard")}
-          onBack={handleBackToLogin}
         />
       )}
 
