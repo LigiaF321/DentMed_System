@@ -3,7 +3,7 @@ import './styles/dm17-modal.css';
 import React, { useEffect, useState } from "react";
 import ConsultorioSugerido from "./ConsultorioSugerido";
 import { actualizarConsultorioCita, verificarDisponibilidad } from "../../services/citas.service";
-import { obtenerConsultorios } from "../../services/consultorios.service";
+import { sugerirConsultorios } from "../../services/consultorios.service";
 import { registrarAuditoriaConsultorio } from "../../services/auditoria.service";
 
 const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
@@ -28,8 +28,9 @@ const CambiarConsultorioModal = ({ open, onClose, cita, onUpdated }) => {
     setLoading(true);
     setError("");
     setSelected(null);
-    setPagina(1); 
-    obtenerConsultorios()
+    setPagina(1);
+    // Usar sugerirConsultorios para obtener sugerencias según el procedimiento de la cita
+    sugerirConsultorios({ procedimiento: cita.procedimiento, fecha: cita.fecha, hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin })
       .then((res) => setConsultorios(res.data || []))
       .catch(() => setConsultorios([]))
       .finally(() => setLoading(false));
