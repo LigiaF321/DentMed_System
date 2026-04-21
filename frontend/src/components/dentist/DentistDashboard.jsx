@@ -16,6 +16,7 @@ import MisPacientesScreen from './MisPacientesScreen';
 import CitasScreen from './CitasScreen';
 import BloqueoModal from './BloqueoModal';
 import ReprogramarCitaModal from './ReprogramarCitaModal';
+import AdminProfileScreen from '../dashboard/AdminProfileScreen';
 import bloquesService from '../../services/bloques.service';
 import { getAuthToken } from '../../utils/auth';
 import { obtenerConsultorios } from '../../services/consultorios.service';
@@ -132,7 +133,7 @@ const CambioConsultorioModal = ({ cita, consultorios, citasDentista, onClose, on
   );
 };
 
-const DentistDashboard = ({ userData, onLogout }) => {
+const DentistDashboard = ({ userData, onLogout, onUserDataUpdate }) => {
   const [citas, setCitas] = useState([]);
   const [bloques, setBloques] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -457,6 +458,13 @@ const DentistDashboard = ({ userData, onLogout }) => {
 
   const closeModal = () => { setShowModal(false); setSelectedEvent(null); };
 
+  const handleDentistProfileUpdate = (updates) => {
+    if (typeof onUserDataUpdate === 'function') {
+      onUserDataUpdate(updates);
+    }
+    setDentistaInfo((prev) => ({ ...(prev || {}), ...updates }));
+  };
+
   const handleVerExpediente = () => {
     if (!pacienteDetalleAgenda && !selectedCita) return;
     setPacienteExpediente(pacienteDetalleAgenda || selectedCita);
@@ -553,6 +561,7 @@ const DentistDashboard = ({ userData, onLogout }) => {
     pacientes:    { title: 'Mis Pacientes',        subtitle: `Gestión clínica de Dr. ${dentistName}` },
     tratamientos: { title: 'Tratamientos',         subtitle: `Seguimiento clínico de Dr. ${dentistName}` },
     notas:        { title: 'Notas',               subtitle: `Registro rápido de Dr. ${dentistName}` },
+    perfil:       { title: 'Mi Perfil',           subtitle: `Clínica DentMed` },
   }[activeView] || { title: 'Panel del Doctor', subtitle: `Dr. ${dentistName}` };
 
   const topDate = new Date().toLocaleDateString('es-ES', {
@@ -683,7 +692,14 @@ const DentistDashboard = ({ userData, onLogout }) => {
       case 'notas':
         return <div className="placeholder-content"><h2>Notas</h2><p>Próximamente...</p></div>;
       case 'perfil':
-        return <div className="placeholder-content"><h2>Mi Perfil</h2><p>Próximamente...</p></div>;
+        return (
+          <AdminProfileScreen
+            userData={userData}
+            onUserDataUpdate={handleDentistProfileUpdate}
+            roleLabel="Doctor(a)"
+            onBack={() => setActiveView('agenda')}
+          />
+        );
       case 'configuracion':
         return <div className="placeholder-content"><h2>Configuración</h2><p>Próximamente...</p></div>;
       default:

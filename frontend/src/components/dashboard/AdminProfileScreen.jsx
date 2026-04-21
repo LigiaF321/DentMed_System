@@ -49,7 +49,12 @@ const getCroppedAvatarFile = async (imageSrc, pixelCrop) => {
   });
 };
 
-export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack }) {
+export default function AdminProfileScreen({
+  userData,
+  onUserDataUpdate,
+  onBack,
+  roleLabel = 'Administrador',
+}) {
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',
@@ -329,7 +334,8 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
     }
   };
 
-  const profileLabel = `${form.nombre || ''} ${form.apellido || ''}`.trim() || 'Administrador';
+  const fallbackName = roleLabel === 'Doctor(a)' ? 'Doctor(a)' : 'Administrador';
+  const profileLabel = `${form.nombre || ''} ${form.apellido || ''}`.trim() || fallbackName;
 
   return (
     <div className="dm2-page">
@@ -488,7 +494,7 @@ export default function AdminProfileScreen({ userData, onUserDataUpdate, onBack 
             </div>
             <div className="dm2-profile-info">
               <div className="dm2-profile-name">{profileLabel}</div>
-              <div className="dm2-profile-role">Administrador</div>
+              <div className="dm2-profile-role">{roleLabel}</div>
               <div className="dm2-profile-meta">
                 <span>{form.email || 'Correo no registrado'}</span>
                 <span>{form.telefono || 'Teléfono no registrado'}</span>

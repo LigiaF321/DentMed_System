@@ -515,7 +515,7 @@ export default function DashboardScreen({ userData, onLogout, onUserDataUpdate }
 
   const renderMainContent = () => {
     if (!isAdmin) {
-      return <DentistDashboard userData={userData} onLogout={onLogout} />;
+      return <DentistDashboard userData={userData} onLogout={onLogout} onUserDataUpdate={onUserDataUpdate} />;
     }
 
     if (adminView === 'consultorios') return <ConsultoriosAdminScreen />;

@@ -1,6 +1,7 @@
 import './styles/dentista-global.css';
 import React from 'react';
 import logoDentMed from '../../assets/dentmed-logo.png';
+import { resolveMediaUrl } from '../../utils/media';
 import './DentistSidebar.css';
 
 const MENU_ITEMS = [
@@ -35,6 +36,7 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
     'Odontólogo';
 
   const userInitial = String(displayName).charAt(0).toUpperCase();
+  const avatarUrl = resolveMediaUrl(dentistaInfo?.avatar || userData?.avatar);
 
   return (
     <aside className="dentist-sidebar">
@@ -67,15 +69,24 @@ const DentistSidebar = ({ activeView, onSelectView, onLogout, userData, dentista
       </div>
 
       <div className="dentist-sidebar-bottom">
-        <div className="dentist-sidebar-user">
-          <div className="dentist-sidebar-avatar">{userInitial}</div>
+        <button
+          className="dentist-sidebar-user dentist-sidebar-user-button"
+          type="button"
+          onClick={() => onSelectView('perfil')}
+          aria-label="Abrir configuración de usuario"
+        >
+          <div className="dentist-sidebar-avatar">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={`${displayName} avatar`} className="dentist-sidebar-avatar-img" />
+            ) : (
+              userInitial
+            )}
+          </div>
           <div className="dentist-sidebar-usertext">
             <div className="dentist-sidebar-username dentista-titulo">Dr. {displayName}</div>
-            <div className="dentist-sidebar-role dentista-label">
-  {especialidad}
-</div>
+            <div className="dentist-sidebar-role dentista-label">{especialidad}</div>
           </div>
-        </div>
+        </button>
 
         <button className="dentist-sidebar-logout" type="button" onClick={onLogout}>
           <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />

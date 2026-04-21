@@ -153,10 +153,26 @@
   border: 1px solid rgba(255,255,255,.08);
 }
 
+.dentist-sidebar-user-button {
+  all: unset;
+  width: 100%;
+  display: flex;
+  cursor: pointer;
+  border-radius: 18px;
+  align-items: center;
+  gap: 12px;
+}
+
+.dentist-sidebar-user-button:hover,
+.dentist-sidebar-user-button:focus {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
+}
+
 .dentist-sidebar-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 14px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
   font-weight: 900;
@@ -164,6 +180,13 @@
   background: rgba(24,178,122,.14);
   border: 1px solid rgba(24,178,122,.30);
   flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.dentist-sidebar-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .dentist-sidebar-usertext {
